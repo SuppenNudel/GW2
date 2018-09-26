@@ -2,17 +2,21 @@ package de.rohmio.gw2.tools.view.main;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-import de.rohmio.gw2.tools.model.Credentials;
+import de.rohmio.gw2.tools.model.ClientFactory;
 import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.view.recipe.RecipeViewController;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
@@ -29,16 +33,31 @@ public class MainViewController implements Initializable {
 	private TextField txt_charName;
 
 	@FXML
-	private VBox scroll_recipes;
+	private HBox hbox_disciplineCheck;
+
+	@FXML
+	private FlowPane scroll_recipes;
+
+	@FXML
+	private Map<CraftingDisciplines, CheckBox> cbx_craftingDisceplines;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		txt_apiKey.setText(Credentials.ACCESS_KEY);
-		txt_charName.setText(Credentials.CHAR_NAME);
+		txt_apiKey.setText(ClientFactory.ACCESS_KEY);
+		txt_charName.setText(ClientFactory.CHAR_NAME);
+
+		cbx_craftingDisceplines = new HashMap<>();
+		for (CraftingDisciplines discipline : CraftingDisciplines.values()) {
+			CheckBox checkBox = new CheckBox(discipline.toString());
+			cbx_craftingDisceplines.put(discipline, checkBox);
+			hbox_disciplineCheck.getChildren().add(checkBox);
+		}
 	}
 
 	@FXML
 	private void analyse() throws GuildWars2Exception, IOException {
+		scroll_recipes.getChildren().clear();
+
 		List<Recipe> allRecipes = Data.getInstance().getAllRecipes();
 		Character character = GuildWars2.getInstance().getSynchronous().getCharacter(txt_apiKey.getText(),
 				txt_charName.getText());
@@ -48,10 +67,17 @@ public class MainViewController implements Initializable {
 		List<Recipe> collect = allRecipes.stream().filter(r -> !charRecipes.contains(r.getId())) // remove already
 																									// learned
 				.filter(r -> !r.getFlags().contains(Flag.LearnedFromItem)) // remove only available through item
-				.filter(r -> r.getDisciplines().contains(CraftingDisciplines.Leatherworker)).filter(r -> {
-					for (Discipline discipline : character.getCrafting()) {// only available by discipline and rating
+				.filter(r -> {
+					for (Discipline discipline : character.getCrafting()) { // only available by discipline and rating
 						if (r.getDisciplines().contains(discipline.getDiscipline())
 								&& r.getMinRating() <= discipline.getRating()) {
+							return true;
+						}
+					}
+					return false;
+				}).filter(r -> {
+					for (CraftingDisciplines discipline : r.getDisciplines()) {
+						if (cbx_craftingDisceplines.get(discipline).isSelected()) {
 							return true;
 						}
 					}
