@@ -21,6 +21,7 @@ public class App extends Application {
 		Parent root = FXMLLoader.load(resource);
 		Scene scene = new Scene(root);
 		primaryStage.setScene(scene);
+		primaryStage.setTitle("Guild Wars 2 Tools");
 		primaryStage.show();
 	}
 

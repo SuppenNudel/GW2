@@ -17,6 +17,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
@@ -37,6 +38,9 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private FlowPane scroll_recipes;
+
+	@FXML
+	private VBox vbox_tasks;
 
 	@FXML
 	private Map<CraftingDisciplines, CheckBox> cbx_craftingDisceplines;
