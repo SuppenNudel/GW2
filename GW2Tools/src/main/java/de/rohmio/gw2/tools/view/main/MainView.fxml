@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
+<BorderPane xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
    <center>
       <AnchorPane>
          <children>
@@ -21,6 +21,7 @@
                   <TextField fx:id="txt_apiKey" promptText="API KEY" />
                   <TextField fx:id="txt_charName" promptText="Character Name" />
                   <HBox fx:id="hbox_disciplineCheck" />
+                  <HBox fx:id="hbox_langRadio" />
                   <Button mnemonicParsing="false" onAction="#analyse" text="Analyse" />
                   <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="SOMETIMES">
                      <content>

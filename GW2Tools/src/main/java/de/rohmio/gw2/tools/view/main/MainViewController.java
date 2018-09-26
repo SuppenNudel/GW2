@@ -11,14 +11,19 @@ import java.util.stream.Collectors;
 import de.rohmio.gw2.tools.model.ClientFactory;
 import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.view.recipe.RecipeViewController;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import me.xhsun.guildwars2wrapper.GuildWars2;
+import me.xhsun.guildwars2wrapper.GuildWars2.LanguageSelect;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe.Flag;
@@ -35,6 +40,8 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private HBox hbox_disciplineCheck;
+	@FXML
+	private HBox hbox_langRadio;
 
 	@FXML
 	private FlowPane scroll_recipes;
@@ -56,6 +63,20 @@ public class MainViewController implements Initializable {
 			cbx_craftingDisceplines.put(discipline, checkBox);
 			hbox_disciplineCheck.getChildren().add(checkBox);
 		}
+
+		ToggleGroup langGroup = new ToggleGroup();
+		for (LanguageSelect lang : LanguageSelect.values()) {
+			RadioButton radio = new RadioButton(lang.getValue());
+			radio.setToggleGroup(langGroup);
+			radio.setOnAction(new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event) {
+					GuildWars2.setLanguage(lang);
+				}
+			});
+			hbox_langRadio.getChildren().add(radio);
+		}
+
 	}
 
 	@FXML

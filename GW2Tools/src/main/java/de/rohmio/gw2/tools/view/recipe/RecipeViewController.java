@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-import de.rohmio.gw2.tools.model.ClientFactory;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -64,12 +63,10 @@ public class RecipeViewController extends VBox implements Initializable {
 		}
 	}
 
-	private static int cacheCount = 0;
-
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		GuildWars2 gw2 = GuildWars2.getInstance();
-		OkHttpClient client = ClientFactory.getClient(String.valueOf(cacheCount++));
+		OkHttpClient client = new OkHttpClient();
 		List<Integer> list = recipe.getIngredients().stream().map(i -> i.getItemId()).collect(Collectors.toList());
 		list.add(recipe.getOutputItemId());
 		int[] itemIds = list.stream().mapToInt(i -> i.intValue()).toArray();
@@ -83,15 +80,17 @@ public class RecipeViewController extends VBox implements Initializable {
 						Platform.runLater(() -> {
 							Item item = collect.get(i.getItemId());
 							Label lbl_count = new Label(String.valueOf(i.getCount()));
+
 							Request request = new Request.Builder().url(item.getIcon()).build();
 							ImageView img_itemIcon = new ImageView();
-							try {
-								okhttp3.Response imageData = client.newCall(request).execute();
-								Image image = new Image(imageData.body().byteStream(), 20, 20, false, true);
-								img_itemIcon.setImage(image);
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
+							// try {
+							// okhttp3.Response imageData = client.newCall(request).execute();
+							// Image image = new Image(imageData.body().byteStream(), 20, 20, false, true);
+							Image img = new Image(item.getIcon(), 20, 20, false, true, true);
+							img_itemIcon.setImage(img);
+							// } catch (IOException e) {
+							// e.printStackTrace();
+							// }
 							Label lbl_name = new Label(item.getName());
 							vbox_ingredients.getChildren().add(new HBox(lbl_count, img_itemIcon, lbl_name));
 						});
@@ -102,28 +101,17 @@ public class RecipeViewController extends VBox implements Initializable {
 
 						String icon = outputItem.getIcon();
 						Request request = new Request.Builder().url(icon).build();
-						// client.newCall(request).enqueue(new okhttp3.Callback() {
-						// @Override
-						// public void onResponse(okhttp3.Call call, okhttp3.Response response) throws
-						// IOException {
-						// if(response.isSuccessful()) {
-						// img_outputItem.setImage(new Image(response.body().byteStream()));
+						// try {
+						// okhttp3.Response imgResponse = client.newCall(request).execute();
+						// if (imgResponse.isSuccessful()) {
+						// Image image = new Image(imgResponse.body().byteStream(), 64, 64, false,
+						// true);
+						Image img = new Image(icon, 64, 64, false, true, true);
+						img_outputItem.setImage(img);
 						// }
+						// } catch (IOException e) {
+						// e.printStackTrace();
 						// }
-						// @Override
-						// public void onFailure(okhttp3.Call call, IOException e) {
-						// }
-						// });
-
-						try {
-							okhttp3.Response imgResponse = client.newCall(request).execute();
-							if (imgResponse.isSuccessful()) {
-								img_outputItem
-										.setImage(new Image(imgResponse.body().byteStream(), 64, 64, false, true));
-							}
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
 
 						// lbl_materialType.setText(outputItem.getDetails().toString());
 					});
