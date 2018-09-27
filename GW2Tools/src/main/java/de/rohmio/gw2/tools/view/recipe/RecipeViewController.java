@@ -10,6 +10,7 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import de.rohmio.gw2.tools.model.Data;
+import de.rohmio.gw2.tools.view.RecipeView;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -28,7 +29,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class RecipeViewController extends VBox implements Initializable {
+public class RecipeViewController extends RecipeView implements Initializable {
 
 	@FXML
 	private Label lbl_outputName;

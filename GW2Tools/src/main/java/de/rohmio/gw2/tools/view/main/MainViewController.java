@@ -10,9 +10,12 @@ import java.util.stream.Collectors;
 
 import de.rohmio.gw2.tools.model.ClientFactory;
 import de.rohmio.gw2.tools.model.Data;
-import de.rohmio.gw2.tools.view.recipe.RecipeViewController;
+import de.rohmio.gw2.tools.view.RecipeView;
+import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -37,7 +40,12 @@ public class MainViewController implements Initializable {
 	private TextField txt_apiKey;
 	@FXML
 	private TextField txt_charName;
+	@FXML
+	private Button btn_analyse;
 
+	@FXML
+	private TextField txt_filter;
+	
 	@FXML // selection for disciplines
 	private HBox hbox_disciplineCheck;
 
@@ -59,10 +67,13 @@ public class MainViewController implements Initializable {
 	@FXML // POC for progress display
 	private ProgressBar pb_getItems;
 
-	private Map<CraftingDisciplines, CheckBox> craftingDisceplinesToCheckBox;
+	private Map<CraftingDisciplines, CheckBox> craftingDisceplinesToCheckBox = new HashMap<>();
+	private Map<Recipe, RecipeView> recipeViews = new HashMap<>();
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		txt_filter.setDisable(true);
+		
 		pb_getItems.progressProperty().bind(Data.getInstance().progress);
 		new Thread(() -> {
 			try {
@@ -76,7 +87,6 @@ public class MainViewController implements Initializable {
 		txt_charName.setText(ClientFactory.CHAR_NAME);
 
 		// create check boxes for discipline selection
-		craftingDisceplinesToCheckBox = new HashMap<>();
 		for (CraftingDisciplines discipline : CraftingDisciplines.values()) {
 			CheckBox checkBox = new CheckBox(discipline.toString());
 			craftingDisceplinesToCheckBox.put(discipline, checkBox);
@@ -91,14 +101,19 @@ public class MainViewController implements Initializable {
 			radio.setOnAction(event -> GuildWars2.setLanguage(lang));
 			hbox_langRadio.getChildren().add(radio);
 		}
-
+		
+		txt_filter.textProperty().addListener((ChangeListener<String>) (observable, oldValue, newValue) -> filter(newValue));
 	}
 
 	@FXML
 	private void analyse() throws GuildWars2Exception, IOException {
+		btn_analyse.setDisable(true);
+		
 		// clear previous analysation
 		scroll_recipes.getChildren().clear();
-
+		vbox_charDisciplines.getChildren().clear();
+		recipeViews.clear();
+		
 		// get ALL recipes
 		List<Recipe> allRecipes = Data.getInstance().getAllRecipes();
 
@@ -144,9 +159,17 @@ public class MainViewController implements Initializable {
 
 		// display all discoverable recipes
 		for (Recipe recipe : collect) {
-			RecipeViewController controller = new RecipeViewController(recipe);
-			scroll_recipes.getChildren().add(controller);
+//			RecipeViewController recipeView = new RecipeViewController(recipe);
+			RecipeView recipeView = new RecipeTreeViewController(recipe);
+			recipeViews.put(recipe, recipeView);
+			scroll_recipes.getChildren().add(recipeView);
 		}
+		btn_analyse.setDisable(false);
+		txt_filter.setDisable(false);
 	}
-
+	
+	private void filter(String value) {
+		 System.out.println(value);
+	}
+	
 }

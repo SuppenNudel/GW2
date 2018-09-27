@@ -19,7 +19,7 @@
             <VBox fx:id="vbox_charDisciplines" />
             <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
                <content>
-                  <FlowPane fx:id="scroll_recipes" prefHeight="400.0" prefWidth="600.0" />
+                  <FlowPane fx:id="scroll_recipes" hgap="10.0" prefHeight="400.0" prefWidth="600.0" vgap="20.0" />
                </content>
             </ScrollPane>
          </children>
@@ -49,7 +49,8 @@
             <HBox fx:id="hbox_disciplineCheck" />
             <HBox fx:id="hbox_langRadio" />
             <CheckBox fx:id="chbx_fromRecipe" mnemonicParsing="false" text="include from recipe" />
-            <Button mnemonicParsing="false" onAction="#analyse" text="Analyse" />
+            <Button fx:id="btn_analyse" mnemonicParsing="false" onAction="#analyse" text="Analyse" />
+            <TextField fx:id="txt_filter" promptText="Filter" />
          </children>
       </VBox>
    </top>

@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,7 +29,7 @@ public class Data {
 	private List<Recipe> allRecipes;
 
 	private List<Item> allItems;
-	private Map<Integer, Item> allItemsMap;
+	private Map<Integer, Item> allItemsMap = new HashMap<>();;
 
 	private Data() {
 		try {
@@ -110,12 +111,42 @@ public class Data {
 		}
 		return allRecipes;
 	}
-
+	
 	public Item getItemById(int id) {
-		if (allItemsMap == null) {
-			allItemsMap = getAllItems().stream().collect(Collectors.toMap(Item::getId, c -> c));
+		Item item = allItemsMap.get(id);
+		if(item == null) {
+			item = getItemById(new int[] {id}).get(0);
 		}
-		return allItemsMap.get(id);
+		return item;
+	}
+
+	public List<Item> getItemById(int... ids) {
+//		if(allItems == null) {
+//			allItemsMap = getAllItems().stream().collect(Collectors.toMap(Item::getId, c -> c));
+//		}
+		
+		GuildWars2 gw2 = GuildWars2.getInstance();
+		
+		List<Integer> toRequest = new ArrayList<>();
+		List<Item> result = new ArrayList<>();
+		for(int id : ids) {
+			Item item = allItemsMap.get(id);
+			if(item == null) {
+				toRequest.add(id);
+			} else {
+				result.add(item);
+			}
+		}
+		int[] toRequestArray = toRequest.stream().mapToInt(i -> i).toArray();
+		try {
+			List<Item> itemInfo = gw2.getSynchronous().getItemInfo(toRequestArray);
+			Map<Integer, Item> collect = itemInfo.stream().collect(Collectors.toMap(Item::getId, item -> item));
+			allItemsMap.putAll(collect);
+			result.addAll(itemInfo);
+		} catch (GuildWars2Exception e) {
+			e.printStackTrace();
+		}
+		return result;
 	}
 
 	public List<Item> getAllItems() {
