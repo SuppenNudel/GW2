@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -26,20 +27,23 @@
         </rowConstraints>
          <children>
             <Label text="Source" />
-            <Label text="Type" GridPane.rowIndex="2" />
+            <Label text="Recipe Type" GridPane.rowIndex="2" />
             <Label text="Output qty." GridPane.rowIndex="3" />
             <Label text="Discipline" GridPane.rowIndex="4" />
             <Label text="Req. rating" GridPane.rowIndex="5" />
             <VBox fx:id="vbox_discipline" GridPane.columnIndex="1" GridPane.rowIndex="4" />
             <Label fx:id="lbl_source" text="&lt;Source&gt;" GridPane.columnIndex="1" />
-            <Label fx:id="lbl_type" text="&lt;Type&gt;" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <Label fx:id="lbl_recipeType" text="&lt;Recipe Type&gt;" GridPane.columnIndex="1" GridPane.rowIndex="2" />
             <Label fx:id="lbl_outputQty" text="&lt;Output qty.&gt;" GridPane.columnIndex="1" GridPane.rowIndex="3" />
             <Label fx:id="lbl_reqRating" text="&lt;Req. rating&gt;" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-            <Label text="Material Type" GridPane.rowIndex="1" />
-            <Label fx:id="lbl_materialType" text="&lt;Material Type&gt;" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <Label text="Item Type" GridPane.rowIndex="1" />
+            <Label fx:id="lbl_itemType" text="&lt;Item Type&gt;" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          </children>
       </GridPane>
       <Label text="Ingredients" />
       <VBox fx:id="vbox_ingredients" />
    </children>
+   <padding>
+      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+   </padding>
 </fx:root>

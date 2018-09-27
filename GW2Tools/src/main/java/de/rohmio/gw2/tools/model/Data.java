@@ -91,11 +91,11 @@ public class Data {
 							List<Recipe> recipes = response.body();
 							// add elements to member list
 							allRecipes.addAll(recipes);
-							System.out.println(recipes);
 							++iterationsDone;
-							System.out.println(String.format("Iteration %d of %d", iterationsDone, iterationsToDo));
 							progress.set(1.0 * iterationsDone / iterationsToDo);
-							System.out.println(progress);
+							if(progress.get() == 1.0) {
+								System.out.println("finished loading recipes");
+							}
 						}
 
 						@Override
@@ -106,6 +106,7 @@ public class Data {
 					e.printStackTrace();
 				}
 			}
+
 		}
 		return allRecipes;
 	}
@@ -132,7 +133,6 @@ public class Data {
 					int[] chunkArray = Arrays.copyOfRange(allItemIDArray, i,
 							Math.min(allItemIDArray.length, i + chunk));
 					List<Item> itemInfo = gw2.getSynchronous().getItemInfo(chunkArray);
-					System.out.println(itemInfo);
 					allItems.addAll(itemInfo);
 				}
 				System.out.println("finished loading items");

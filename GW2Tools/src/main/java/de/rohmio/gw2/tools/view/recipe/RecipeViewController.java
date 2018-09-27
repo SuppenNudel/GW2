@@ -37,9 +37,9 @@ public class RecipeViewController extends VBox implements Initializable {
 	@FXML
 	private Label lbl_source;
 	@FXML
-	private Label lbl_materialType;
+	private Label lbl_recipeType;
 	@FXML
-	private Label lbl_type;
+	private Label lbl_itemType;
 	@FXML
 	private Label lbl_outputQty;
 	@FXML
@@ -109,8 +109,7 @@ public class RecipeViewController extends VBox implements Initializable {
 								e.printStackTrace();
 							}
 						});
-
-						// lbl_materialType.setText(outputItem.getDetails().toString());
+						lbl_itemType.setText(outputItem.getType().name());
 					});
 				}
 
@@ -122,7 +121,7 @@ public class RecipeViewController extends VBox implements Initializable {
 			e2.printStackTrace();
 		}
 		lbl_source.setText(String.valueOf(recipe.getFlags()));
-		lbl_type.setText(String.valueOf(recipe.getType()));
+		lbl_recipeType.setText(String.valueOf(recipe.getType()));
 		lbl_outputQty.setText(String.valueOf(recipe.getOutputItemCount()));
 		for (CraftingDisciplines discipline : recipe.getDisciplines()) {
 			vbox_discipline.getChildren().add(new Label(String.valueOf(discipline.name())));
