@@ -32,12 +32,12 @@
          </children></AnchorPane>
    </center>
    <bottom>
-      <VBox BorderPane.alignment="CENTER">
+      <VBox fx:id="vbox_tasks" BorderPane.alignment="CENTER">
          <children>
             <HBox VBox.vgrow="ALWAYS">
                <children>
                   <Label text="Label" />
-                  <ProgressBar progress="0.0" HBox.hgrow="ALWAYS">
+                  <ProgressBar fx:id="pb_getItems" progress="0.0" HBox.hgrow="ALWAYS">
                      <HBox.margin>
                         <Insets />
                      </HBox.margin>

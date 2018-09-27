@@ -1,8 +1,10 @@
 package de.rohmio.gw2.tools;
 
+import de.rohmio.gw2.tools.model.Data;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 
 /**
  * Unit test for simple App.
@@ -30,5 +32,9 @@ public class AppTest extends TestCase {
 	 */
 	public void testApp() {
 		assertTrue(true);
+	}
+
+	public void testRecipes() throws GuildWars2Exception {
+		Data.getInstance().getAllRecipes();
 	}
 }

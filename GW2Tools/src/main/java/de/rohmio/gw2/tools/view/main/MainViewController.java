@@ -14,6 +14,7 @@ import de.rohmio.gw2.tools.view.recipe.RecipeViewController;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -43,10 +44,21 @@ public class MainViewController implements Initializable {
 	private VBox vbox_tasks;
 
 	@FXML
+	private ProgressBar pb_getItems;
+
 	private Map<CraftingDisciplines, CheckBox> cbx_craftingDisceplines;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		pb_getItems.progressProperty().bind(Data.getInstance().progress);
+		new Thread(() -> {
+			try {
+				Data.getInstance().getAllRecipes();
+			} catch (GuildWars2Exception e) {
+				e.printStackTrace();
+			}
+		}).start();
+
 		txt_apiKey.setText(ClientFactory.ACCESS_KEY);
 		txt_charName.setText(ClientFactory.CHAR_NAME);
 
