@@ -1,5 +1,8 @@
 package de.rohmio.gw2.tools.model;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,6 +15,8 @@ import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -38,6 +43,22 @@ public class Data {
 			data = new Data();
 		}
 		return data;
+	}
+
+	public File getImage(String url) throws IOException {
+		String fileName = "data/img/" + new File(url).getName();
+		final File file = new File(fileName);
+		if (!file.exists()) {
+			Request request = new Request.Builder().url(url).build();
+			OkHttpClient client = ClientFactory.getClient();
+			okhttp3.Response response = client.newCall(request).execute();
+			file.getParentFile().mkdirs();
+			file.createNewFile();
+			FileOutputStream fileOutputStream = new FileOutputStream(file);
+			fileOutputStream.write(response.body().bytes());
+			fileOutputStream.close();
+		}
+		return file;
 	}
 
 	public DoubleProperty progress = new SimpleDoubleProperty();
