@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
@@ -12,7 +13,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
+<BorderPane xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
    <center>
       <VBox>
          <children>
@@ -44,8 +45,13 @@
    <top>
       <VBox>
          <children>
-            <TextField fx:id="txt_apiKey" promptText="API KEY" />
-            <TextField fx:id="txt_charName" promptText="Character Name" />
+            <HBox>
+               <children>
+                  <TextField fx:id="txt_apiKey" promptText="API KEY" HBox.hgrow="ALWAYS" />
+                  <Button mnemonicParsing="false" onAction="#getCharacters" text="Get Characters" />
+               </children>
+            </HBox>
+            <ChoiceBox fx:id="choice_charName" prefWidth="150.0" />
             <HBox fx:id="hbox_disciplineCheck" />
             <HBox fx:id="hbox_langRadio" />
             <CheckBox fx:id="chbx_fromRecipe" mnemonicParsing="false" text="include from recipe" />
