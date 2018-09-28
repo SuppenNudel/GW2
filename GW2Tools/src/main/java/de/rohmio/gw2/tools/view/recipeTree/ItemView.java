@@ -16,7 +16,7 @@ import me.xhsun.guildwars2wrapper.model.v2.Item;
 public class ItemView extends VBox {
 	
 	public ItemView(Item item) {
-		setAlignment(Pos.CENTER);
+		setAlignment(Pos.TOP_CENTER);
 		
 		getChildren().add(new Label(item.getName()));
 		Platform.runLater(() -> {

@@ -24,6 +24,7 @@ import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
+import me.xhsun.guildwars2wrapper.model.v2.Recipe.Ingredient;
 import me.xhsun.guildwars2wrapper.model.v2.util.comm.CraftingDisciplines;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -50,11 +51,8 @@ public class RecipeViewController extends RecipeView implements Initializable {
 	@FXML
 	private VBox vbox_ingredients;
 
-	private Recipe recipe;
-
 	public RecipeViewController(Recipe recipe) {
-		this.recipe = recipe;
-
+		super(recipe);
 		FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("RecipeView.fxml"));
 		fxmlLoader.setRoot(this);
 		fxmlLoader.setController(this);
@@ -68,16 +66,16 @@ public class RecipeViewController extends RecipeView implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		GuildWars2 gw2 = GuildWars2.getInstance();
-		List<Integer> list = recipe.getIngredients().stream().map(i -> i.getItemId()).collect(Collectors.toList());
-		list.add(recipe.getOutputItemId());
-		int[] itemIds = list.stream().mapToInt(i -> i.intValue()).toArray();
+		List<Integer> list = getRecipe().getIngredients().stream().map(Ingredient::getItemId).collect(Collectors.toList());
+		list.add(getRecipe().getOutputItemId());
+		int[] itemIds = list.stream().mapToInt(Integer::intValue).toArray();
 		try {
 			gw2.getAsynchronous().getItemInfo(itemIds, new Callback<List<Item>>() {
 				@Override
 				public void onResponse(Call<List<Item>> call, Response<List<Item>> response) {
 					Map<Integer, Item> collect = response.body().stream()
 							.collect(Collectors.toMap(Item::getId, c -> c));
-					recipe.getIngredients().forEach(i -> {
+					getRecipe().getIngredients().forEach(i -> {
 						Platform.runLater(() -> {
 							Item item = collect.get(i.getItemId());
 							Label lbl_count = new Label(String.valueOf(i.getCount()));
@@ -97,7 +95,7 @@ public class RecipeViewController extends RecipeView implements Initializable {
 						});
 					});
 					Platform.runLater(() -> {
-						Item outputItem = collect.get(recipe.getOutputItemId());
+						Item outputItem = collect.get(getRecipe().getOutputItemId());
 						lbl_outputName.setText(outputItem.getName());
 
 						String icon = outputItem.getIcon();
@@ -121,13 +119,13 @@ public class RecipeViewController extends RecipeView implements Initializable {
 		} catch (NullPointerException | GuildWars2Exception e2) {
 			e2.printStackTrace();
 		}
-		lbl_source.setText(String.valueOf(recipe.getFlags()));
-		lbl_recipeType.setText(String.valueOf(recipe.getType()));
-		lbl_outputQty.setText(String.valueOf(recipe.getOutputItemCount()));
-		for (CraftingDisciplines discipline : recipe.getDisciplines()) {
+		lbl_source.setText(String.valueOf(getRecipe().getFlags()));
+		lbl_recipeType.setText(String.valueOf(getRecipe().getType()));
+		lbl_outputQty.setText(String.valueOf(getRecipe().getOutputItemCount()));
+		for (CraftingDisciplines discipline : getRecipe().getDisciplines()) {
 			vbox_discipline.getChildren().add(new Label(String.valueOf(discipline.name())));
 		}
-		lbl_reqRating.setText(String.valueOf(recipe.getMinRating()));
+		lbl_reqRating.setText(String.valueOf(getRecipe().getMinRating()));
 	}
 
 }

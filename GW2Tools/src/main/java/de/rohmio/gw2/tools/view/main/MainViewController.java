@@ -2,6 +2,8 @@ package de.rohmio.gw2.tools.view.main;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +66,9 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private CheckBox chbx_fromRecipe;
+	
+	@FXML
+	private CheckBox chbx_recipesRecursively;
 
 	@FXML // current tasks done by application
 	private VBox vbox_tasks;
@@ -131,7 +136,7 @@ public class MainViewController implements Initializable {
 		List<Integer> charRecipes = character.getRecipes();
 
 		// get filtered list
-		List<Recipe> collect = allRecipes.stream()
+		List<Recipe> recipesToShow = allRecipes.stream()
 				// remove already learned
 				.filter(r -> !charRecipes.contains(r.getId()))
 				// remove only available through item
@@ -158,12 +163,22 @@ public class MainViewController implements Initializable {
 
 		System.out.println("All: " + allRecipes.size());
 		System.out.println("Char: " + charRecipes.size());
-		System.out.println("To Discover: " + collect.size());
-
+		System.out.println("To Discover: " + recipesToShow.size());
+		
+		// fetch all Item information here, so they don't have to be called individually
+		List<Integer> itemIds = new ArrayList<>();
+		for(Recipe recipe : recipesToShow) {
+			itemIds.add(recipe.getOutputItemId());
+			List<Integer> ingredientIds = recipe.getIngredients().stream().map(Ingredient::getItemId).collect(Collectors.toList());
+			itemIds.addAll(ingredientIds);
+		}
+		int[] itemIdsArray = itemIds.stream().mapToInt(Integer::intValue).toArray();
+		Data.getInstance().getItemsById(itemIdsArray); // now they are saved locally in a map
+		
 		// display all discoverable recipes
-		for (Recipe recipe : collect) {
+		for (Recipe recipe : recipesToShow) {
 			// RecipeViewController recipeView = new RecipeViewController(recipe);
-			RecipeView recipeView = new RecipeTreeViewController(recipe);
+			RecipeView recipeView = new RecipeTreeViewController(recipe, chbx_recipesRecursively.isSelected());
 			recipeViews.put(recipe, recipeView);
 			scroll_recipes.getChildren().add(recipeView);
 		}
@@ -176,16 +191,13 @@ public class MainViewController implements Initializable {
 		for (Recipe recipe : recipeViews.keySet()) {
 			Item outputItem = Data.getInstance().getItemById(recipe.getOutputItemId());
 			String outputItemName = outputItem.getName();
-
-			boolean show = false;
-			boolean contains = outputItemName.toLowerCase().contains(filterText.toLowerCase());
-			show = show || contains;
-
-			for (Ingredient ingredient : recipe.getIngredients()) {
-				Item ingredientItem = Data.getInstance().getItemById(ingredient.getItemId());
-				boolean containsIngr = ingredientItem.getName().toLowerCase().contains(filterText.toLowerCase());
-				show = show || containsIngr;
+			
+			String compoundNames = outputItemName;
+			for(Ingredient ingredient : recipe.getIngredients()) {
+				compoundNames = compoundNames + " " + Data.getInstance().getItemById(ingredient.getItemId()).getName();
 			}
+			
+			boolean show = Arrays.stream(filterText.toLowerCase().split(" ")).allMatch(compoundNames.toLowerCase()::contains);
 
 			RecipeView view = recipeViews.get(recipe);
 			view.setVisible(show);

@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
+<BorderPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
    <center>
       <VBox>
          <children>
@@ -55,7 +55,12 @@
             <HBox fx:id="hbox_disciplineCheck" />
             <HBox fx:id="hbox_langRadio" />
             <CheckBox fx:id="chbx_fromRecipe" mnemonicParsing="false" text="include from recipe" />
-            <Button fx:id="btn_analyse" mnemonicParsing="false" onAction="#analyse" text="Analyse" />
+            <HBox alignment="CENTER_LEFT">
+               <children>
+                  <Button fx:id="btn_analyse" mnemonicParsing="false" onAction="#analyse" text="Analyse" />
+                  <CheckBox fx:id="chbx_recipesRecursively" mnemonicParsing="false" text="Show Recipes Recursively" />
+               </children>
+            </HBox>
             <TextField fx:id="txt_filter" promptText="Filter" />
          </children>
       </VBox>
