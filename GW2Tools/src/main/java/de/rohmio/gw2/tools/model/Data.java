@@ -10,8 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Item;
@@ -26,11 +28,15 @@ public class Data {
 
 	private static Data data;
 
-	private List<Recipe> allRecipes;
-	private Map<Integer, Recipe> allRecipesMap = new HashMap<>();
+	private ObservableMap<Integer, Recipe> recipes = FXCollections.observableHashMap();
+	private IntegerProperty recipesSize = new SimpleIntegerProperty();
+
+	public ObservableMap<Integer, Recipe> recipesProperty() {
+		return recipes;
+	}
 
 	private List<Item> allItems;
-	private Map<Integer, Item> allItemsMap = new HashMap<>();;
+	private Map<Integer, Item> allItemsMap = new HashMap<>();
 
 	private Data() {
 		try {
@@ -63,69 +69,42 @@ public class Data {
 		return file;
 	}
 
-	public DoubleProperty progress = new SimpleDoubleProperty();
-	private int iterationsDone;
+	public IntegerProperty getRecipesSize() {
+		return recipesSize;
+	}
+	public ObservableMap<Integer, Recipe> getAllRecipes() throws GuildWars2Exception {
+		GuildWars2 gw2 = GuildWars2.getInstance();
 
-	public List<Recipe> getAllRecipes() throws GuildWars2Exception {
-		if (allRecipes == null) {
-			progress.set(0);
-			iterationsDone = 0;
-			GuildWars2 gw2 = GuildWars2.getInstance();
+		// first get all ids
+		List<Integer> result = gw2.getSynchronous().getAllRecipeID();
+		// convert to array
+		int[] allRecipeIDArray = result.stream().mapToInt(i -> i).toArray();
+		recipesSize.set(allRecipeIDArray.length);
 
-			// first get all ids
-			List<Integer> result = gw2.getSynchronous().getAllRecipeID();
-			// convert to array
-			int[] allRecipeIDArray = result.stream().mapToInt(i -> i).toArray();
-
-			// init member list
-			allRecipes = new ArrayList<>();
-			allRecipesMap = new HashMap<>();
-
-			int chunk = 200; // chunk size to divide
-			List<int[]> chunkedRecipeIds = chunkUp(chunk, allRecipeIDArray);
-			int iterationsToDo = 1 + allRecipeIDArray.length / chunk;
-			for(int[] recipeIds : chunkedRecipeIds) {
-				try {
-					// request recipes' info
-					gw2.getAsynchronous().getRecipeInfo(recipeIds, new Callback<List<Recipe>>() {
-						@Override
-						public void onResponse(Call<List<Recipe>> call, Response<List<Recipe>> response) {
-							List<Recipe> recipes = response.body();
-							// add elements to member list
-							allRecipes.addAll(recipes);
-							Map<Integer, Recipe> collect = recipes.stream().collect(Collectors.toMap(Recipe::getId, recipe -> recipe));
-							allRecipesMap.putAll(collect);
-							++iterationsDone;
-							progress.set(1.0 * iterationsDone / iterationsToDo);
-							if (progress.get() == 1.0) {
-								System.out.println("finished loading recipes");
-							}
-						}
-
-						@Override
-						public void onFailure(Call<List<Recipe>> call, Throwable t) {
-						}
-					});
-				} catch (NullPointerException | GuildWars2Exception e) {
-					e.printStackTrace();
+		int chunk = 200; // chunk size to divide
+		List<int[]> chunkedRecipeIds = chunkUp(chunk, allRecipeIDArray);
+		for (int[] recipeIds : chunkedRecipeIds) {
+			// request recipes' info
+			gw2.getAsynchronous().getRecipeInfo(recipeIds, new Callback<List<Recipe>>() {
+				@Override
+				public void onResponse(Call<List<Recipe>> call, Response<List<Recipe>> response) {
+					List<Recipe> recipesResult = response.body();
+					// add elements to member list
+					Map<Integer, Recipe> collect = recipesResult.stream().collect(Collectors.toMap(Recipe::getId, recipe -> recipe));
+					synchronized (recipes) {
+						recipes.putAll(collect);
+					}
 				}
-			}
 
+				@Override
+				public void onFailure(Call<List<Recipe>> call, Throwable t) {
+				}
+			});
 		}
-		return allRecipes;
+
+		return recipes;
 	}
-	
-	public Map<Integer, Recipe> getAllRecipesMap() {
-		if(allRecipesMap == null) {
-			try {
-				getAllRecipes();
-			} catch (GuildWars2Exception e) {
-				e.printStackTrace();
-			}
-		}
-		return allRecipesMap;
-	}
-	
+
 	private List<int[]> chunkUp(int chunkSize, int[] array) {
 		List<int[]> list = new ArrayList<>();
 		for (int i = 0; i < array.length; i += chunkSize) {
@@ -158,7 +137,7 @@ public class Data {
 		}
 		int[] toRequestArray = toRequest.stream().mapToInt(i -> i).toArray();
 		List<int[]> chunkUp = chunkUp(200, toRequestArray);
-		for(int[] itemIds : chunkUp) {
+		for (int[] itemIds : chunkUp) {
 			try {
 				List<Item> itemInfo = gw2.getSynchronous().getItemInfo(itemIds);
 				Map<Integer, Item> collect = itemInfo.stream().collect(Collectors.toMap(Item::getId, item -> item));

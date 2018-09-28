@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.view.RecipeView;
 import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -66,7 +68,7 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private CheckBox chbx_fromRecipe;
-	
+
 	@FXML
 	private CheckBox chbx_recipesRecursively;
 
@@ -75,6 +77,8 @@ public class MainViewController implements Initializable {
 
 	@FXML // POC for progress display
 	private ProgressBar pb_getItems;
+	@FXML
+	private ProgressBar pb_getRecipes;
 
 	private Map<CraftingDisciplines, CheckBox> craftingDisceplinesToCheckBox = new HashMap<>();
 	private Map<Recipe, RecipeView> recipeViews = new HashMap<>();
@@ -83,14 +87,10 @@ public class MainViewController implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		txt_filter.setDisable(true);
 
-		pb_getItems.progressProperty().bind(Data.getInstance().progress);
-		new Thread(() -> {
-			try {
-				Data.getInstance().getAllRecipes();
-			} catch (GuildWars2Exception e) {
-				e.printStackTrace();
-			}
-		}).start();
+		Data.getInstance().recipesProperty().addListener((MapChangeListener<Integer, Recipe>) change -> {
+			double progress = change.getMap().size() / Data.getInstance().getRecipesSize().get();
+			pb_getRecipes.setProgress(progress);
+		});
 
 		txt_apiKey.setText(ClientFactory.ACCESS_KEY);
 
@@ -124,7 +124,7 @@ public class MainViewController implements Initializable {
 		recipeViews.clear();
 
 		// get ALL recipes
-		List<Recipe> allRecipes = Data.getInstance().getAllRecipes();
+		Collection<Recipe> allRecipes = Data.getInstance().getAllRecipes().values();
 
 		// get recipes selected character has already learned
 		Character character = GuildWars2.getInstance().getSynchronous().getCharacter(txt_apiKey.getText(),
@@ -164,17 +164,18 @@ public class MainViewController implements Initializable {
 		System.out.println("All: " + allRecipes.size());
 		System.out.println("Char: " + charRecipes.size());
 		System.out.println("To Discover: " + recipesToShow.size());
-		
+
 		// fetch all Item information here, so they don't have to be called individually
 		List<Integer> itemIds = new ArrayList<>();
-		for(Recipe recipe : recipesToShow) {
+		for (Recipe recipe : recipesToShow) {
 			itemIds.add(recipe.getOutputItemId());
-			List<Integer> ingredientIds = recipe.getIngredients().stream().map(Ingredient::getItemId).collect(Collectors.toList());
+			List<Integer> ingredientIds = recipe.getIngredients().stream().map(Ingredient::getItemId)
+					.collect(Collectors.toList());
 			itemIds.addAll(ingredientIds);
 		}
 		int[] itemIdsArray = itemIds.stream().mapToInt(Integer::intValue).toArray();
 		Data.getInstance().getItemsById(itemIdsArray); // now they are saved locally in a map
-		
+
 		// display all discoverable recipes
 		for (Recipe recipe : recipesToShow) {
 			// RecipeViewController recipeView = new RecipeViewController(recipe);
@@ -191,13 +192,14 @@ public class MainViewController implements Initializable {
 		for (Recipe recipe : recipeViews.keySet()) {
 			Item outputItem = Data.getInstance().getItemById(recipe.getOutputItemId());
 			String outputItemName = outputItem.getName();
-			
+
 			String compoundNames = outputItemName;
-			for(Ingredient ingredient : recipe.getIngredients()) {
+			for (Ingredient ingredient : recipe.getIngredients()) {
 				compoundNames = compoundNames + " " + Data.getInstance().getItemById(ingredient.getItemId()).getName();
 			}
-			
-			boolean show = Arrays.stream(filterText.toLowerCase().split(" ")).allMatch(compoundNames.toLowerCase()::contains);
+
+			boolean show = Arrays.stream(filterText.toLowerCase().split(" "))
+					.allMatch(compoundNames.toLowerCase()::contains);
 
 			RecipeView view = recipeViews.get(recipe);
 			view.setVisible(show);

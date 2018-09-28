@@ -48,7 +48,7 @@ public class RecipeTreeViewController extends RecipeView {
 					ItemView itemView = new ItemView(ingredientItem);
 					hbox_ingredients.getChildren().add(itemView);
 				} else {
-					Recipe subRecipe = Data.getInstance().getAllRecipesMap().get(searchRecipes.get(0));
+					Recipe subRecipe = Data.getInstance().getAllRecipes().get(searchRecipes.get(0));
 					hbox_ingredients.getChildren().add(createTree(subRecipe));
 				}
 			} catch (GuildWars2Exception e) {
