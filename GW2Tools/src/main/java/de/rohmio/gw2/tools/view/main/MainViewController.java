@@ -52,6 +52,9 @@ public class MainViewController implements Initializable {
 	@FXML
 	private TextField txt_filter;
 
+	@FXML
+	private TextField txt_minLevel;
+
 	@FXML // selection for disciplines
 	private HBox hbox_disciplineCheck;
 
@@ -66,7 +69,7 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private CheckBox chbx_fromRecipe;
-	
+
 	@FXML
 	private CheckBox chbx_recipesRecursively;
 
@@ -110,8 +113,8 @@ public class MainViewController implements Initializable {
 			hbox_langRadio.getChildren().add(radio);
 		}
 
-		txt_filter.textProperty()
-				.addListener((ChangeListener<String>) (observable, oldValue, newValue) -> filter(newValue));
+		txt_filter.textProperty().addListener((ChangeListener<String>) (observable, oldValue, newValue) -> filter());
+		txt_minLevel.textProperty().addListener((ChangeListener<String>) (observable, oldValue, newValue) -> filter());
 	}
 
 	@FXML
@@ -164,17 +167,18 @@ public class MainViewController implements Initializable {
 		System.out.println("All: " + allRecipes.size());
 		System.out.println("Char: " + charRecipes.size());
 		System.out.println("To Discover: " + recipesToShow.size());
-		
+
 		// fetch all Item information here, so they don't have to be called individually
 		List<Integer> itemIds = new ArrayList<>();
-		for(Recipe recipe : recipesToShow) {
+		for (Recipe recipe : recipesToShow) {
 			itemIds.add(recipe.getOutputItemId());
-			List<Integer> ingredientIds = recipe.getIngredients().stream().map(Ingredient::getItemId).collect(Collectors.toList());
+			List<Integer> ingredientIds = recipe.getIngredients().stream().map(Ingredient::getItemId)
+					.collect(Collectors.toList());
 			itemIds.addAll(ingredientIds);
 		}
 		int[] itemIdsArray = itemIds.stream().mapToInt(Integer::intValue).toArray();
 		Data.getInstance().getItemsById(itemIdsArray); // now they are saved locally in a map
-		
+
 		// display all discoverable recipes
 		for (Recipe recipe : recipesToShow) {
 			// RecipeViewController recipeView = new RecipeViewController(recipe);
@@ -186,18 +190,27 @@ public class MainViewController implements Initializable {
 		txt_filter.setDisable(false);
 	}
 
-	private void filter(String value) {
+	private void filter() {
 		String filterText = txt_filter.getText();
 		for (Recipe recipe : recipeViews.keySet()) {
 			Item outputItem = Data.getInstance().getItemById(recipe.getOutputItemId());
 			String outputItemName = outputItem.getName();
-			
+
 			String compoundNames = outputItemName;
-			for(Ingredient ingredient : recipe.getIngredients()) {
+			for (Ingredient ingredient : recipe.getIngredients()) {
 				compoundNames = compoundNames + " " + Data.getInstance().getItemById(ingredient.getItemId()).getName();
 			}
-			
-			boolean show = Arrays.stream(filterText.toLowerCase().split(" ")).allMatch(compoundNames.toLowerCase()::contains);
+
+			boolean txtContains = Arrays.stream(filterText.toLowerCase().split(" "))
+					.allMatch(compoundNames.toLowerCase()::contains);
+			int minLevel = 0;
+			try {
+				minLevel = Integer.parseInt(txt_minLevel.getText());
+			} catch (NumberFormatException e) {
+			}
+			boolean filterMinLevel = minLevel <= recipe.getMinRating();
+
+			boolean show = txtContains && filterMinLevel;
 
 			RecipeView view = recipeViews.get(recipe);
 			view.setVisible(show);
@@ -207,12 +220,14 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private void getCharacters() throws GuildWars2Exception {
+		choice_charName.getItems().clear();
+
 		GuildWars2 gw2 = GuildWars2.getInstance();
-		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(ClientFactory.ACCESS_KEY);
+		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(txt_apiKey.getText());
 		choice_charName.getItems().addAll(allCharacterName);
 		choice_charName.getSelectionModel().select(0);
 		String name = choice_charName.getSelectionModel().getSelectedItem();
-		CharacterCraftingLevel characterCrafting = gw2.getSynchronous().getCharacterCrafting(ClientFactory.ACCESS_KEY,
+		CharacterCraftingLevel characterCrafting = gw2.getSynchronous().getCharacterCrafting(txt_apiKey.getText(),
 				name);
 		for (Discipline discipline : characterCrafting.getCrafting()) {
 			CheckBox checkBox = craftingDisceplinesToCheckBox.get(discipline.getDiscipline());
