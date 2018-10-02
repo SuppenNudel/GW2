@@ -127,7 +127,7 @@ public class MainViewController implements Initializable {
 		recipeViews.clear();
 
 		// get ALL recipes
-		List<Recipe> allRecipes = Data.getInstance().getAllRecipes();
+		List<Recipe> allRecipes = new ArrayList<>(Data.getInstance().getAllRecipes());
 
 		// get recipes selected character has already learned
 		Character character = GuildWars2.getInstance().getSynchronous().getCharacter(txt_apiKey.getText(),

@@ -1,14 +1,23 @@
 package de.rohmio.gw2.tools.model;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -26,10 +35,8 @@ public class Data {
 
 	private static Data data;
 
-	private List<Recipe> allRecipes;
 	private Map<Integer, Recipe> allRecipesMap = new HashMap<>();
 
-	private List<Item> allItems;
 	private Map<Integer, Item> allItemsMap = new HashMap<>();;
 
 	private Data() {
@@ -65,21 +72,69 @@ public class Data {
 
 	public DoubleProperty progress = new SimpleDoubleProperty();
 	private int iterationsDone;
+	
+	private <T> T getCache(String fileName, Class<T> type) {
+		Gson gson = new Gson();
+		File file = new File(String.format("data/cache/%s.json", fileName));
+		T object = null;
+		if(file.exists()) {
+			try {
+				object = gson.fromJson(new FileReader(file), type);
+			} catch (JsonSyntaxException e) {
+				e.printStackTrace();
+			} catch (JsonIOException e) {
+				e.printStackTrace();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+		return object;
+	}
+	
+	private void writeCache(String fileName, Object object) {
+		Gson gson = new Gson();
+		File file = new File(String.format("data/cache/%s.json", fileName));
+		file.getParentFile().mkdirs();
+		try {
+			file.createNewFile();
+			String json = gson.toJson(object);
+			FileWriter fileWriter = new FileWriter(file);
+			fileWriter.write(json);
+			fileWriter.close();
+		} catch (JsonIOException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-	public List<Recipe> getAllRecipes() throws GuildWars2Exception {
-		if (allRecipes == null) {
+	public Collection<Recipe> getAllRecipes() throws GuildWars2Exception {
+		if (allRecipesMap.isEmpty()) {
 			progress.set(0);
 			iterationsDone = 0;
 			GuildWars2 gw2 = GuildWars2.getInstance();
 
 			// first get all ids
-			List<Integer> result = gw2.getSynchronous().getAllRecipeID();
+			List<Integer> allrecipeIds = gw2.getSynchronous().getAllRecipeID();
+			List<Integer> toRequest = new ArrayList<>(allrecipeIds);
+			
+			for(Integer recipeId : allrecipeIds) {
+				String fileName = "recipe/"+recipeId;
+				if(allRecipesMap.containsKey(recipeId)) {
+					toRequest.remove(recipeId);
+				} else { // not already loaded
+					Recipe recipe = getCache(fileName, Recipe.class);
+					if(recipe != null) {
+						toRequest.remove(recipeId);
+						synchronized (allRecipesMap) {
+							allRecipesMap.put(recipeId, recipe);
+						}
+					}
+				}
+			}
+			
 			// convert to array
-			int[] allRecipeIDArray = result.stream().mapToInt(i -> i).toArray();
-
-			// init member list
-			allRecipes = new ArrayList<>();
-			allRecipesMap = new HashMap<>();
+			int[] allRecipeIDArray = toRequest.stream().mapToInt(i -> i).toArray();
 
 			int chunk = 200; // chunk size to divide
 			List<int[]> chunkedRecipeIds = chunkUp(chunk, allRecipeIDArray);
@@ -91,10 +146,18 @@ public class Data {
 						@Override
 						public void onResponse(Call<List<Recipe>> call, Response<List<Recipe>> response) {
 							List<Recipe> recipes = response.body();
-							// add elements to member list
-							allRecipes.addAll(recipes);
+							
+							recipes.forEach(new Consumer<Recipe>() {
+								@Override
+								public void accept(Recipe recipe) {
+									writeCache("recipe/"+recipe.getId(), recipe);
+								}
+							});							
+							
 							Map<Integer, Recipe> collect = recipes.stream().collect(Collectors.toMap(Recipe::getId, recipe -> recipe));
-							allRecipesMap.putAll(collect);
+							synchronized (allRecipesMap) {
+								allRecipesMap.putAll(collect);
+							}
 							++iterationsDone;
 							progress.set(1.0 * iterationsDone / iterationsToDo);
 							if (progress.get() == 1.0) {
@@ -112,7 +175,7 @@ public class Data {
 			}
 
 		}
-		return allRecipes;
+		return allRecipesMap.values();
 	}
 	
 	public Map<Integer, Recipe> getAllRecipesMap() {
@@ -142,18 +205,22 @@ public class Data {
 		}
 		return item;
 	}
-
+	
 	public List<Item> getItemsById(int... ids) {
 		GuildWars2 gw2 = GuildWars2.getInstance();
 
 		List<Integer> toRequest = new ArrayList<>();
 		List<Item> result = new ArrayList<>();
-		for (int id : ids) {
-			Item item = allItemsMap.get(id);
-			if (item == null) {
-				toRequest.add(id);
-			} else {
-				result.add(item);
+		for (Integer itemId : ids) {
+			if(!allItemsMap.containsKey(itemId)) { // not loaded yet
+				String fileName = "item/"+itemId;
+				Item item = getCache(fileName, Item.class);
+				if (item == null) { // not in cache -> request
+					toRequest.add(itemId);
+				} else {
+					result.add(item); // in cache -> load
+					allItemsMap.put(itemId, item);
+				}
 			}
 		}
 		int[] toRequestArray = toRequest.stream().mapToInt(i -> i).toArray();
@@ -162,39 +229,18 @@ public class Data {
 			try {
 				List<Item> itemInfo = gw2.getSynchronous().getItemInfo(itemIds);
 				Map<Integer, Item> collect = itemInfo.stream().collect(Collectors.toMap(Item::getId, item -> item));
-				allItemsMap.putAll(collect);
+				synchronized (allItemsMap) {
+					allItemsMap.putAll(collect);
+				}
+				for(Item item : itemInfo) {
+					writeCache("item/"+item.getId(), item);
+				}
 				result.addAll(itemInfo);
 			} catch (GuildWars2Exception e) {
 				e.printStackTrace();
 			}
 		}
 		return result;
-	}
-
-	@Deprecated
-	public List<Item> getAllItems() {
-		if (allItems == null) {
-			GuildWars2 gw2 = GuildWars2.getInstance();
-			List<Integer> allItemID;
-			try {
-				allItemID = gw2.getSynchronous().getAllItemID();
-				int[] allItemIDArray = allItemID.stream().mapToInt(i -> i).toArray();
-
-				allItems = new ArrayList<>();
-
-				int chunk = 200; // chunk size to divide
-				for (int i = 0; i < allItemIDArray.length; i += chunk) {
-					int[] chunkArray = Arrays.copyOfRange(allItemIDArray, i,
-							Math.min(allItemIDArray.length, i + chunk));
-					List<Item> itemInfo = gw2.getSynchronous().getItemInfo(chunkArray);
-					allItems.addAll(itemInfo);
-				}
-				System.out.println("finished loading items");
-			} catch (GuildWars2Exception e) {
-				e.printStackTrace();
-			}
-		}
-		return allItems;
 	}
 
 }
