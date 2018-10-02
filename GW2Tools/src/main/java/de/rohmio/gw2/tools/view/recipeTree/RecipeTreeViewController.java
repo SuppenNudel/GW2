@@ -43,13 +43,18 @@ public class RecipeTreeViewController extends RecipeView {
 			try {
 				int ingredientId = ingredient.getItemId();
 				Item ingredientItem = Data.getInstance().getItemById(ingredientId);
-				List<Integer> searchRecipes = GuildWars2.getInstance().getSynchronous().searchRecipes(false, ingredientId);
-				if(searchRecipes.isEmpty() || !recursive) {
+				if(recursive) {
+					List<Integer> searchRecipes = GuildWars2.getInstance().getSynchronous().searchRecipes(false, ingredientId);
+					if(searchRecipes.isEmpty()) {
+						ItemView itemView = new ItemView(ingredientItem);
+						hbox_ingredients.getChildren().add(itemView);
+					} else {
+						Recipe subRecipe = Data.getInstance().getAllRecipesMap().get(searchRecipes.get(0));
+						hbox_ingredients.getChildren().add(createTree(subRecipe));	
+					}
+				} else {
 					ItemView itemView = new ItemView(ingredientItem);
 					hbox_ingredients.getChildren().add(itemView);
-				} else {
-					Recipe subRecipe = Data.getInstance().getAllRecipesMap().get(searchRecipes.get(0));
-					hbox_ingredients.getChildren().add(createTree(subRecipe));
 				}
 			} catch (GuildWars2Exception e) {
 				e.printStackTrace();

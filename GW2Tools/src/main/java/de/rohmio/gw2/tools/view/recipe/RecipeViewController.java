@@ -20,15 +20,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import me.xhsun.guildwars2wrapper.GuildWars2;
-import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe.Ingredient;
 import me.xhsun.guildwars2wrapper.model.v2.util.comm.CraftingDisciplines;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class RecipeViewController extends RecipeView implements Initializable {
 
@@ -65,60 +60,47 @@ public class RecipeViewController extends RecipeView implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		GuildWars2 gw2 = GuildWars2.getInstance();
 		List<Integer> list = getRecipe().getIngredients().stream().map(Ingredient::getItemId).collect(Collectors.toList());
 		list.add(getRecipe().getOutputItemId());
 		int[] itemIds = list.stream().mapToInt(Integer::intValue).toArray();
-		try {
-			gw2.getAsynchronous().getItemInfo(itemIds, new Callback<List<Item>>() {
-				@Override
-				public void onResponse(Call<List<Item>> call, Response<List<Item>> response) {
-					Map<Integer, Item> collect = response.body().stream()
-							.collect(Collectors.toMap(Item::getId, c -> c));
-					getRecipe().getIngredients().forEach(i -> {
-						Platform.runLater(() -> {
-							Item item = collect.get(i.getItemId());
-							Label lbl_count = new Label(String.valueOf(i.getCount()));
+		List<Item> itemsById = Data.getInstance().getItemsById(itemIds);
+		Map<Integer, Item> collect = itemsById.stream()
+				.collect(Collectors.toMap(Item::getId, c -> c));
+		getRecipe().getIngredients().forEach(i -> {
+			Platform.runLater(() -> {
+				Item item = collect.get(i.getItemId());
+				Label lbl_count = new Label(String.valueOf(i.getCount()));
 
-							ImageView img_itemIcon = new ImageView();
-							Platform.runLater(() -> {
-								try {
-									File imageFile = Data.getInstance().getImage(item.getIcon());
-									Image img = new Image(new FileInputStream(imageFile), 20, 20, false, true);
-									img_itemIcon.setImage(img);
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
-							});
-							Label lbl_name = new Label(item.getName());
-							vbox_ingredients.getChildren().add(new HBox(lbl_count, img_itemIcon, lbl_name));
-						});
-					});
-					Platform.runLater(() -> {
-						Item outputItem = collect.get(getRecipe().getOutputItemId());
-						lbl_outputName.setText(outputItem.getName());
+				ImageView img_itemIcon = new ImageView();
+				Platform.runLater(() -> {
+					try {
+						File imageFile = Data.getInstance().getImage(item.getIcon());
+						Image img = new Image(new FileInputStream(imageFile), 20, 20, false, true);
+						img_itemIcon.setImage(img);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				});
+				Label lbl_name = new Label(item.getName());
+				vbox_ingredients.getChildren().add(new HBox(lbl_count, img_itemIcon, lbl_name));
+			});
+		});
+		Platform.runLater(() -> {
+			Item outputItem = collect.get(getRecipe().getOutputItemId());
+			lbl_outputName.setText(outputItem.getName());
 
-						String icon = outputItem.getIcon();
-						Platform.runLater(() -> {
-							try {
-								File imageFile = Data.getInstance().getImage(icon);
-								Image img = new Image(new FileInputStream(imageFile), 64, 64, false, false);
-								img_outputItem.setImage(img);
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-						});
-						lbl_itemType.setText(outputItem.getType().name());
-					});
-				}
-
-				@Override
-				public void onFailure(Call<List<Item>> call, Throwable t) {
+			String icon = outputItem.getIcon();
+			Platform.runLater(() -> {
+				try {
+					File imageFile = Data.getInstance().getImage(icon);
+					Image img = new Image(new FileInputStream(imageFile), 64, 64, false, false);
+					img_outputItem.setImage(img);
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
 			});
-		} catch (NullPointerException | GuildWars2Exception e2) {
-			e2.printStackTrace();
-		}
+			lbl_itemType.setText(outputItem.getType().name());
+		});
 		lbl_source.setText(String.valueOf(getRecipe().getFlags()));
 		lbl_recipeType.setText(String.valueOf(getRecipe().getType()));
 		lbl_outputQty.setText(String.valueOf(getRecipe().getOutputItemCount()));
