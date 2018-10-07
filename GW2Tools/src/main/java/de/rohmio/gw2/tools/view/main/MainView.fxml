@@ -31,12 +31,14 @@
          <children>
             <HBox VBox.vgrow="ALWAYS">
                <children>
-                  <Label text="Label" />
-                  <ProgressBar fx:id="pb_getItems" progress="0.0" HBox.hgrow="ALWAYS">
+                  <Label text="Recipes" />
+                  <ProgressBar fx:id="pb_getRecipes" progress="0.0" HBox.hgrow="ALWAYS">
                      <HBox.margin>
                         <Insets />
                      </HBox.margin>
                   </ProgressBar>
+                  <Label text="Items" />
+                  <ProgressBar fx:id="pb_getItems" progress="0.0" />
                </children>
             </HBox>
          </children>

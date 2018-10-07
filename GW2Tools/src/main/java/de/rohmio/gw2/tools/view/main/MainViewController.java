@@ -3,7 +3,6 @@ package de.rohmio.gw2.tools.view.main;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +77,9 @@ public class MainViewController implements Initializable {
 
 	@FXML // POC for progress display
 	private ProgressBar pb_getItems;
+	
+	@FXML
+	private ProgressBar pb_getRecipes;
 
 	private Map<CraftingDisciplines, CheckBox> craftingDisceplinesToCheckBox = new HashMap<>();
 	private Map<Recipe, RecipeView> recipeViews = new HashMap<>();
@@ -85,16 +87,11 @@ public class MainViewController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		txt_filter.setDisable(true);
+		
+		pb_getItems.progressProperty().bind(Data.getInstance().itemsProgress);
+		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipeProgress());
 
-		pb_getItems.progressProperty().bind(Data.getInstance().progress);
-		new Thread(() -> {
-			try {
-				Data.getInstance().getAllRecipes();
-			} catch (GuildWars2Exception e) {
-				e.printStackTrace();
-			}
-		}).start();
-
+		
 		txt_apiKey.setText(ClientFactory.ACCESS_KEY);
 
 		// create check boxes for discipline selection
@@ -127,7 +124,7 @@ public class MainViewController implements Initializable {
 		recipeViews.clear();
 
 		// get ALL recipes
-		List<Recipe> allRecipes = new ArrayList<>(Data.getInstance().getAllRecipes());
+		List<Recipe> allRecipes = new ArrayList<>(Data.getInstance().getAllRecipes().values());
 
 		// get recipes selected character has already learned
 		Character character = GuildWars2.getInstance().getSynchronous().getCharacter(txt_apiKey.getText(),
@@ -181,13 +178,14 @@ public class MainViewController implements Initializable {
 
 		// display all discoverable recipes
 		for (Recipe recipe : recipesToShow) {
-			// RecipeViewController recipeView = new RecipeViewController(recipe);
 			RecipeView recipeView = new RecipeTreeViewController(recipe, chbx_recipesRecursively.isSelected());
 			recipeViews.put(recipe, recipeView);
 			scroll_recipes.getChildren().add(recipeView);
 		}
 		btn_analyse.setDisable(false);
 		txt_filter.setDisable(false);
+		
+		filter();
 	}
 
 	private void filter() {
@@ -200,9 +198,24 @@ public class MainViewController implements Initializable {
 			for (Ingredient ingredient : recipe.getIngredients()) {
 				compoundNames = compoundNames + " " + Data.getInstance().getItemById(ingredient.getItemId()).getName();
 			}
+			
+			boolean txtFilter = true;
+			String[] split = filterText.toLowerCase().split(" ");
+			for(String part : split) {
+				boolean contains;
+				if(part.startsWith("!")) {
+					String substring = part.substring(1);
+					if(substring.isEmpty()) {
+						contains = true;
+					} else {
+						contains = !compoundNames.toLowerCase().contains(substring);
+					}
+				} else {
+					contains = compoundNames.toLowerCase().contains(part);
+				}
+				txtFilter = txtFilter && contains;
+			}
 
-			boolean txtContains = Arrays.stream(filterText.toLowerCase().split(" "))
-					.allMatch(compoundNames.toLowerCase()::contains);
 			int minLevel = 0;
 			try {
 				minLevel = Integer.parseInt(txt_minLevel.getText());
@@ -210,7 +223,7 @@ public class MainViewController implements Initializable {
 			}
 			boolean filterMinLevel = minLevel <= recipe.getMinRating();
 
-			boolean show = txtContains && filterMinLevel;
+			boolean show = txtFilter && filterMinLevel;
 
 			RecipeView view = recipeViews.get(recipe);
 			view.setVisible(show);
