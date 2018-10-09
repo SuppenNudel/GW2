@@ -1,10 +1,12 @@
 package de.rohmio.gw2.tools;
 
 import de.rohmio.gw2.tools.model.Data;
+import de.rohmio.gw2.tools.model.RequestProgress;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
+import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 
 /**
  * Unit test for simple App.
@@ -34,7 +36,15 @@ public class AppTest extends TestCase {
 		assertTrue(true);
 	}
 
-	public void testRecipes() throws GuildWars2Exception {
-		Data.getInstance().getAllRecipes();
+	public void testRecipes() throws GuildWars2Exception, InterruptedException {
+		RequestProgress<Recipe> allRecipes = Data.getInstance().getRecipeProgress().getAll();
+		System.out.println("Before wait: "+allRecipes.size());
+		while(allRecipes.getProgress().get() < 1.0) {
+			System.out.println(allRecipes.getProgress().get());
+			Thread.sleep(1000);
+		}
+		System.out.println(allRecipes.getProgress().get());
+		System.out.println("After wait: "+allRecipes.size());
+//		allRecipes.forEach((t, u) -> System.out.println(u));
 	}
 }

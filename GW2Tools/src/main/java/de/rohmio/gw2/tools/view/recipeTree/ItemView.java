@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import de.rohmio.gw2.tools.model.Data;
+import de.rohmio.gw2.tools.model.Util;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -21,7 +21,7 @@ public class ItemView extends VBox {
 		getChildren().add(new Label(String.format("%dx %s", count, item.getName())));
 		Platform.runLater(() -> {
 			try {
-				File imgFile = Data.getInstance().getImage(item.getIcon());
+				File imgFile = Util.getImage(item.getIcon());
 				Image image = new Image(new FileInputStream(imgFile), 64, 64, false, false);
 				getChildren().add(new ImageView(image));
 			} catch (IOException e) {

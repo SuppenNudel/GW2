@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import de.rohmio.gw2.tools.model.ClientFactory;
 import de.rohmio.gw2.tools.model.Data;
+import de.rohmio.gw2.tools.model.RequestProgress;
 import de.rohmio.gw2.tools.view.RecipeView;
 import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.beans.value.ChangeListener;
@@ -88,8 +89,8 @@ public class MainViewController implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		txt_filter.setDisable(true);
 		
-		pb_getItems.progressProperty().bind(Data.getInstance().itemsProgress);
-		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipeProgress());
+		pb_getItems.progressProperty().bind(Data.getInstance().getItemProgress().getProgress());
+		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipeProgress().getProgress());
 
 		
 		txt_apiKey.setText(ClientFactory.ACCESS_KEY);
@@ -115,7 +116,7 @@ public class MainViewController implements Initializable {
 	}
 
 	@FXML
-	private void analyse() throws GuildWars2Exception, IOException {
+	private void analyse() throws GuildWars2Exception, IOException, InterruptedException {
 		btn_analyse.setDisable(true);
 
 		// clear previous analysation
@@ -124,7 +125,14 @@ public class MainViewController implements Initializable {
 		recipeViews.clear();
 
 		// get ALL recipes
-		List<Recipe> allRecipes = new ArrayList<>(Data.getInstance().getAllRecipes().values());
+		RequestProgress<Recipe> recipeProgress = Data.getInstance().getRecipeProgress();
+		recipeProgress.getAll();
+		while(recipeProgress.getProgress().get() < 1.0) {
+			Thread.sleep(1000);
+			System.out.println(recipeProgress.getProgress().get());
+		}
+		
+		List<Recipe> allRecipes = new ArrayList<>(recipeProgress.values());
 
 		// get recipes selected character has already learned
 		Character character = GuildWars2.getInstance().getSynchronous().getCharacter(txt_apiKey.getText(),
@@ -173,9 +181,8 @@ public class MainViewController implements Initializable {
 					.collect(Collectors.toList());
 			itemIds.addAll(ingredientIds);
 		}
-		int[] itemIdsArray = itemIds.stream().mapToInt(Integer::intValue).toArray();
-		Data.getInstance().getItemsById(itemIdsArray); // now they are saved locally in a map
-
+		Data.getInstance().getItemProgress().getByIds(itemIds);
+		
 		// display all discoverable recipes
 		for (Recipe recipe : recipesToShow) {
 			RecipeView recipeView = new RecipeTreeViewController(recipe, chbx_recipesRecursively.isSelected());
@@ -191,12 +198,12 @@ public class MainViewController implements Initializable {
 	private void filter() {
 		String filterText = txt_filter.getText();
 		for (Recipe recipe : recipeViews.keySet()) {
-			Item outputItem = Data.getInstance().getItemById(recipe.getOutputItemId());
+			Item outputItem = Data.getInstance().getItemProgress().getById(recipe.getOutputItemId());
 			String outputItemName = outputItem.getName();
 
 			String compoundNames = outputItemName;
 			for (Ingredient ingredient : recipe.getIngredients()) {
-				compoundNames = compoundNames + " " + Data.getInstance().getItemById(ingredient.getItemId()).getName();
+				compoundNames = compoundNames + " " + Data.getInstance().getItemProgress().getById(ingredient.getItemId()).getName();
 			}
 			
 			boolean txtFilter = true;
