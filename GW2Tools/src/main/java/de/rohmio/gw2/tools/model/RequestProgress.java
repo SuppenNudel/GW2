@@ -56,8 +56,7 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 		SynchronousRequest synchronous = GuildWars2.getInstance().getSynchronous();
 		AsynchronousRequest asynchronous = GuildWars2.getInstance().getAsynchronous();
 		
-		RequestType t = RequestType.RECIPE;
-		switch (t) {
+		switch (type) {
 		case RECIPE:
 			idCaller = () -> synchronous.getAllRecipeID();
 			infoFunction = ids -> {
@@ -68,7 +67,7 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 						public void onResponse(Call<List<Recipe>> call, Response<List<Recipe>> response) {
 							List<T> body = (List<T>) response.body();
 							if(body != null) {
-								test(body);
+								handleResult(body);
 							}
 						}
 						@Override
@@ -89,7 +88,7 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 						@SuppressWarnings("unchecked")
 						@Override
 						public void onResponse(Call<List<Item>> call, Response<List<Item>> response) {
-							test((List<T>) response.body());
+							handleResult((List<T>) response.body());
 						}
 						@Override
 						public void onFailure(Call<List<Item>> call, Throwable t) {
@@ -136,20 +135,12 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 		super.putAll(m);
 		updateProgress();
 	}
-	
-	public T getById(int id) {
-		List<Integer> list = new ArrayList<>();
-		list.add(id);
-		RequestProgress<T> byIds = getByIds(list);
-		T result = byIds.get(id);
-		return result;
-	}
 
 	public RequestProgress<T> getByIds(List<Integer> itemIds) {
 		List<Integer> toRequest = new ArrayList<>(itemIds);
 		
 		// TODO keep track of toRequest
-		for(Integer id : allIds) {
+		for(Integer id : itemIds) {
 			if(containsKey(id)) {
 				toRequest.remove(id);
 			} else { // not already loaded
@@ -172,40 +163,24 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 
 		return this;
 	}
+	
+	public T getById(int id) {
+		List<Integer> list = new ArrayList<>();
+		list.add(id);
+		T result = getByIds(list).get(id);
+		return result;
+	}
 		
 	public RequestProgress<T> getAll() {
 		List<Integer> toRequest = new ArrayList<>(allIds);
-		
-		// TODO keep track of toRequest
-		for(Integer id : allIds) {
-			if(containsKey(id)) {
-				toRequest.remove(id);
-			} else { // not already loaded
-				T value = Util.getCache(typeName, id, type.getClazz());
-				if(value != null) {
-					toRequest.remove(id);
-					put(id, value);
-				}
-			}
-		}
-		
-		// convert to array
-		int[] allIdArray = toRequest.stream().mapToInt(i -> i).toArray();
-
-		int chunk = 200; // chunk size to divide
-		List<int[]> chunkedIds = Util.chunkUp(chunk, allIdArray);
-		for(int[] ids : chunkedIds) {
-			infoFunction.apply(ids);
-		}
-
-		return this;
+		return getByIds(toRequest);
 	}
 	
 	private RequestProgress<T> getThis() {
 		return this;
 	}
 	
-	private void test(List<T> result) {
+	private void handleResult(List<T> result) {
 		result.forEach(r -> Util.writeCache(typeName, r.getId(), r));							
 		Map<Integer, T> collect = result.stream().collect(Collectors.toMap(T::getId, r -> r));
 		putAll(collect);
