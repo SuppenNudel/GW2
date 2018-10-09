@@ -15,10 +15,10 @@ import me.xhsun.guildwars2wrapper.model.v2.Item;
 
 public class ItemView extends VBox {
 	
-	public ItemView(Item item) {
+	public ItemView(Item item, int count) {
 		setAlignment(Pos.TOP_CENTER);
 		
-		getChildren().add(new Label(item.getName()));
+		getChildren().add(new Label(String.format("%dx %s", count, item.getName())));
 		Platform.runLater(() -> {
 			try {
 				File imgFile = Data.getInstance().getImage(item.getIcon());

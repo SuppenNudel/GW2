@@ -3,8 +3,6 @@ package de.rohmio.gw2.tools.view.main;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +14,6 @@ import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.view.RecipeView;
 import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.beans.value.ChangeListener;
-import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -54,6 +51,9 @@ public class MainViewController implements Initializable {
 	@FXML
 	private TextField txt_filter;
 
+	@FXML
+	private TextField txt_minLevel;
+
 	@FXML // selection for disciplines
 	private HBox hbox_disciplineCheck;
 
@@ -77,6 +77,7 @@ public class MainViewController implements Initializable {
 
 	@FXML // POC for progress display
 	private ProgressBar pb_getItems;
+	
 	@FXML
 	private ProgressBar pb_getRecipes;
 
@@ -86,12 +87,11 @@ public class MainViewController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		txt_filter.setDisable(true);
+		
+		pb_getItems.progressProperty().bind(Data.getInstance().itemsProgress);
+		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipeProgress());
 
-		Data.getInstance().recipesProperty().addListener((MapChangeListener<Integer, Recipe>) change -> {
-			double progress = change.getMap().size() / Data.getInstance().getRecipesSize().get();
-			pb_getRecipes.setProgress(progress);
-		});
-
+		
 		txt_apiKey.setText(ClientFactory.ACCESS_KEY);
 
 		// create check boxes for discipline selection
@@ -110,8 +110,8 @@ public class MainViewController implements Initializable {
 			hbox_langRadio.getChildren().add(radio);
 		}
 
-		txt_filter.textProperty()
-				.addListener((ChangeListener<String>) (observable, oldValue, newValue) -> filter(newValue));
+		txt_filter.textProperty().addListener((ChangeListener<String>) (observable, oldValue, newValue) -> filter());
+		txt_minLevel.textProperty().addListener((ChangeListener<String>) (observable, oldValue, newValue) -> filter());
 	}
 
 	@FXML
@@ -124,7 +124,7 @@ public class MainViewController implements Initializable {
 		recipeViews.clear();
 
 		// get ALL recipes
-		Collection<Recipe> allRecipes = Data.getInstance().getAllRecipes().values();
+		List<Recipe> allRecipes = new ArrayList<>(Data.getInstance().getAllRecipes().values());
 
 		// get recipes selected character has already learned
 		Character character = GuildWars2.getInstance().getSynchronous().getCharacter(txt_apiKey.getText(),
@@ -178,16 +178,17 @@ public class MainViewController implements Initializable {
 
 		// display all discoverable recipes
 		for (Recipe recipe : recipesToShow) {
-			// RecipeViewController recipeView = new RecipeViewController(recipe);
 			RecipeView recipeView = new RecipeTreeViewController(recipe, chbx_recipesRecursively.isSelected());
 			recipeViews.put(recipe, recipeView);
 			scroll_recipes.getChildren().add(recipeView);
 		}
 		btn_analyse.setDisable(false);
 		txt_filter.setDisable(false);
+		
+		filter();
 	}
 
-	private void filter(String value) {
+	private void filter() {
 		String filterText = txt_filter.getText();
 		for (Recipe recipe : recipeViews.keySet()) {
 			Item outputItem = Data.getInstance().getItemById(recipe.getOutputItemId());
@@ -197,9 +198,32 @@ public class MainViewController implements Initializable {
 			for (Ingredient ingredient : recipe.getIngredients()) {
 				compoundNames = compoundNames + " " + Data.getInstance().getItemById(ingredient.getItemId()).getName();
 			}
+			
+			boolean txtFilter = true;
+			String[] split = filterText.toLowerCase().split(" ");
+			for(String part : split) {
+				boolean contains;
+				if(part.startsWith("!")) {
+					String substring = part.substring(1);
+					if(substring.isEmpty()) {
+						contains = true;
+					} else {
+						contains = !compoundNames.toLowerCase().contains(substring);
+					}
+				} else {
+					contains = compoundNames.toLowerCase().contains(part);
+				}
+				txtFilter = txtFilter && contains;
+			}
 
-			boolean show = Arrays.stream(filterText.toLowerCase().split(" "))
-					.allMatch(compoundNames.toLowerCase()::contains);
+			int minLevel = 0;
+			try {
+				minLevel = Integer.parseInt(txt_minLevel.getText());
+			} catch (NumberFormatException e) {
+			}
+			boolean filterMinLevel = minLevel <= recipe.getMinRating();
+
+			boolean show = txtFilter && filterMinLevel;
 
 			RecipeView view = recipeViews.get(recipe);
 			view.setVisible(show);
@@ -209,12 +233,14 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private void getCharacters() throws GuildWars2Exception {
+		choice_charName.getItems().clear();
+
 		GuildWars2 gw2 = GuildWars2.getInstance();
-		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(ClientFactory.ACCESS_KEY);
+		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(txt_apiKey.getText());
 		choice_charName.getItems().addAll(allCharacterName);
 		choice_charName.getSelectionModel().select(0);
 		String name = choice_charName.getSelectionModel().getSelectedItem();
-		CharacterCraftingLevel characterCrafting = gw2.getSynchronous().getCharacterCrafting(ClientFactory.ACCESS_KEY,
+		CharacterCraftingLevel characterCrafting = gw2.getSynchronous().getCharacterCrafting(txt_apiKey.getText(),
 				name);
 		for (Discipline discipline : characterCrafting.getCrafting()) {
 			CheckBox checkBox = craftingDisceplinesToCheckBox.get(discipline.getDiscipline());
