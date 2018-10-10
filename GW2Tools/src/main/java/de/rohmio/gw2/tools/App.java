@@ -2,6 +2,7 @@ package de.rohmio.gw2.tools;
 
 import java.net.URL;
 
+import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.view.main.MainViewController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -13,6 +14,7 @@ public class App extends Application {
 
 	public static void main(String[] args) {
 		launch(args);
+		Data.getInstance();
 	}
 
 	@Override

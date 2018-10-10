@@ -22,9 +22,10 @@ public class Data {
 		
 		itemProgress = new RequestProgress<>(RequestType.ITEM);
 		recipeProgress = new RequestProgress<>(RequestType.RECIPE);
-		
-		recipeProgress.getAll();
-		itemProgress.getAll();
+
+		new Thread(() -> { 
+			recipeProgress.getAll();
+		}).start();
 	}
 
 	public static Data getInstance() {

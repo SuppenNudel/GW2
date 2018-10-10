@@ -87,22 +87,30 @@ public class MainViewController implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		txt_apiKey.setText(ClientFactory.ACCESS_KEY);
+		
 		txt_filter.setDisable(true);
 		
+		Data.getInstance().getRecipeProgress().getProgress().addListener((ChangeListener<Number>) (observable, oldValue, newValue) -> {
+			if(newValue.doubleValue() < 1.0) {
+				btn_analyse.setDisable(true);
+			} else {
+				btn_analyse.setDisable(false);
+			}
+		});
+		
+		// progress display
 		pb_getItems.progressProperty().bind(Data.getInstance().getItemProgress().getProgress());
 		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipeProgress().getProgress());
 
-		
-		txt_apiKey.setText(ClientFactory.ACCESS_KEY);
-
-		// create check boxes for discipline selection
+		// discipline selection
 		for (CraftingDisciplines discipline : CraftingDisciplines.values()) {
 			CheckBox checkBox = new CheckBox(discipline.toString());
 			craftingDisceplinesToCheckBox.put(discipline, checkBox);
 			hbox_disciplineCheck.getChildren().add(checkBox);
 		}
 
-		// create radio buttons for language
+		// language selection
 		ToggleGroup langGroup = new ToggleGroup();
 		for (LanguageSelect lang : LanguageSelect.values()) {
 			RadioButton radio = new RadioButton(lang.getValue());
@@ -111,6 +119,7 @@ public class MainViewController implements Initializable {
 			hbox_langRadio.getChildren().add(radio);
 		}
 
+		// filters
 		txt_filter.textProperty().addListener((ChangeListener<String>) (observable, oldValue, newValue) -> filter());
 		txt_minLevel.textProperty().addListener((ChangeListener<String>) (observable, oldValue, newValue) -> filter());
 	}
@@ -126,12 +135,6 @@ public class MainViewController implements Initializable {
 
 		// get ALL recipes
 		RequestProgress<Recipe> recipeProgress = Data.getInstance().getRecipeProgress();
-		recipeProgress.getAll();
-		while(recipeProgress.getProgress().get() < 1.0) {
-			Thread.sleep(1000);
-			System.out.println(recipeProgress.getProgress().get());
-		}
-		
 		List<Recipe> allRecipes = new ArrayList<>(recipeProgress.values());
 
 		// get recipes selected character has already learned
