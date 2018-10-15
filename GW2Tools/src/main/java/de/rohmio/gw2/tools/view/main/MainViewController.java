@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-import de.rohmio.gw2.tools.model.ClientFactory;
 import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.model.RequestProgress;
 import de.rohmio.gw2.tools.view.RecipeView;
@@ -43,8 +42,6 @@ import me.xhsun.guildwars2wrapper.model.v2.util.comm.CraftingDisciplines;
 public class MainViewController implements Initializable {
 
 	@FXML
-	private TextField txt_apiKey;
-	@FXML
 	private ChoiceBox<String> choice_charName;
 	@FXML
 	private Button btn_analyse;
@@ -57,9 +54,6 @@ public class MainViewController implements Initializable {
 
 	@FXML // selection for disciplines
 	private HBox hbox_disciplineCheck;
-
-	@FXML // selection for language
-	private HBox hbox_langRadio;
 
 	@FXML // list of all disciplines the character has
 	private VBox vbox_charDisciplines;
@@ -87,8 +81,6 @@ public class MainViewController implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		txt_apiKey.setText(ClientFactory.ACCESS_KEY);
-		
 		txt_filter.setDisable(true);
 		
 		Data.getInstance().getRecipeProgress().getProgress().addListener((ChangeListener<Number>) (observable, oldValue, newValue) -> {
@@ -116,7 +108,6 @@ public class MainViewController implements Initializable {
 			RadioButton radio = new RadioButton(lang.getValue());
 			radio.setToggleGroup(langGroup);
 			radio.setOnAction(event -> GuildWars2.setLanguage(lang));
-			hbox_langRadio.getChildren().add(radio);
 		}
 
 		// filters
@@ -138,7 +129,7 @@ public class MainViewController implements Initializable {
 		List<Recipe> allRecipes = new ArrayList<>(recipeProgress.values());
 
 		// get recipes selected character has already learned
-		Character character = GuildWars2.getInstance().getSynchronous().getCharacter(txt_apiKey.getText(),
+		Character character = GuildWars2.getInstance().getSynchronous().getCharacter(Data.getInstance().getApiKey(),
 				choice_charName.getSelectionModel().getSelectedItem());
 		for (Discipline discipline : character.getCrafting()) {
 			vbox_charDisciplines.getChildren().add(new Label(String.format("%s: %d - active: %s",
@@ -246,11 +237,11 @@ public class MainViewController implements Initializable {
 		choice_charName.getItems().clear();
 
 		GuildWars2 gw2 = GuildWars2.getInstance();
-		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(txt_apiKey.getText());
+		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(Data.getInstance().getApiKey());
 		choice_charName.getItems().addAll(allCharacterName);
 		choice_charName.getSelectionModel().select(0);
 		String name = choice_charName.getSelectionModel().getSelectedItem();
-		CharacterCraftingLevel characterCrafting = gw2.getSynchronous().getCharacterCrafting(txt_apiKey.getText(),
+		CharacterCraftingLevel characterCrafting = gw2.getSynchronous().getCharacterCrafting(Data.getInstance().getApiKey(),
 				name);
 		for (Discipline discipline : characterCrafting.getCrafting()) {
 			CheckBox checkBox = craftingDisceplinesToCheckBox.get(discipline.getDiscipline());

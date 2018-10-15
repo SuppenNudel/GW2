@@ -24,16 +24,21 @@ import retrofit2.Response;
 public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer, T> {
 	
 	public enum RequestType {
-		ITEM(Item.class), RECIPE(Recipe.class);
+		ITEM(Item.class, "item"), RECIPE(Recipe.class, "recipe");
 		
 		private Class<?> clazz;
+		private String path;
 		
-		private RequestType(Class<?> clazz) {
+		private RequestType(Class<?> clazz, String path) {
 			this.clazz = clazz;
+			this.path = path;
 		}
 		
 		public Class<?> getClazz() {
 			return clazz;
+		}
+		public String getPath() {
+			return path;
 		}
 	}
 
@@ -43,7 +48,6 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 	// list of all ids available for this data type
 	private List<Integer> allIds;
 	private RequestType type;
-	private String typeName;
 //	private List<Integer> toRequest;
 
 	private Callable<List<Integer>> idCaller;
@@ -51,7 +55,6 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 
 	public RequestProgress(RequestType type) throws NullPointerException, GuildWars2Exception {
 		this.type = type;
-		this.typeName = type.name().toLowerCase();
 
 		SynchronousRequest synchronous = GuildWars2.getInstance().getSynchronous();
 		AsynchronousRequest asynchronous = GuildWars2.getInstance().getAsynchronous();
@@ -144,7 +147,7 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 			if(containsKey(id)) {
 				toRequest.remove(id);
 			} else { // not already loaded
-				T value = Util.getCache(typeName, id, type.getClazz());
+				T value = Util.getCache(type, id, type.getClazz());
 				if(value != null) {
 					toRequest.remove(id);
 					put(id, value);
@@ -181,7 +184,7 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 	}
 	
 	private void handleResult(List<T> result) {
-		result.forEach(r -> Util.writeCache(typeName, r.getId(), r));							
+		result.forEach(r -> Util.writeCache(type, r.getId(), r));							
 		Map<Integer, T> collect = result.stream().collect(Collectors.toMap(T::getId, r -> r));
 		putAll(collect);
 		System.out.println("Iteration: "+getThis().size());

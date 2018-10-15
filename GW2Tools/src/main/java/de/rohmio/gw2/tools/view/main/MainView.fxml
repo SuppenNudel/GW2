@@ -5,6 +5,9 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
@@ -13,19 +16,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
-   <center>
-      <VBox>
-         <children>
-            <VBox fx:id="vbox_charDisciplines" />
-            <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
-               <content>
-                  <FlowPane fx:id="scroll_recipes" hgap="10.0" prefHeight="400.0" prefWidth="600.0" vgap="20.0" />
-               </content>
-            </ScrollPane>
-         </children>
-      </VBox>
-   </center>
+<BorderPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
    <bottom>
       <VBox fx:id="vbox_tasks" BorderPane.alignment="CENTER">
          <children>
@@ -44,32 +35,57 @@
          </children>
       </VBox>
    </bottom>
-   <top>
-      <VBox>
+   <center>
+      <VBox BorderPane.alignment="CENTER">
          <children>
             <HBox>
                <children>
-                  <TextField fx:id="txt_apiKey" promptText="API KEY" HBox.hgrow="ALWAYS" />
+                  <ChoiceBox fx:id="choice_charName" prefWidth="150.0" />
                   <Button mnemonicParsing="false" onAction="#getCharacters" text="Get Characters" />
                </children>
             </HBox>
-            <ChoiceBox fx:id="choice_charName" prefWidth="150.0" />
             <HBox fx:id="hbox_disciplineCheck" />
-            <HBox fx:id="hbox_langRadio" />
-            <CheckBox fx:id="chbx_fromRecipe" mnemonicParsing="false" text="include from recipe" />
             <HBox alignment="CENTER_LEFT">
                <children>
-                  <Button fx:id="btn_analyse" mnemonicParsing="false" onAction="#analyse" text="Analyse" />
+                  <CheckBox fx:id="chbx_fromRecipe" mnemonicParsing="false" text="include from recipe" />
                   <CheckBox fx:id="chbx_recipesRecursively" mnemonicParsing="false" text="Show Recipes Recursively" />
                </children>
             </HBox>
+            <Button fx:id="btn_analyse" mnemonicParsing="false" onAction="#analyse" text="Analyse" />
             <HBox>
                <children>
                   <TextField fx:id="txt_filter" promptText="Filter" HBox.hgrow="ALWAYS" />
                   <TextField fx:id="txt_minLevel" promptText="Min Level" />
                </children>
             </HBox>
+            <VBox fx:id="vbox_charDisciplines" />
+            <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
+               <content>
+                  <FlowPane fx:id="scroll_recipes" hgap="10.0" prefHeight="400.0" prefWidth="600.0" vgap="20.0" />
+               </content>
+            </ScrollPane>
          </children>
       </VBox>
+   </center>
+   <top>
+      <MenuBar BorderPane.alignment="CENTER">
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Close" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Edit">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Delete" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Help">
+            <items>
+              <MenuItem mnemonicParsing="false" text="About" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
    </top>
 </BorderPane>

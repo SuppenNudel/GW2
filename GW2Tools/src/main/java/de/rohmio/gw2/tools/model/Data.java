@@ -9,6 +9,7 @@ import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 public class Data {
 
 	private static Data data;
+	private String apiKey;
 	
 	private RequestProgress<Item> itemProgress;
 	private RequestProgress<Recipe> recipeProgress;
@@ -22,10 +23,6 @@ public class Data {
 		
 		itemProgress = new RequestProgress<>(RequestType.ITEM);
 		recipeProgress = new RequestProgress<>(RequestType.RECIPE);
-
-		new Thread(() -> { 
-			recipeProgress.getAll();
-		}).start();
 	}
 
 	public static Data getInstance() {
@@ -44,6 +41,12 @@ public class Data {
 	}
 	public RequestProgress<Recipe> getRecipeProgress() {
 		return recipeProgress;
+	}
+	public void setApiKey(String apiKey) {
+		this.apiKey = apiKey;
+	}
+	public String getApiKey() {
+		return apiKey;
 	}
 	
 }
