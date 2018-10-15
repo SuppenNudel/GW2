@@ -15,24 +15,24 @@ import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.GuildWars2.LanguageSelect;
 
 public class StartupViewController implements Initializable {
-	
+
 	@FXML
 	private ComboBox<LanguageSelect> cb_lang;
-	
+
 	@FXML
 	private TextField txt_apiKey;
-	
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		cb_lang.getItems().addAll(LanguageSelect.values());
 	}
-	
+
 	@FXML
 	private void apply() throws IOException {
 		GuildWars2.setLanguage(cb_lang.getValue());
 		Data.getInstance().setApiKey(txt_apiKey.getText());
 		App.setScene(MainViewController.class);
-		new Thread(() -> { 
+		new Thread(() -> {
 			Data.getInstance().getRecipeProgress().getAll();
 		}).start();
 	}

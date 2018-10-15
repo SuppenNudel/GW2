@@ -21,7 +21,7 @@ public class App extends Application {
 	
 	public static void setScene(Class<? extends Initializable> initializable) throws IOException {
 		String fileName_view = initializable.getSimpleName().replaceAll("Controller", "");
-		URL resource = initializable.getResource(fileName_view+".fxml");
+		URL resource = initializable.getResource(String.format("/fxml/%s.fxml", fileName_view));
 		Parent root = FXMLLoader.load(resource);
 		Scene scene = new Scene(root);
 		stage.setScene(scene);
