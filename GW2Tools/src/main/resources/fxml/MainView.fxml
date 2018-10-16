@@ -22,13 +22,13 @@
          <children>
             <HBox VBox.vgrow="ALWAYS">
                <children>
-                  <Label text="Recipes" />
+                  <Label text="%recipes" />
                   <ProgressBar fx:id="pb_getRecipes" progress="0.0" HBox.hgrow="ALWAYS">
                      <HBox.margin>
                         <Insets />
                      </HBox.margin>
                   </ProgressBar>
-                  <Label text="Items" />
+                  <Label text="%items" />
                   <ProgressBar fx:id="pb_getItems" progress="0.0" />
                </children>
             </HBox>
@@ -51,11 +51,11 @@
                   <CheckBox fx:id="chbx_recipesRecursively" mnemonicParsing="false" text="Show Recipes Recursively" />
                </children>
             </HBox>
-            <Button fx:id="btn_analyse" mnemonicParsing="false" onAction="#analyse" text="Analyse" />
+            <Button fx:id="btn_analyse" mnemonicParsing="false" onAction="#analyse" text="%analyse" />
             <HBox>
                <children>
-                  <TextField fx:id="txt_filter" promptText="Filter" HBox.hgrow="ALWAYS" />
-                  <TextField fx:id="txt_minLevel" promptText="Min Level" />
+                  <TextField fx:id="txt_filter" promptText="%filter" HBox.hgrow="ALWAYS" />
+                  <TextField fx:id="txt_minLevel" promptText="%min_level" />
                </children>
             </HBox>
             <VBox fx:id="vbox_charDisciplines" />
@@ -70,17 +70,17 @@
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
-          <Menu mnemonicParsing="false" text="File">
+          <Menu mnemonicParsing="false" text="%file">
             <items>
               <MenuItem mnemonicParsing="false" text="Close" />
             </items>
           </Menu>
-          <Menu mnemonicParsing="false" text="Edit">
+          <Menu mnemonicParsing="false" text="%edit">
             <items>
-              <MenuItem mnemonicParsing="false" text="Delete" />
+              <MenuItem mnemonicParsing="false" onAction="#openSettings" text="%settings" />
             </items>
           </Menu>
-          <Menu mnemonicParsing="false" text="Help">
+          <Menu mnemonicParsing="false" text="%help">
             <items>
               <MenuItem mnemonicParsing="false" text="About" />
             </items>

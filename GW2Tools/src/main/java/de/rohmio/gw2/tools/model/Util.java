@@ -54,8 +54,12 @@ public class Util {
 	}
 
 	public static <T> T getCache(RequestType type, int id, Type clazz) {
-		Gson gson = new Gson();
 		File file = getFilePath(type, id);
+		return readFile(file, clazz);
+	}
+	
+	public static <T> T readFile(File file, Type clazz) {
+		Gson gson = new Gson();
 		T object = null;
 		if (file.exists()) {
 			try {
@@ -72,8 +76,12 @@ public class Util {
 	}
 
 	public static void writeCache(RequestType type, int id, Object object) {
-		Gson gson = new Gson();
 		File file = getFilePath(type, id);
+		writeFile(file, object);
+	}
+	
+	public static void writeFile(File file, Object object) {
+		Gson gson = new Gson();
 		file.getParentFile().mkdirs();
 		try {
 			file.createNewFile();

@@ -9,26 +9,28 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
+import de.rohmio.gw2.tools.App;
 import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.model.RequestProgress;
+import de.rohmio.gw2.tools.model.Settings;
 import de.rohmio.gw2.tools.view.RecipeView;
 import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import me.xhsun.guildwars2wrapper.GuildWars2;
-import me.xhsun.guildwars2wrapper.GuildWars2.LanguageSelect;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
@@ -102,14 +104,6 @@ public class MainViewController implements Initializable {
 			hbox_disciplineCheck.getChildren().add(checkBox);
 		}
 
-		// language selection
-		ToggleGroup langGroup = new ToggleGroup();
-		for (LanguageSelect lang : LanguageSelect.values()) {
-			RadioButton radio = new RadioButton(lang.getValue());
-			radio.setToggleGroup(langGroup);
-			radio.setOnAction(event -> GuildWars2.setLanguage(lang));
-		}
-
 		// filters
 		txt_filter.textProperty().addListener((ChangeListener<String>) (observable, oldValue, newValue) -> filter());
 		txt_minLevel.textProperty().addListener((ChangeListener<String>) (observable, oldValue, newValue) -> filter());
@@ -129,7 +123,7 @@ public class MainViewController implements Initializable {
 		List<Recipe> allRecipes = new ArrayList<>(recipeProgress.values());
 
 		// get recipes selected character has already learned
-		Character character = GuildWars2.getInstance().getSynchronous().getCharacter(Data.getInstance().getApiKey(),
+		Character character = GuildWars2.getInstance().getSynchronous().getCharacter(Settings.getInstance().getApiKey(),
 				choice_charName.getSelectionModel().getSelectedItem());
 		for (Discipline discipline : character.getCrafting()) {
 			vbox_charDisciplines.getChildren().add(new Label(String.format("%s: %d - active: %s",
@@ -237,16 +231,26 @@ public class MainViewController implements Initializable {
 		choice_charName.getItems().clear();
 
 		GuildWars2 gw2 = GuildWars2.getInstance();
-		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(Data.getInstance().getApiKey());
+		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(Settings.getInstance().getApiKey());
 		choice_charName.getItems().addAll(allCharacterName);
 		choice_charName.getSelectionModel().select(0);
 		String name = choice_charName.getSelectionModel().getSelectedItem();
-		CharacterCraftingLevel characterCrafting = gw2.getSynchronous().getCharacterCrafting(Data.getInstance().getApiKey(),
+		CharacterCraftingLevel characterCrafting = gw2.getSynchronous().getCharacterCrafting(Settings.getInstance().getApiKey(),
 				name);
 		for (Discipline discipline : characterCrafting.getCrafting()) {
 			CheckBox checkBox = craftingDisceplinesToCheckBox.get(discipline.getDiscipline());
 			checkBox.setSelected(discipline.isActive());
 		}
+	}
+	
+	@FXML
+	private void openSettings() throws IOException {
+		Scene scene = App.createScene(SettingsViewController.class);
+		Stage stage = new Stage();
+		stage.initModality(Modality.WINDOW_MODAL);
+		stage.initOwner(App.getStage());
+		stage.setScene(scene);
+		stage.showAndWait();
 	}
 
 }
