@@ -7,6 +7,9 @@ import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 
 public class Data {
+	
+	// TODO keep settings values here
+	// TODO use Settings class only to save settings in json file and load it from there
 
 	private static Data data;
 	

@@ -21,7 +21,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
@@ -53,9 +52,6 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private Label lbl_accountName;
-
-	@FXML
-	private Button btn_analyse;
 
 	@FXML
 	private TextField txt_filter;
@@ -91,14 +87,6 @@ public class MainViewController implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		Data.getInstance().getRecipeProgress().getProgress().addListener((ChangeListener<Number>) (observable, oldValue, newValue) -> {
-			if (newValue.doubleValue() < 1.0) {
-				btn_analyse.setDisable(true);
-			} else {
-				btn_analyse.setDisable(false);
-			}
-		});
-
 		// progress display
 		pb_getItems.progressProperty().bind(Data.getInstance().getItemProgress().getProgress());
 		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipeProgress().getProgress());
@@ -124,7 +112,7 @@ public class MainViewController implements Initializable {
 		
 		choice_charName.setOnAction(event -> {
 			try {
-				selectActiveDisciplines();
+				onSelectCharacter();
 			} catch (GuildWars2Exception e) {
 				e.printStackTrace();
 			}
@@ -136,11 +124,9 @@ public class MainViewController implements Initializable {
 			Account accountInfo = GuildWars2.getInstance().getSynchronous().getAccountInfo(apiKey);
 			String name = accountInfo.getName();
 			lbl_accountName.setText(name);
-			btn_analyse.setDisable(false);
 			getCharacters();
 		} catch (GuildWars2Exception e) {
 			lbl_accountName.setText(e.getMessage());
-			btn_analyse.setDisable(false);
 		}
 	}
 
@@ -154,51 +140,69 @@ public class MainViewController implements Initializable {
 		stage.showAndWait();
 	}
 	
-	private Map<String, CharacterCraftingLevel> characterCraftingMap = new HashMap<>();
-	
 	@FXML
 	private void getCharacters() throws GuildWars2Exception {
 		choice_charName.getItems().clear();
-		characterCraftingMap.clear();
-
 		GuildWars2 gw2 = GuildWars2.getInstance();
 		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(Settings.getInstance().getApiKey());
 		choice_charName.getItems().addAll(allCharacterName);
 	}
 	
-	private void selectActiveDisciplines() throws GuildWars2Exception {
-		String name = choice_charName.getSelectionModel().getSelectedItem();
-		CharacterCraftingLevel characterCrafting = characterCraftingMap.get(name);
-		if(characterCrafting == null) {
-			characterCrafting = GuildWars2.getInstance().getSynchronous()
-					.getCharacterCrafting(Settings.getInstance().getApiKey(), name);
-			characterCraftingMap.put(name, characterCrafting);
-		}
+	private void onSelectCharacter() throws GuildWars2Exception {
+		String characterName = choice_charName.getSelectionModel().getSelectedItem();
+		
+		System.out.println(String.format("Get character crafting for '%s'", characterName));
+		
+		CharacterCraftingLevel characterCrafting = GuildWars2.getInstance().getSynchronous()
+				.getCharacterCrafting(Settings.getInstance().getApiKey(), characterName);
+		
+		System.out.println(characterCrafting.getCrafting());
+		
+		// reset all radio buttons
 		for(CraftingDisciplines discipline : CraftingDisciplines.values()) {
 			RadioButton box = craftingDisceplinesToCheckBox.get(discipline);
 			box.setDisable(true);
 			box.setSelected(false);
 			box.setText(discipline.name());
 		}
+		// touch radio buttons that are necessary
 		for(Discipline discipline : characterCrafting.getCrafting()) {
 			RadioButton radioButton = craftingDisceplinesToCheckBox.get(discipline.getDiscipline());
 			radioButton.setDisable(!discipline.isActive());
 			radioButton.setText(discipline.getDiscipline().name() + " - "+discipline.getRating());
 		}
+		
+		try {
+			compareRecipes();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
-	@FXML
-	private void analyse() throws GuildWars2Exception, IOException, InterruptedException {
-		btn_analyse.setDisable(true);
-
-		// clear previous analysation
+	private void compareRecipes() throws GuildWars2Exception, IOException, InterruptedException {
+		// clear previous
 		scroll_recipes.getChildren().clear();
 		recipeViews.clear();
 
 		Thread thread = new Thread(() -> {
 			try {
 				// get ALL recipes
+				System.out.println("Getting all recipes");
 				RequestProgress<Recipe> recipeProgress = Data.getInstance().getRecipeProgress().getAll();
+				
+				System.out.println("waiting..");
+				while(recipeProgress.getProgress().get() < 1.0) {
+					try {
+						System.out.print(".");
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				System.out.println("All recipes received");
+				
 				List<Recipe> allRecipes = new ArrayList<>(recipeProgress.values());
 			
 				// get recipes selected character has already learned
@@ -253,7 +257,6 @@ public class MainViewController implements Initializable {
 					recipeViews.put(recipe, recipeView);
 					Platform.runLater(() -> scroll_recipes.getChildren().add(recipeView));
 				}
-				btn_analyse.setDisable(false);
 				txt_filter.setDisable(false);
 			
 				filter();
