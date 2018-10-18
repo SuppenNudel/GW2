@@ -2,9 +2,10 @@ package de.rohmio.gw2.tools.view.main;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
-import de.rohmio.gw2.tools.App;
+import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.model.Settings;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -38,7 +39,8 @@ public class SettingsViewController implements Initializable {
 		Settings.getInstance().setLang(lang);
 		Settings.getInstance().setApiKey(txt_apiKey.getText());
 		
-		App.setScene(MainViewController.class);
+		ResourceBundle resources = ResourceBundle.getBundle("bundle.MyBundle", new Locale(GuildWars2.getLanguage().getValue()));
+		Data.getInstance().setResources(resources);
 		
 		Node source = (Node) event.getSource();
 	    Stage stage = (Stage) source.getScene().getWindow();

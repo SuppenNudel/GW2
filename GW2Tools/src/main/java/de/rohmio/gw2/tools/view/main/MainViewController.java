@@ -3,6 +3,7 @@ package de.rohmio.gw2.tools.view.main;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +85,8 @@ public class MainViewController implements Initializable {
 	private Map<Recipe, RecipeView> recipeViews = new HashMap<>();
 
 	private StringProperty apiKeyProperty;
+	
+	private ToggleGroup disciplineToggle;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -91,18 +94,27 @@ public class MainViewController implements Initializable {
 		pb_getItems.progressProperty().bind(Data.getInstance().getItemProgress().getProgress());
 		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipeProgress().getProgress());
 
-		ToggleGroup toggleGroup = new ToggleGroup();
+		disciplineToggle = new ToggleGroup();
 		// discipline selection
 		for (CraftingDisciplines discipline : CraftingDisciplines.values()) {
 			RadioButton radioButton = new RadioButton(discipline.name());
-			radioButton.setToggleGroup(toggleGroup);
+			radioButton.setDisable(true);
+			radioButton.setToggleGroup(disciplineToggle);
+			radioButton.setOnAction(event -> filter());
 			craftingDisceplinesToCheckBox.put(discipline, radioButton);
 			hbox_disciplineCheck.getChildren().add(radioButton);
 		}
 
 		// filters
 		txt_filter.textProperty().addListener((ChangeListener<String>) (observable, oldValue, newValue) -> filter());
-		txt_minLevel.textProperty().addListener((ChangeListener<String>) (observable, oldValue, newValue) -> filter());
+		txt_minLevel.textProperty().addListener((ChangeListener<String>) (observable, oldValue, newValue) -> {
+			if (!newValue.matches("\\d*")) {
+				txt_minLevel.setText(newValue.replaceAll("[^\\d]", ""));
+			} else {
+				filter();
+			}
+		});
+		chbx_fromRecipe.setOnAction(event -> filter());
 
 		apiKeyProperty = Settings.getInstance().getApiKeyProperty();
 		checkApiKey(apiKeyProperty.get());
@@ -156,8 +168,6 @@ public class MainViewController implements Initializable {
 		CharacterCraftingLevel characterCrafting = GuildWars2.getInstance().getSynchronous()
 				.getCharacterCrafting(Settings.getInstance().getApiKey(), characterName);
 		
-		System.out.println(characterCrafting.getCrafting());
-		
 		// reset all radio buttons
 		for(CraftingDisciplines discipline : CraftingDisciplines.values()) {
 			RadioButton box = craftingDisceplinesToCheckBox.get(discipline);
@@ -169,7 +179,7 @@ public class MainViewController implements Initializable {
 		for(Discipline discipline : characterCrafting.getCrafting()) {
 			RadioButton radioButton = craftingDisceplinesToCheckBox.get(discipline.getDiscipline());
 			radioButton.setDisable(!discipline.isActive());
-			radioButton.setText(discipline.getDiscipline().name() + " - "+discipline.getRating());
+			radioButton.setText(discipline.getDiscipline().name());
 		}
 		
 		try {
@@ -215,17 +225,6 @@ public class MainViewController implements Initializable {
 				List<Recipe> recipesToShow = allRecipes.stream()
 						// remove already learned
 						.filter(r -> !charRecipes.contains(r.getId()))
-						// remove only available through item
-						.filter(r -> chbx_fromRecipe.isSelected() || !r.getFlags().contains(Flag.LearnedFromItem))
-						// only disciplines that are checked
-						.filter(r -> {
-							for (CraftingDisciplines discipline : r.getDisciplines()) {
-								if (craftingDisceplinesToCheckBox.get(discipline).isSelected()) {
-									return true;
-								}
-							}
-							return false;
-						})
 						// only available by discipline and rating
 						.filter(r -> {
 							for (Discipline discipline : character.getCrafting()) {
@@ -253,14 +252,13 @@ public class MainViewController implements Initializable {
 			
 				// display all discoverable recipes
 				for (Recipe recipe : recipesToShow) {
-					RecipeView recipeView = new RecipeTreeViewController(recipe, chbx_recipesRecursively.isSelected());
-					recipeViews.put(recipe, recipeView);
-					Platform.runLater(() -> scroll_recipes.getChildren().add(recipeView));
+					new Thread(() -> {
+						RecipeView recipeView = new RecipeTreeViewController(recipe, chbx_recipesRecursively.isSelected());
+						recipeViews.put(recipe, recipeView);
+						Platform.runLater(() -> scroll_recipes.getChildren().add(recipeView));
+					}).start();
 				}
 				txt_filter.setDisable(false);
-			
-				filter();
-
 			} catch (GuildWars2Exception e) {
 				e.printStackTrace();
 			}
@@ -270,47 +268,81 @@ public class MainViewController implements Initializable {
 	}
 
 	private void filter() {
-		String filterText = txt_filter.getText();
-		for (Recipe recipe : recipeViews.keySet()) {
-			Item outputItem = Data.getInstance().getItemProgress().getById(recipe.getOutputItemId());
-			String outputItemName = outputItem.getName();
-
-			String compoundNames = outputItemName;
-			for (Ingredient ingredient : recipe.getIngredients()) {
-				compoundNames = compoundNames + " "
-						+ Data.getInstance().getItemProgress().getById(ingredient.getItemId()).getName();
-			}
-
-			boolean txtFilter = true;
-			String[] split = filterText.toLowerCase().split(" ");
-			for (String part : split) {
-				boolean contains;
-				if (part.startsWith("!")) {
-					String substring = part.substring(1);
-					if (substring.isEmpty()) {
-						contains = true;
-					} else {
-						contains = !compoundNames.toLowerCase().contains(substring);
-					}
-				} else {
-					contains = compoundNames.toLowerCase().contains(part);
-				}
-				txtFilter = txtFilter && contains;
-			}
-
-			int minLevel = 0;
-			try {
-				minLevel = Integer.parseInt(txt_minLevel.getText());
-			} catch (NumberFormatException e) {
-			}
-			boolean filterMinLevel = minLevel <= recipe.getMinRating();
-
-			boolean show = txtFilter && filterMinLevel;
-
-			RecipeView view = recipeViews.get(recipe);
-			view.setVisible(show);
-			view.setManaged(show);
+		String itemNameFilter = txt_filter.getText();
+		int minLevelFilter = txt_minLevel.getText().isEmpty() ? 0 : Integer.parseInt(txt_minLevel.getText());
+		RadioButton selectedRadioButton = (RadioButton) disciplineToggle.getSelectedToggle();
+		CraftingDisciplines disciplineFilter = null;
+		if(selectedRadioButton != null) {
+			disciplineFilter = CraftingDisciplines.valueOf(selectedRadioButton.getText());
 		}
+		boolean includeFromRecipeSelected = chbx_fromRecipe.isSelected();
+		
+		for (Recipe recipe : recipeViews.keySet()) {
+			RecipeView view = recipeViews.get(recipe);
+			
+			// min level filter
+			boolean filterMinLevel = minLevelFilter <= recipe.getMinRating();
+			if(!filterMinLevel) {
+				filterOut(view, true);
+				continue;
+			}
+
+			// recipe from item filter
+			boolean filterOutFromRecipe  = !includeFromRecipeSelected && recipe.getFlags().contains(Flag.LearnedFromItem);
+			if(filterOutFromRecipe) {
+				filterOut(view, true);
+				continue;
+			}
+			
+			// discipline filter
+			boolean disciplineFiltered = !(disciplineFilter == null || recipe.getDisciplines().contains(disciplineFilter));
+			if(disciplineFiltered) {
+				filterOut(view, true);
+				continue;
+			}
+			
+			
+			List<String> itemNames = new ArrayList<>();
+			Item outputItem = Data.getInstance().getItemProgress().getById(recipe.getOutputItemId());
+			String outputItemName = outputItem.getName() + outputItem.getId();
+			itemNames.add(outputItemName);
+			for (Ingredient ingredient : recipe.getIngredients()) {
+				Item ingredientItem = Data.getInstance().getItemProgress().getById(ingredient.getItemId());
+				String ingredientItemName = ingredientItem.getName() + ingredientItem.getId();
+				itemNames.add(ingredientItemName);
+			}
+			
+			// item name filter
+			List<String> filterNames = Arrays.asList(itemNameFilter.toLowerCase().split(" "));
+			boolean match = itemNames.stream().anyMatch(itemName -> {
+				itemName = itemName.toLowerCase();
+				for(String filterName : filterNames) {
+					boolean reverse = false;
+					if(filterName.startsWith("!")) {
+						filterName = filterName.substring(1);
+						reverse = true;
+					}
+					filterName = filterName.toLowerCase();
+					boolean result = reverse ? !itemName.contains(filterName) : itemName.contains(filterName);
+					if(!result) {
+						return false;
+					}
+				}
+				return true;
+			});
+			if(!match) {
+				filterOut(view, true);
+				continue;
+			}
+			
+			// if nothing filtered show
+			filterOut(view, false);
+		}
+	}
+	
+	private void filterOut(RecipeView view, boolean filterOut) {
+		view.setVisible(!filterOut);
+		view.setManaged(!filterOut);
 	}
 
 }

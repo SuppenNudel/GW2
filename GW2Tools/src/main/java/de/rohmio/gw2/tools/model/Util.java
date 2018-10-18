@@ -2,14 +2,13 @@ package de.rohmio.gw2.tools.model;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.apache.commons.io.FileUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
@@ -21,6 +20,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
 public class Util {
+	
+	private static Gson gson = new Gson();
 
 	public static File getImage(String url) throws IOException {
 		String fileName = String.format("data/img/%s", new File(url).getName());
@@ -29,11 +30,7 @@ public class Util {
 			Request request = new Request.Builder().url(url).build();
 			OkHttpClient client = ClientFactory.getClient();
 			okhttp3.Response response = client.newCall(request).execute();
-			file.getParentFile().mkdirs();
-			file.createNewFile();
-			FileOutputStream fileOutputStream = new FileOutputStream(file);
-			fileOutputStream.write(response.body().bytes());
-			fileOutputStream.close();
+			FileUtils.writeStringToFile(file, response.body().string(), "UTF-8");
 		}
 		return file;
 	}
@@ -59,16 +56,18 @@ public class Util {
 	}
 	
 	public static <T> T readFile(File file, Type clazz) {
-		Gson gson = new Gson();
 		T object = null;
 		if (file.exists()) {
 			try {
-				object = gson.fromJson(new FileReader(file), clazz);
+				String json = FileUtils.readFileToString(file, "UTF-8");
+				object = gson.fromJson(json, clazz);
 			} catch (JsonSyntaxException e) {
 				e.printStackTrace();
 			} catch (JsonIOException e) {
 				e.printStackTrace();
 			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
@@ -81,14 +80,9 @@ public class Util {
 	}
 	
 	public static void writeFile(File file, Object object) {
-		Gson gson = new Gson();
-		file.getParentFile().mkdirs();
 		try {
-			file.createNewFile();
 			String json = gson.toJson(object);
-			FileWriter fileWriter = new FileWriter(file);
-			fileWriter.write(json);
-			fileWriter.close();
+			FileUtils.writeStringToFile(file, json, "UTF-8");
 		} catch (JsonIOException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

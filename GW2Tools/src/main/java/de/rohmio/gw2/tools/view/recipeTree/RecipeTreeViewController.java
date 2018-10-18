@@ -34,7 +34,11 @@ public class RecipeTreeViewController extends RecipeView {
 		
 		int outputItemId = recipe.getOutputItemId();
 		Item outputItem = Data.getInstance().getItemProgress().getById(outputItemId);
-		root.getChildren().add(new ItemView(outputItem, recipe.getOutputItemCount()));
+		try {
+			root.getChildren().add(new ItemView(outputItem, recipe.getOutputItemCount()));
+		} catch (NullPointerException e) {
+			System.err.println(outputItemId + " not loaded");
+		}
 		
 		HBox hbox_ingredients = new HBox();
 		hbox_ingredients.setAlignment(Pos.TOP_CENTER);
@@ -47,15 +51,23 @@ public class RecipeTreeViewController extends RecipeView {
 				if(recursive) {
 					List<Integer> searchRecipes = GuildWars2.getInstance().getSynchronous().searchRecipes(false, ingredientId);
 					if(searchRecipes.isEmpty()) {
-						ItemView itemView = new ItemView(ingredientItem, count);
-						hbox_ingredients.getChildren().add(itemView);
+						try {
+							ItemView itemView = new ItemView(ingredientItem, count);
+							hbox_ingredients.getChildren().add(itemView);
+						} catch (NullPointerException e) {
+							System.err.println(outputItemId + " not loaded");
+						}
 					} else {
 						Recipe subRecipe = Data.getInstance().getRecipeProgress().get(searchRecipes.get(0));
 						hbox_ingredients.getChildren().add(createTree(subRecipe));	
 					}
 				} else {
-					ItemView itemView = new ItemView(ingredientItem, count);
-					hbox_ingredients.getChildren().add(itemView);
+					try {
+						ItemView itemView = new ItemView(ingredientItem, count);
+						hbox_ingredients.getChildren().add(itemView);
+					} catch (NullPointerException e) {
+						System.err.println(outputItemId + " not loaded");
+					}
 				}
 			} catch (GuildWars2Exception e) {
 				e.printStackTrace();

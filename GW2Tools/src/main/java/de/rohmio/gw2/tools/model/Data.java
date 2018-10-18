@@ -1,6 +1,12 @@
 package de.rohmio.gw2.tools.model;
 
+import java.util.Locale;
+import java.util.ResourceBundle;
+
 import de.rohmio.gw2.tools.model.RequestProgress.RequestType;
+import javafx.beans.binding.StringBinding;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Item;
@@ -15,6 +21,8 @@ public class Data {
 	
 	private RequestProgress<Item> itemProgress;
 	private RequestProgress<Recipe> recipeProgress;
+	
+	private ObjectProperty<ResourceBundle> resources = new SimpleObjectProperty<>();
 
 	private Data() throws NullPointerException, GuildWars2Exception {
 		try {
@@ -31,6 +39,8 @@ public class Data {
 		if (data == null) {
 			try {
 				data = new Data();
+				ResourceBundle resources = ResourceBundle.getBundle("bundle.MyBundle", new Locale(GuildWars2.getLanguage().getValue()));
+				data.setResources(resources);
 			} catch (NullPointerException | GuildWars2Exception e) {
 				e.printStackTrace();
 			}
@@ -43,6 +53,26 @@ public class Data {
 	}
 	public RequestProgress<Recipe> getRecipeProgress() {
 		return recipeProgress;
+	}
+	
+	public ObjectProperty<ResourceBundle> resourcesProperty() {
+		return resources;
+	}
+	public final ResourceBundle getResources() {
+		return resourcesProperty().get();
+	}
+	public final void setResources(ResourceBundle resources) {
+		resourcesProperty().set(resources);
+	}
+	
+	public StringBinding getStringBinding(String key) {
+		return new StringBinding() {
+			{ bind(resourcesProperty()); }
+			@Override
+			protected String computeValue() {
+				return getResources().getString(key);
+			}
+		};
 	}
 	
 }
