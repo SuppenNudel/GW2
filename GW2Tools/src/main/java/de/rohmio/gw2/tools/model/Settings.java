@@ -20,6 +20,9 @@ public class Settings {
 	public static Settings getInstance() {
 		if (settings == null) {
 			settings = Util.readFile(file, Settings.class);
+			if(settings == null) {
+				settings = new Settings();
+			}
 			
 			settings.apiKeyProperty.set(settings.apiKey);
 			
