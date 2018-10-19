@@ -19,7 +19,7 @@
    <bottom>
       <VBox fx:id="vbox_tasks" BorderPane.alignment="CENTER">
          <children>
-            <HBox VBox.vgrow="ALWAYS">
+            <HBox>
                <children>
                   <Label text="%recipes" />
                   <ProgressBar fx:id="pb_getRecipes" progress="0.0" HBox.hgrow="ALWAYS">
@@ -28,7 +28,7 @@
                      </HBox.margin>
                   </ProgressBar>
                   <Label text="%items" />
-                  <ProgressBar fx:id="pb_getItems" progress="0.0" />
+                  <ProgressBar fx:id="pb_getItems" maxWidth="1.7976931348623157E308" progress="0.0" HBox.hgrow="ALWAYS" />
                </children>
             </HBox>
          </children>
@@ -53,13 +53,13 @@
             </HBox>
             <HBox>
                <children>
-                  <TextField fx:id="txt_filter" promptText="%filter" HBox.hgrow="ALWAYS" />
+                  <TextField fx:id="txt_filter" promptText="%filter" HBox.hgrow="SOMETIMES" />
                   <TextField fx:id="txt_minLevel" promptText="%min_level" />
                </children>
             </HBox>
             <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
                <content>
-                  <FlowPane fx:id="scroll_recipes" hgap="10.0" prefHeight="400.0" prefWidth="600.0" vgap="20.0" />
+                  <FlowPane fx:id="scroll_recipes" hgap="10.0" vgap="20.0" />
                </content>
             </ScrollPane>
          </children>
