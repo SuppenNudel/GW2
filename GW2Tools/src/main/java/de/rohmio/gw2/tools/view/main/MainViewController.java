@@ -70,6 +70,9 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private CheckBox chbx_showWholeRecipe;
+	
+	@FXML
+	private CheckBox chbx_showAlreadyLearned;
 
 	@FXML // current tasks done by application
 	private VBox vbox_tasks;
@@ -86,7 +89,7 @@ public class MainViewController implements Initializable {
 	private StringProperty apiKeyProperty;
 	
 	private ToggleGroup disciplineToggle;
-
+	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		initResourceBundle(resources);
@@ -116,6 +119,7 @@ public class MainViewController implements Initializable {
 			}
 		});
 		chbx_byableRecipe.setOnAction(event -> filter());
+		chbx_showAlreadyLearned.setOnAction(event -> filter());
 
 		apiKeyProperty = Data.getInstance().accessTokenProperty();
 		checkApiKey(apiKeyProperty.get());
@@ -196,6 +200,8 @@ public class MainViewController implements Initializable {
 			e.printStackTrace();
 		}
 	}
+	
+	private List<Integer> charRecipes;
 
 	private void compareRecipes() throws GuildWars2Exception, IOException, InterruptedException {
 		// clear previous
@@ -222,15 +228,14 @@ public class MainViewController implements Initializable {
 				List<Recipe> allRecipes = new ArrayList<>(recipeProgress.values());
 			
 				// get recipes selected character has already learned
-				Character character;
-					character = GuildWars2.getInstance().getSynchronous().getCharacter(Data.getInstance().getAccessToken(),
+				Character character = GuildWars2.getInstance().getSynchronous().getCharacter(Data.getInstance().getAccessToken(),
 							choice_charName.getSelectionModel().getSelectedItem());
-				List<Integer> charRecipes = character.getRecipes();
+				charRecipes = character.getRecipes();
 			
 				// get filtered list
 				List<Recipe> recipesToShow = allRecipes.stream()
 						// remove already learned
-						.filter(r -> !charRecipes.contains(r.getId()))
+//						.filter(r -> !charRecipes.contains(r.getId()))
 						// only available by discipline and rating
 						.filter(r -> {
 							for (Discipline discipline : character.getCrafting()) {
@@ -307,7 +312,16 @@ public class MainViewController implements Initializable {
 				continue;
 			}
 			
+			// ignore already learned
+			boolean recipeAlreadyLearned = charRecipes.contains(recipe.getId());
+			boolean showAlreadyLearned = chbx_showAlreadyLearned.isSelected();
+			boolean alreadyLearnedAndIgnored = !showAlreadyLearned && recipeAlreadyLearned;
+			if(alreadyLearnedAndIgnored) {
+				filterOut(view, true);
+				continue;
+			}
 			
+			// get items for item name filter
 			List<String> itemNames = new ArrayList<>();
 			Item outputItem = Data.getInstance().getItemProgress().getById(recipe.getOutputItemId());
 			String outputItemName = outputItem.getName() + outputItem.getId();

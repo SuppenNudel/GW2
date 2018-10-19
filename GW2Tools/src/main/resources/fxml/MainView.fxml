@@ -49,6 +49,7 @@
                <children>
                   <CheckBox fx:id="chbx_byableRecipe" mnemonicParsing="false" text="include from recipe" />
                   <CheckBox fx:id="chbx_showWholeRecipe" mnemonicParsing="false" text="Show Recipes Recursively" />
+                  <CheckBox fx:id="chbx_showAlreadyLearned" mnemonicParsing="false" text="Show already learned" />
                </children>
             </HBox>
             <HBox>
