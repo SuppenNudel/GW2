@@ -47,8 +47,8 @@
             <HBox fx:id="hbox_disciplineCheck" />
             <HBox alignment="CENTER_LEFT">
                <children>
-                  <CheckBox fx:id="chbx_fromRecipe" mnemonicParsing="false" text="include from recipe" />
-                  <CheckBox fx:id="chbx_recipesRecursively" mnemonicParsing="false" text="Show Recipes Recursively" />
+                  <CheckBox fx:id="chbx_byableRecipe" mnemonicParsing="false" text="include from recipe" />
+                  <CheckBox fx:id="chbx_showWholeRecipe" mnemonicParsing="false" text="Show Recipes Recursively" />
                </children>
             </HBox>
             <HBox>

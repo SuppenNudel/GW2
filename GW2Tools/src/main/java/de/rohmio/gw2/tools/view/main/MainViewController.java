@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import de.rohmio.gw2.tools.App;
 import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.model.RequestProgress;
-import de.rohmio.gw2.tools.model.Settings;
 import de.rohmio.gw2.tools.view.RecipeView;
 import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.application.Platform;
@@ -67,10 +66,10 @@ public class MainViewController implements Initializable {
 	private FlowPane scroll_recipes;
 
 	@FXML
-	private CheckBox chbx_fromRecipe;
+	private CheckBox chbx_byableRecipe;
 
 	@FXML
-	private CheckBox chbx_recipesRecursively;
+	private CheckBox chbx_showWholeRecipe;
 
 	@FXML // current tasks done by application
 	private VBox vbox_tasks;
@@ -90,6 +89,8 @@ public class MainViewController implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		initResourceBundle(resources);
+		
 		// progress display
 		pb_getItems.progressProperty().bind(Data.getInstance().getItemProgress().getProgress());
 		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipeProgress().getProgress());
@@ -114,9 +115,9 @@ public class MainViewController implements Initializable {
 				filter();
 			}
 		});
-		chbx_fromRecipe.setOnAction(event -> filter());
+		chbx_byableRecipe.setOnAction(event -> filter());
 
-		apiKeyProperty = Settings.getInstance().getApiKeyProperty();
+		apiKeyProperty = Data.getInstance().accessTokenProperty();
 		checkApiKey(apiKeyProperty.get());
 		apiKeyProperty.addListener((ChangeListener<String>) (observable, oldValue, newValue) -> {
 			checkApiKey(newValue);
@@ -129,6 +130,11 @@ public class MainViewController implements Initializable {
 				e.printStackTrace();
 			}
 		});
+	}
+	
+	private void initResourceBundle(ResourceBundle resource) {
+		chbx_byableRecipe.textProperty().bind(Data.getInstance().getStringBinding("show_buyable_recipes"));
+		chbx_showWholeRecipe.textProperty().bind(Data.getInstance().getStringBinding("show_whole_recipe"));
 	}
 
 	private void checkApiKey(String apiKey) {
@@ -156,7 +162,7 @@ public class MainViewController implements Initializable {
 	private void getCharacters() throws GuildWars2Exception {
 		choice_charName.getItems().clear();
 		GuildWars2 gw2 = GuildWars2.getInstance();
-		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(Settings.getInstance().getApiKey());
+		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(Data.getInstance().getAccessToken());
 		choice_charName.getItems().addAll(allCharacterName);
 	}
 	
@@ -166,7 +172,7 @@ public class MainViewController implements Initializable {
 		System.out.println(String.format("Get character crafting for '%s'", characterName));
 		
 		CharacterCraftingLevel characterCrafting = GuildWars2.getInstance().getSynchronous()
-				.getCharacterCrafting(Settings.getInstance().getApiKey(), characterName);
+				.getCharacterCrafting(Data.getInstance().getAccessToken(), characterName);
 		
 		// reset all radio buttons
 		for(CraftingDisciplines discipline : CraftingDisciplines.values()) {
@@ -217,7 +223,7 @@ public class MainViewController implements Initializable {
 			
 				// get recipes selected character has already learned
 				Character character;
-					character = GuildWars2.getInstance().getSynchronous().getCharacter(Settings.getInstance().getApiKey(),
+					character = GuildWars2.getInstance().getSynchronous().getCharacter(Data.getInstance().getAccessToken(),
 							choice_charName.getSelectionModel().getSelectedItem());
 				List<Integer> charRecipes = character.getRecipes();
 			
@@ -253,7 +259,7 @@ public class MainViewController implements Initializable {
 				// display all discoverable recipes
 				for (Recipe recipe : recipesToShow) {
 					new Thread(() -> {
-						RecipeView recipeView = new RecipeTreeViewController(recipe, chbx_recipesRecursively.isSelected());
+						RecipeView recipeView = new RecipeTreeViewController(recipe, chbx_showWholeRecipe.isSelected());
 						recipeViews.put(recipe, recipeView);
 						Platform.runLater(() -> scroll_recipes.getChildren().add(recipeView));
 					}).start();
@@ -275,7 +281,7 @@ public class MainViewController implements Initializable {
 		if(selectedRadioButton != null) {
 			disciplineFilter = CraftingDisciplines.valueOf(selectedRadioButton.getText());
 		}
-		boolean includeFromRecipeSelected = chbx_fromRecipe.isSelected();
+		boolean includeFromRecipeSelected = chbx_byableRecipe.isSelected();
 		
 		for (Recipe recipe : recipeViews.keySet()) {
 			RecipeView view = recipeViews.get(recipe);
