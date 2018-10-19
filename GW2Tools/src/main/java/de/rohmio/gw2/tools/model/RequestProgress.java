@@ -91,7 +91,10 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 						@SuppressWarnings("unchecked")
 						@Override
 						public void onResponse(Call<List<Item>> call, Response<List<Item>> response) {
-							handleResult((List<T>) response.body());
+							List<T> body = (List<T>) response.body();
+							if(body != null) {
+								handleResult(body);
+							}
 						}
 						@Override
 						public void onFailure(Call<List<Item>> call, Throwable t) {
@@ -154,6 +157,8 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 				}
 			}
 		}
+		
+		updateProgress();
 		
 		// convert to array
 		int[] allIdArray = toRequest.stream().mapToInt(i -> i).toArray();

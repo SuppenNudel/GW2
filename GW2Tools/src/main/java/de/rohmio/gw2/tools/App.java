@@ -5,7 +5,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import de.rohmio.gw2.tools.model.Data;
-import de.rohmio.gw2.tools.model.Settings;
 import de.rohmio.gw2.tools.view.main.MainViewController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -20,7 +19,6 @@ public class App extends Application {
 	private static Class<? extends Initializable> startingView = MainViewController.class;
 	
 	public static void main(String[] args) {
-		Settings.getInstance();
 		launch(args);
 	}
 	
