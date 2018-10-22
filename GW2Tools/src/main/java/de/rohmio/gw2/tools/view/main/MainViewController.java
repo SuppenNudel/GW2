@@ -250,7 +250,10 @@ public class MainViewController implements Initializable {
 				System.out.println("All: " + allRecipes.size());
 				System.out.println("Char: " + charRecipes.size());
 				System.out.println("To Discover: " + recipesToShow.size());
-			
+				
+				// get ALL needed items
+				System.out.println("Getting all needed items");
+					
 				// fetch all Item information here, so they don't have to be called individually
 				List<Integer> itemIds = new ArrayList<>();
 				for (Recipe recipe : recipesToShow) {
@@ -259,7 +262,22 @@ public class MainViewController implements Initializable {
 							.collect(Collectors.toList());
 					itemIds.addAll(ingredientIds);
 				}
-				Data.getInstance().getItemProgress().getByIds(itemIds);
+				RequestProgress<Item> itemProgress = Data.getInstance().getItemProgress().getByIds(itemIds);
+				
+				System.out.println("waiting..");
+				while(!itemProgress.values().stream().map(i -> i.getId()).collect(Collectors.toList()).containsAll(itemIds)) {
+					try {
+						System.out.print(".");
+						Thread.sleep(200);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				System.out.println("All needed items received");
+				
+//				List<Item> allItems = new ArrayList<>(itemProgress.values());
+				
+				
 			
 				// display all discoverable recipes
 				for (Recipe recipe : recipesToShow) {
