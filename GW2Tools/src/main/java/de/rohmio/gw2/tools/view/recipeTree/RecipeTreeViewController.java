@@ -16,8 +16,6 @@ import me.xhsun.guildwars2wrapper.model.v2.Recipe.Ingredient;
 
 public class RecipeTreeViewController extends RecipeView {
 	
-	// TODO let this class handle the filtering by its own
-	
 	private boolean recursive;
 	
 	public RecipeTreeViewController(Recipe recipe, boolean recursive) {

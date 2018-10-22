@@ -48,13 +48,13 @@
             <HBox alignment="CENTER_LEFT">
                <children>
                   <CheckBox fx:id="chbx_byableRecipe" mnemonicParsing="false" text="include from recipe" />
-                  <CheckBox fx:id="chbx_showWholeRecipe" mnemonicParsing="false" text="Show Recipes Recursively" />
-                  <CheckBox fx:id="chbx_showAlreadyLearned" mnemonicParsing="false" text="Show already learned" />
+                  <CheckBox fx:id="chbx_showWholeRecipe" disable="true" mnemonicParsing="false" text="Show Recipes Recursively" />
+                  <CheckBox fx:id="chbx_showAlreadyLearned" disable="true" mnemonicParsing="false" text="Show already learned" />
                </children>
             </HBox>
             <HBox>
                <children>
-                  <TextField fx:id="txt_filter" promptText="%filter" HBox.hgrow="SOMETIMES" />
+                  <TextField fx:id="txt_itemNameFilter" promptText="%filter" HBox.hgrow="SOMETIMES" />
                   <TextField fx:id="txt_minLevel" promptText="%min_level" />
                </children>
             </HBox>
