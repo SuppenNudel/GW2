@@ -5,131 +5,156 @@ import java.util.Arrays;
 import java.util.List;
 
 import de.rohmio.gw2.tools.model.Data;
-import javafx.scene.control.CheckBox;
+import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.StringProperty;
 import javafx.scene.control.RadioButton;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Toggle;
 import javafx.scene.layout.VBox;
 import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe.Flag;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe.Ingredient;
+import me.xhsun.guildwars2wrapper.model.v2.character.CharacterRecipes;
 import me.xhsun.guildwars2wrapper.model.v2.util.comm.CraftingDisciplines;
 
 public abstract class RecipeView extends VBox {
 
 	private Recipe recipe;
+	private CharacterRecipes characterRecipes;
+	private List<Integer> unlockedRecipes;
 
-	private TextField txt_filter;
-	private TextField txt_minLevel;
-	private ToggleGroup disciplineToggle;
-	private CheckBox chbx_byableRecipe;
+	private StringProperty minRecipeLevelFilter;
+	private StringProperty itemNameFilter;
+	private ObjectExpression<Toggle> disciplineFilter;
+	private BooleanProperty byableRecipeFilter;
+	private BooleanProperty alreadyLearnedFilter;
 
-	public void addFilter(TextField txt_filter, TextField txt_minLevel, ToggleGroup disciplineToggle,
-			CheckBox chbx_byableRecipe) {
-		this.txt_filter = txt_filter;
-		this.txt_minLevel = txt_minLevel;
-		this.disciplineToggle = disciplineToggle;
-		this.chbx_byableRecipe = chbx_byableRecipe;
-
-		txt_filter.textProperty().addListener((observable, oldValue, newValue) -> filter());
-		txt_minLevel.textProperty().addListener((observable, oldValue, newValue) -> filter());
-
-		disciplineToggle.selectedToggleProperty().addListener((observable, oldValue, newValue) -> filter());
-		chbx_byableRecipe.selectedProperty().addListener((observable, oldValue, newValue) -> filter());
+	public RecipeView(Recipe recipe, CharacterRecipes characterRecipes, List<Integer> unlockedRecipes) {
+		this.recipe = recipe;
+		this.characterRecipes = characterRecipes;
+		this.unlockedRecipes = unlockedRecipes;
 	}
 
-	private void filter() {
-		String itemNameFilter = txt_filter.getText();
-		int minLevelFilter = txt_minLevel.getText().isEmpty() ? 0 : Integer.parseInt(txt_minLevel.getText());
-		RadioButton selectedRadioButton = (RadioButton) disciplineToggle.getSelectedToggle();
-		CraftingDisciplines disciplineFilter = null;
-		if (selectedRadioButton != null) {
-			disciplineFilter = CraftingDisciplines.valueOf(selectedRadioButton.getText());
+	public void handleFilter(boolean show) {
+		if (show) {
+			// nicht gleich zeigen sondern andere noch überprüfen
+			show(disciplineFilter() && itemNameFilter() && minRecipeLevelFilter() && byableRecipeFilter()
+					&& alreadyLearnedFilter());
+		} else {
+			// falls eh nicht angezeigt dann gleich raus filtern
+			show(false);
 		}
-		boolean includeFromRecipeSelected = chbx_byableRecipe.isSelected();
+	}
 
-		// min level filter
-		boolean filterMinLevel = minLevelFilter <= recipe.getMinRating();
-		if (!filterMinLevel) {
-			filterOut(true);
-			return;
+	public void addRecipeLevelFilter(StringProperty textProperty) {
+		minRecipeLevelFilter = textProperty;
+		minRecipeLevelFilter.addListener((observable, oldValue, newValue) -> handleFilter(minRecipeLevelFilter()));
+
+	}
+
+	public void addItemNameFilter(StringProperty textProperty) {
+		itemNameFilter = textProperty;
+		itemNameFilter.addListener((observable, oldValue, newValue) -> handleFilter(itemNameFilter()));
+	}
+
+	public void addDisciplineFilter(ObjectExpression<Toggle> toggleProperty) {
+		disciplineFilter = toggleProperty;
+		disciplineFilter.addListener((observable, oldValue, newValue) -> handleFilter(disciplineFilter()));
+	}
+
+	public void addByableRecipeFilter(BooleanProperty selectedProperty) {
+		byableRecipeFilter = selectedProperty;
+		byableRecipeFilter.addListener((observable, oldValue, newValue) -> handleFilter(byableRecipeFilter()));
+	}
+
+	public void addAlreadyLearnedFilter(BooleanProperty selectedProperty) {
+		alreadyLearnedFilter = selectedProperty;
+		alreadyLearnedFilter.addListener((observable, oldValue, newValue) -> handleFilter(alreadyLearnedFilter()));
+	}
+
+	private boolean alreadyLearnedFilter() {
+		boolean characterUnlocked = characterRecipes.getRecipes().contains(recipe.getId());
+		boolean accountUnlocked = unlockedRecipes.contains(recipe.getId());
+		boolean showAlreadyLearned = alreadyLearnedFilter.get();
+		boolean unlockedAndIgnored = showAlreadyLearned || (!characterUnlocked && !accountUnlocked);
+		return unlockedAndIgnored;
+	}
+
+	private boolean minRecipeLevelFilter() {
+		if (minRecipeLevelFilter.get().isEmpty()) {
+			return true;
 		}
+		int minLevel = Integer.parseInt(minRecipeLevelFilter.get());
+		return recipe.getMinRating() >= minLevel;
+	}
 
-		// recipe from item filter
-		boolean filterOutFromRecipe = !includeFromRecipeSelected && recipe.getFlags().contains(Flag.LearnedFromItem);
-		if (filterOutFromRecipe) {
-			filterOut(true);
-			return;
+	private boolean byableRecipeFilter() {
+		boolean show = true;
+		if (!byableRecipeFilter.get() && recipe.getFlags().contains(Flag.LearnedFromItem)) {
+			show = false;
 		}
+		return show;
+	}
 
-		// discipline filter
-		boolean disciplineFiltered = !(disciplineFilter == null || recipe.getDisciplines().contains(disciplineFilter));
-		if (disciplineFiltered) {
-			filterOut(true);
-			return;
+	private boolean disciplineFilter() {
+		Toggle toggle = disciplineFilter.get();
+		if (toggle == null) {
+			return true;
 		}
+		boolean result = true;
+		if (toggle instanceof RadioButton) {
+			RadioButton radio = (RadioButton) toggle;
+			CraftingDisciplines discipline = (CraftingDisciplines) radio.getUserData();
+			result = recipe.getDisciplines().contains(discipline);
+		} else {
+			System.err.println(toggle + " is not a radio button");
+		}
+		return result;
+	}
 
-		// ignore already learned
-		// boolean recipeAlreadyLearned = charRecipes.contains(recipe.getId());
-		// boolean showAlreadyLearned = chbx_showAlreadyLearned.isSelected();
-		// boolean alreadyLearnedAndIgnored = !showAlreadyLearned &&
-		// recipeAlreadyLearned;
-		// if (alreadyLearnedAndIgnored) {
-		// filterOut(true);
-		// continue;
-		// }
+	private boolean itemNameFilter() {
+		String filterText = itemNameFilter.get();
 
 		// get items for item name filter
 		List<String> itemNames = new ArrayList<>();
 		Item outputItem = Data.getInstance().getItemProgress().getById(recipe.getOutputItemId());
-		String outputItemName = outputItem.getName() + outputItem.getId();
+		String outputItemName = outputItem.getName(); // + outputItem.getId() for filter by id
 		itemNames.add(outputItemName);
 		for (Ingredient ingredient : recipe.getIngredients()) {
 			Item ingredientItem = Data.getInstance().getItemProgress().getById(ingredient.getItemId());
-			String ingredientItemName = ingredientItem.getName() + ingredientItem.getId();
+			String ingredientItemName = ingredientItem.getName(); // + ingredientItem.getId() for filter by id
 			itemNames.add(ingredientItemName);
 		}
 
 		// item name filter
-		List<String> filterNames = Arrays.asList(itemNameFilter.toLowerCase().split(" "));
-		boolean match = itemNames.stream().anyMatch(itemName -> {
-			itemName = itemName.toLowerCase();
-			for (String filterName : filterNames) {
-				boolean reverse = false;
-				if (filterName.startsWith("!")) {
-					filterName = filterName.substring(1);
-					reverse = true;
-				}
-				filterName = filterName.toLowerCase();
-				boolean result = reverse ? !itemName.contains(filterName) : itemName.contains(filterName);
-				if (!result) {
-					return false;
+		final List<String> filterNames = Arrays.asList(filterText.toLowerCase().split(" "));
+		boolean match = filterNames.stream().allMatch(filterName -> {
+			filterName = filterName.toLowerCase();
+			boolean not = false;
+			if (filterName.startsWith("!")) {
+				filterName = filterName.substring(1);
+				not = true;
+			}
+			boolean result = not; // grundsätzlich alles anzeigen außer not filter ist aktiv
+			for (String itemName : itemNames) {
+				itemName = itemName.toLowerCase();
+				boolean contains = itemName.contains(filterName);
+				if (not) {
+					contains = !contains;
+					result &= contains; // wenn not filter aktiv filterung umdrehen
+				} else {
+					result |= contains;
 				}
 			}
-			return true;
+			return result;
 		});
-		if (!match) {
-			filterOut(true);
-			return;
-		}
-
-		// if nothing filtered show
-		filterOut(false);
-
+		return match;
 	}
 
-	private void filterOut(boolean filterOut) {
-		setVisible(!filterOut);
-		setManaged(!filterOut);
-	}
-
-	public RecipeView(Recipe recipe) {
-		this.recipe = recipe;
-	}
-
-	public Recipe getRecipe() {
-		return recipe;
+	private void show(boolean show) {
+		setVisible(show);
+		setManaged(show);
 	}
 
 }
