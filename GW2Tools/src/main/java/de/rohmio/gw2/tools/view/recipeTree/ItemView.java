@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.model.Util;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
@@ -14,10 +15,25 @@ import javafx.scene.layout.VBox;
 import me.xhsun.guildwars2wrapper.model.v2.Item;
 
 public class ItemView extends VBox {
-	
-	public ItemView(Item item, int count) {
+
+	public ItemView(int itemId, int count) {
+		Item item = Data.getInstance().getItemProgress().getById(itemId);
+		try {
+			init(item, count);
+		} catch (NullPointerException e) {
+			System.err.println("Can't load Item with ID " + itemId);
+		}
+	}
+
+//	public ItemView(Item item, int count) {
+//		init(item, count);
+//	}
+
+	private void init(Item item, int count) throws NullPointerException {
 		setAlignment(Pos.TOP_CENTER);
-		
+		if(item == null) {
+			return;
+		}
 		getChildren().add(new Label(String.format("%dx %s", count, item.getName())));
 		Platform.runLater(() -> {
 			try {

@@ -30,7 +30,7 @@ public class Util {
 			Request request = new Request.Builder().url(url).build();
 			OkHttpClient client = ClientFactory.getClient();
 			okhttp3.Response response = client.newCall(request).execute();
-			FileUtils.writeStringToFile(file, response.body().string(), "UTF-8");
+			FileUtils.writeByteArrayToFile(file, response.body().bytes());
 		}
 		return file;
 	}
