@@ -32,6 +32,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
+import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe.Ingredient;
 import me.xhsun.guildwars2wrapper.model.v2.account.Account;
@@ -257,8 +258,20 @@ public class MainViewController implements Initializable {
 						.collect(Collectors.toList());
 				itemIds.addAll(ingredientIds);
 			}
-			Data.getInstance().getItemProgress().getByIds(itemIds);
-
+			
+            RequestProgress<Item> itemProgress = Data.getInstance().getItemProgress().getByIds(itemIds);
+            
+            System.out.println("waiting..");
+            while(!itemProgress.values().stream().map(i -> i.getId()).collect(Collectors.toList()).containsAll(itemIds)) {
+                try {
+                    System.out.print(".");
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("All needed items received");
+            
 			// display all discoverable recipes
 			for (Recipe recipe : filteredRecipes) {
 				Thread recipeViewThread = new Thread(() -> {
