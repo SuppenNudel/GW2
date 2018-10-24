@@ -5,12 +5,19 @@ import java.util.Arrays;
 import java.util.List;
 
 import de.rohmio.gw2.tools.model.Data;
+import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Toggle;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe.Flag;
@@ -34,6 +41,27 @@ public abstract class RecipeView extends VBox {
 		this.recipe = recipe;
 		this.characterRecipes = characterRecipes;
 		this.unlockedRecipes = unlockedRecipes;
+		
+		ContextMenu contextMenu = createContextMenu();
+		Node owner = this;
+		setOnContextMenuRequested(event -> {
+			contextMenu.show(owner, event.getScreenX(), event.getScreenY());
+		});
+	}
+	
+	private ContextMenu createContextMenu() {
+		MenuItem showDetailed = new MenuItem("Show Detailed");
+		showDetailed.setOnAction(event -> {
+			RecipeTreeViewController recipeTreeView = new RecipeTreeViewController(recipe, characterRecipes, unlockedRecipes, true);
+			ScrollPane scrollPane = new ScrollPane(recipeTreeView);
+			Scene scene = new Scene(scrollPane);
+			Stage stage = new Stage();
+			stage.setHeight(USE_COMPUTED_SIZE);
+			stage.setWidth(USE_COMPUTED_SIZE);
+			stage.setScene(scene);
+			stage.show();
+		});
+		return new ContextMenu(showDetailed);
 	}
 
 	public void handleFilter(boolean show) {

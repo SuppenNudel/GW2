@@ -17,6 +17,9 @@ import me.xhsun.guildwars2wrapper.model.v2.Item;
 public class ItemView extends VBox {
 
 	public ItemView(int itemId, int count) {
+		setPrefWidth(USE_COMPUTED_SIZE);
+		setPrefHeight(USE_COMPUTED_SIZE);
+		
 		Item item = Data.getInstance().getItemProgress().getById(itemId);
 		try {
 			init(item, count);

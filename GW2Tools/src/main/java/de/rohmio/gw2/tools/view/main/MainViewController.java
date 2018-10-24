@@ -275,7 +275,7 @@ public class MainViewController implements Initializable {
 			// display all discoverable recipes
 			for (Recipe recipe : filteredRecipes) {
 				Thread recipeViewThread = new Thread(() -> {
-					RecipeView recipeView = new RecipeTreeViewController(recipe, characterRecipes, unlockedRecipes);
+					RecipeView recipeView = new RecipeTreeViewController(recipe, characterRecipes, unlockedRecipes, false);
 					recipeView.addItemNameFilter(txt_itemNameFilter.textProperty());
 					recipeView.addRecipeLevelFilter(txt_minLevel.textProperty());
 					recipeView.addDisciplineFilter(disciplineToggle.selectedToggleProperty());
