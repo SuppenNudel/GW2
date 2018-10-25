@@ -3,13 +3,18 @@ package de.rohmio.gw2.tools.view.recipeTree;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.model.Util;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -27,6 +32,8 @@ import retrofit2.Response;
 public class ItemView extends VBox {
 
 	private boolean detailed;
+	private Item item;
+	private int count;
 
 	public ItemView(int itemId, int count, boolean detailed) {
 		setPrefWidth(USE_COMPUTED_SIZE);
@@ -34,9 +41,10 @@ public class ItemView extends VBox {
 
 		this.detailed = detailed;
 
-		Item item = Data.getInstance().getItemProgress().getById(itemId);
+		item = Data.getInstance().getItemProgress().getById(itemId);
+		this.count = count;
 		try {
-			init(item, count);
+			init();
 		} catch (NullPointerException e) {
 			System.err.println("Can't load Item with ID " + itemId);
 		}
@@ -45,8 +53,17 @@ public class ItemView extends VBox {
 	// public ItemView(Item item, int count) {
 	// init(item, count);
 	// }
+	
+	// TODO put detailed recipe contextMenu here
 
-	private void init(Item item, int count) throws NullPointerException {
+	private void init() throws NullPointerException {
+		ContextMenu contextMenu = createContextMenu();
+		Node owner = this;
+//		setOnContextMenuRequested(event -> {
+//			contextMenu.show(owner, event.getScreenX(), event.getScreenY());
+//			event.consume();
+//		});
+		
 		setAlignment(Pos.TOP_CENTER);
 		if (item == null) {
 			return;
@@ -118,6 +135,23 @@ public class ItemView extends VBox {
 				}
 			}
 		}
+	}
+
+	private ContextMenu createContextMenu() {
+		MenuItem openWiki = new MenuItem("Open Wiki");
+		openWiki.setOnAction(event -> {
+			if (java.awt.Desktop.isDesktopSupported()) {
+				try {
+					String path = item.getName().replace(" ", "_");
+					java.awt.Desktop.getDesktop().browse(new URI("https://wiki.guildwars2.com/wiki/"+path));
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		return new ContextMenu(openWiki);
 	}
 
 }
