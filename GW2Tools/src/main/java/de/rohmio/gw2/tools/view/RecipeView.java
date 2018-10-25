@@ -77,28 +77,37 @@ public abstract class RecipeView extends VBox {
 
 	public void addRecipeLevelFilter(StringProperty textProperty) {
 		minRecipeLevelFilter = textProperty;
-		minRecipeLevelFilter.addListener((observable, oldValue, newValue) -> handleFilter(minRecipeLevelFilter()));
-
+		synchronized (minRecipeLevelFilter) {
+			minRecipeLevelFilter.addListener((observable, oldValue, newValue) -> handleFilter(minRecipeLevelFilter()));
+		}
 	}
 
 	public void addItemNameFilter(StringProperty textProperty) {
 		itemNameFilter = textProperty;
-		itemNameFilter.addListener((observable, oldValue, newValue) -> handleFilter(itemNameFilter()));
+		synchronized (itemNameFilter) {
+			itemNameFilter.addListener((observable, oldValue, newValue) -> handleFilter(itemNameFilter()));
+		}
 	}
 
 	public void addDisciplineFilter(ObjectExpression<Toggle> toggleProperty) {
 		disciplineFilter = toggleProperty;
-		disciplineFilter.addListener((observable, oldValue, newValue) -> handleFilter(disciplineFilter()));
+		synchronized (disciplineFilter) {
+			disciplineFilter.addListener((observable, oldValue, newValue) -> handleFilter(disciplineFilter()));
+		}
 	}
 
 	public void addByableRecipeFilter(BooleanProperty selectedProperty) {
 		byableRecipeFilter = selectedProperty;
-		byableRecipeFilter.addListener((observable, oldValue, newValue) -> handleFilter(byableRecipeFilter()));
+		synchronized (byableRecipeFilter) {
+			byableRecipeFilter.addListener((observable, oldValue, newValue) -> handleFilter(byableRecipeFilter()));
+		}
 	}
 
 	public void addAlreadyLearnedFilter(BooleanProperty selectedProperty) {
 		alreadyLearnedFilter = selectedProperty;
-		alreadyLearnedFilter.addListener((observable, oldValue, newValue) -> handleFilter(alreadyLearnedFilter()));
+		synchronized (alreadyLearnedFilter) {
+			alreadyLearnedFilter.addListener((observable, oldValue, newValue) -> handleFilter(alreadyLearnedFilter()));
+		}
 	}
 
 	private boolean alreadyLearnedFilter() {

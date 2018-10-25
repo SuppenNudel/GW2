@@ -16,13 +16,13 @@ import me.xhsun.guildwars2wrapper.model.v2.character.CharacterRecipes;
 
 public class RecipeTreeViewController extends RecipeView { // VBox
 
-	private boolean recursive;
+	private boolean detailed;
 
 	public RecipeTreeViewController(Recipe recipe, CharacterRecipes characterRecipes, List<Integer> unlockedRecipes,
-			boolean recursive) {
+			boolean detailed) {
 		super(recipe, characterRecipes, unlockedRecipes);
 
-		this.recursive = recursive;
+		this.detailed = detailed;
 		
 		setPrefWidth(USE_COMPUTED_SIZE);
 		setPrefHeight(USE_COMPUTED_SIZE);
@@ -49,7 +49,7 @@ public class RecipeTreeViewController extends RecipeView { // VBox
 		}
 		int outputItemId = recipe.getOutputItemId();
 		// Item outputItem = Data.getInstance().getItemProgress().getById(outputItemId);
-		root.getChildren().add(new ItemView(outputItemId, outputCount));
+		root.getChildren().add(new ItemView(outputItemId, outputCount, detailed));
 
 		HBox hbox_ingredients = new HBox();
 		hbox_ingredients.setAlignment(Pos.TOP_CENTER);
@@ -59,7 +59,7 @@ public class RecipeTreeViewController extends RecipeView { // VBox
 		for (Ingredient ingredient : recipe.getIngredients()) {
 			int ingredientId = ingredient.getItemId();
 			int count = ingredient.getCount();
-			if (recursive) {
+			if (detailed) {
 				List<Integer> searchRecipes = null;
 				try {
 					searchRecipes = GuildWars2.getInstance().getSynchronous().searchRecipes(false, ingredientId);
@@ -70,10 +70,10 @@ public class RecipeTreeViewController extends RecipeView { // VBox
 					Recipe subRecipe = Data.getInstance().getRecipeProgress().get(searchRecipes.get(0));
 					hbox_ingredients.getChildren().add(createTree(subRecipe, count));
 				} else {
-					hbox_ingredients.getChildren().add(new ItemView(ingredientId, count));
+					hbox_ingredients.getChildren().add(new ItemView(ingredientId, count, detailed));
 				}
 			} else {
-				hbox_ingredients.getChildren().add(new ItemView(ingredientId, count));
+				hbox_ingredients.getChildren().add(new ItemView(ingredientId, count, detailed));
 			}
 		}
 		root.getChildren().add(hbox_ingredients);
