@@ -225,15 +225,15 @@ public class MainViewController implements Initializable {
 			System.out.println("Getting all recipes");
 			RequestProgress<Recipe> recipeProgress = Data.getInstance().getRecipeProgress().getAll();
 
-			System.out.println("waiting..");
 			while (recipeProgress.getProgress().get() < 1.0) {
 				try {
-					System.out.print(".");
+					System.out.println(recipeProgress.getProgress().get());
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
+			System.out.println(recipeProgress.getProgress().get());
 			System.out.println("All recipes received");
 
 			List<Recipe> allRecipes = new ArrayList<>(recipeProgress.values());

@@ -24,7 +24,6 @@ import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Item.Flag;
 import me.xhsun.guildwars2wrapper.model.v2.commerce.Prices;
-import me.xhsun.guildwars2wrapper.model.v2.commerce.Prices.Price;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -98,6 +97,8 @@ public class ItemView extends VBox {
 									List<Prices> prices = response.body();
 									if (prices == null) {
 										VBox vBoxFlags = new VBox();
+										vBoxFlags.setPrefWidth(USE_COMPUTED_SIZE);
+										vBoxFlags.setPrefHeight(USE_COMPUTED_SIZE);
 										vBoxFlags.setAlignment(Pos.TOP_CENTER);
 										vBoxFlags.getChildren().add(new Label("No Listings:"));
 										Label label = new Label(item.getFlags().toString());
@@ -111,22 +112,17 @@ public class ItemView extends VBox {
 										});
 									} else {
 										Prices price = prices.get(0);
-										Price buys = price.getBuys();
-										VBox vBoxBuys = new VBox(new Label("Buys"),
-												// new Label("Listings: " + buys.getListings()),
-												new Label("Quantity: " + buys.getQuantity()),
-												new Label("Price: " + buys.getUnitPrice()));
-	
-										Price sells = price.getSells();
-										VBox vBoxSells = new VBox(new Label("Sells"),
-												// new Label("Listings: " + sells.getListings()),
-												new Label("Quantity: " + sells.getQuantity()),
-												new Label("Price: " + sells.getUnitPrice()));
-										Platform.runLater(() -> {
-											HBox hbox = new HBox(vBoxBuys, vBoxSells);
-											hbox.setAlignment(Pos.TOP_CENTER);
-											getChildren().add(hbox);
-										});
+										try {
+											PriceView buysView = new PriceView("Buys", price.getBuys());
+											PriceView sellsView = new PriceView("Sells", price.getSells());
+											Platform.runLater(() -> {
+												HBox hbox = new HBox(buysView, sellsView);
+												hbox.setAlignment(Pos.TOP_CENTER);
+												getChildren().add(hbox);
+											});
+										} catch (IOException e) {
+											e.printStackTrace();
+										}
 									}
 								}
 							});

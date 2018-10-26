@@ -16,7 +16,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Toggle;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
@@ -25,7 +25,7 @@ import me.xhsun.guildwars2wrapper.model.v2.Recipe.Ingredient;
 import me.xhsun.guildwars2wrapper.model.v2.character.CharacterRecipes;
 import me.xhsun.guildwars2wrapper.model.v2.util.comm.CraftingDisciplines;
 
-public abstract class RecipeView extends VBox {
+public abstract class RecipeView extends AnchorPane {
 
 	private Recipe recipe;
 	private CharacterRecipes characterRecipes;
@@ -54,10 +54,12 @@ public abstract class RecipeView extends VBox {
 		showDetailed.setOnAction(event -> {
 			RecipeTreeViewController recipeTreeView = new RecipeTreeViewController(recipe, characterRecipes, unlockedRecipes, true);
 			ScrollPane scrollPane = new ScrollPane(recipeTreeView);
+			scrollPane.setPrefHeight(USE_COMPUTED_SIZE);
+			scrollPane.setPrefWidth(USE_COMPUTED_SIZE);
 			Scene scene = new Scene(scrollPane);
 			Stage stage = new Stage();
-			stage.setHeight(USE_COMPUTED_SIZE);
-			stage.setWidth(USE_COMPUTED_SIZE);
+			stage.setWidth(600);
+			stage.setHeight(400);
 			stage.setScene(scene);
 			stage.show();
 		});

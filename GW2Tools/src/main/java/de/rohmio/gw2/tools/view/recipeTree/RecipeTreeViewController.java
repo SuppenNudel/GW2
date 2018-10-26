@@ -14,7 +14,7 @@ import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe.Ingredient;
 import me.xhsun.guildwars2wrapper.model.v2.character.CharacterRecipes;
 
-public class RecipeTreeViewController extends RecipeView { // VBox
+public class RecipeTreeViewController extends RecipeView { // Anchor Pane
 
 	private boolean detailed;
 
@@ -27,12 +27,16 @@ public class RecipeTreeViewController extends RecipeView { // VBox
 		setPrefWidth(USE_COMPUTED_SIZE);
 		setPrefHeight(USE_COMPUTED_SIZE);
 
-		getChildren().add(createTree(recipe, -1));
+		HBox hBox = new HBox(createTree(recipe, -1));
+		
+		hBox.setPrefWidth(USE_COMPUTED_SIZE);
+		hBox.setPrefHeight(USE_COMPUTED_SIZE);
+		hBox.setAlignment(Pos.TOP_CENTER);
+		getChildren().add(hBox);
 	}
 
 	private VBox createTree(Recipe recipe, int prevCount) {
 		VBox root = new VBox(10.0);
-		root.setSpacing(10.0);
 		root.setPadding(new Insets(10.0));
 		
 		root.setPrefWidth(USE_COMPUTED_SIZE);
@@ -51,11 +55,10 @@ public class RecipeTreeViewController extends RecipeView { // VBox
 		// Item outputItem = Data.getInstance().getItemProgress().getById(outputItemId);
 		root.getChildren().add(new ItemView(outputItemId, outputCount, detailed));
 
-		HBox hbox_ingredients = new HBox();
+		HBox hbox_ingredients = new HBox(10.0);
 		hbox_ingredients.setAlignment(Pos.TOP_CENTER);
 		hbox_ingredients.setPrefWidth(USE_COMPUTED_SIZE);
 		hbox_ingredients.setPrefHeight(USE_COMPUTED_SIZE);
-		hbox_ingredients.setSpacing(10.0);
 		for (Ingredient ingredient : recipe.getIngredients()) {
 			int ingredientId = ingredient.getItemId();
 			int count = ingredient.getCount();
