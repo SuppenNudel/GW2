@@ -5,7 +5,7 @@
 
 	<groupId>de.rohm-io.gw2</groupId>
 	<artifactId>tools</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.2.1</version>
 	<packaging>jar</packaging>
 
 	<name>GW2 Tools</name>
@@ -39,7 +39,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>${project.name}</finalName>
+		<finalName>${project.name}_${project.version}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
