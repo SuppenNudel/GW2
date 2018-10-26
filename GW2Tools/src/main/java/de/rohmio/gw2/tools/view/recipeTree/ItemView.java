@@ -113,8 +113,8 @@ public class ItemView extends VBox {
 									} else {
 										Prices price = prices.get(0);
 										try {
-											PriceView buysView = new PriceView("Buys", price.getBuys());
-											PriceView sellsView = new PriceView("Sells", price.getSells());
+											PriceView buysView = new PriceView("Buys", price.getBuys(), count);
+											PriceView sellsView = new PriceView("Sells", price.getSells(), count);
 											Platform.runLater(() -> {
 												HBox hbox = new HBox(buysView, sellsView);
 												hbox.setAlignment(Pos.TOP_CENTER);
