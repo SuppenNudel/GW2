@@ -225,6 +225,7 @@ public class MainViewController implements Initializable {
 			System.out.println("Getting all recipes");
 			RequestProgress<Recipe> recipeProgress = Data.getInstance().getRecipeProgress().getAll();
 
+			// wait until all recipes are loaded 
 			while (recipeProgress.getProgress().get() < 1.0) {
 				try {
 					System.out.println(recipeProgress.getProgress().get());

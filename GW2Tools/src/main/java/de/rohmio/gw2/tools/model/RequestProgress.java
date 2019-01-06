@@ -143,17 +143,20 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 	}
 
 	public RequestProgress<T> getByIds(List<Integer> itemIds) {
-		List<Integer> toRequest = new ArrayList<>(itemIds);
+		List<Integer> toRequest = new ArrayList<>();
 		
 		// TODO keep track of toRequest
 		for(Integer id : itemIds) {
-			if(containsKey(id)) {
-				toRequest.remove(id);
-			} else { // not already loaded
+			if(!containsKey(id)) {
+				// if not already loaded
+				// try to get from cache
 				T value = Util.getCache(type, id, type.getClazz());
 				if(value != null) {
-					toRequest.remove(id);
+					// if found add to loaded
 					put(id, value);
+				} else {
+					// if not found add to toRequest
+					toRequest.add(id);
 				}
 			}
 		}
