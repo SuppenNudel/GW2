@@ -45,7 +45,7 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private ChoiceBox<String> choice_charName;
-
+	
 	@FXML
 	private Label lbl_accountName;
 
@@ -69,6 +69,9 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private CheckBox chbx_showAlreadyLearned;
+	
+	@FXML
+	private Label lbl_currentlyDisplayed;
 
 	@FXML // current tasks done by application
 	private VBox vbox_tasks;
@@ -156,8 +159,12 @@ public class MainViewController implements Initializable {
 		choice_charName.getItems().addAll(allCharacterName);
 	}
 
+	@FXML
 	private void onSelectCharacter() throws GuildWars2Exception {
 		String characterName = choice_charName.getSelectionModel().getSelectedItem();
+		if(characterName == null) {
+			return;
+		}
 
 		System.out.println(String.format("Get character crafting for '%s'", characterName));
 
@@ -249,7 +256,8 @@ public class MainViewController implements Initializable {
 				}
 				return false;
 			}).collect(Collectors.toList());
-			System.out.println("Filtered by discipline and rating Recipe Count: "+filteredRecipes.size());
+			int size = filteredRecipes.size();
+			System.out.println("Filtered by discipline and rating Recipe Count: "+size);
 
 			// fetch all Item information here, so they don't have to be called individually
 			List<Integer> itemIds = new ArrayList<>();
@@ -266,12 +274,14 @@ public class MainViewController implements Initializable {
             while(!itemProgress.values().stream().map(i -> i.getId()).collect(Collectors.toList()).containsAll(itemIds)) {
                 try {
                     System.out.print(".");
-                    Thread.sleep(200);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
             System.out.println("All needed items received");
+            
+            Platform.runLater(() -> lbl_currentlyDisplayed.setText("Recipes: "+filteredRecipes.size()));
             
 			// display all discoverable recipes
 			for (Recipe recipe : filteredRecipes) {
