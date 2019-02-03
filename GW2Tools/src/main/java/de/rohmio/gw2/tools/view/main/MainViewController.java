@@ -95,6 +95,10 @@ public class MainViewController implements Initializable {
 		// progress display
 		pb_getItems.progressProperty().bind(Data.getInstance().getItemProgress().getProgress());
 		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipeProgress().getProgress());
+		
+		new Thread(() -> {
+			Data.getInstance().getRecipeProgress().getAll();
+		}).start();
 
 		// discipline selection
 		disciplineToggle = new ToggleGroup();
@@ -128,6 +132,7 @@ public class MainViewController implements Initializable {
 	private void initResourceBundle(ResourceBundle resource) {
 		chbx_byableRecipe.textProperty().bind(Data.getInstance().getStringBinding("show_buyable_recipes"));
 		chbx_showWholeRecipe.textProperty().bind(Data.getInstance().getStringBinding("show_whole_recipe"));
+		chbx_showAlreadyLearned.textProperty().bind(Data.getInstance().getStringBinding("show_already_learned"));
 	}
 
 	private void checkApiKey(String apiKey) {

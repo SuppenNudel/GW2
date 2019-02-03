@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javafx.beans.property.DoubleProperty;
@@ -22,6 +23,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer, T> {
+	
+	private static Logger log = Logger.getLogger("RequestProgress");
 	
 	public enum RequestType {
 		ITEM(Item.class, "item"), RECIPE(Recipe.class, "recipe");
@@ -147,16 +150,20 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 		
 		// TODO keep track of toRequest
 		for(Integer id : itemIds) {
+			log.finest("Iterating getByIds: "+id);
 			if(!containsKey(id)) {
 				// if not already loaded
+				log.finest("Iterating getByIds: "+id+" is not loaded yet");
 				// try to get from cache
 				T value = Util.getCache(type, id, type.getClazz());
 				if(value != null) {
 					// if found add to loaded
 					put(id, value);
+					log.finest("Iterating getByIds: "+id+" found in cache and added");
 				} else {
 					// if not found add to toRequest
 					toRequest.add(id);
+					log.finest("Iterating getByIds: "+id+" NOT found in cache -> to request");
 				}
 			}
 		}
