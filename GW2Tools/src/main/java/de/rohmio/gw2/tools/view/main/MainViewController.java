@@ -8,8 +8,8 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import de.rohmio.gw2.tools.App;
-import de.rohmio.gw2.tools.model.Data;
-import de.rohmio.gw2.tools.model.RequestProgress;
+import de.rohmio.gw2.tools.main.Data;
+import de.rohmio.gw2.tools.main.RequestProgress;
 import de.rohmio.gw2.tools.view.RecipeView;
 import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.application.Platform;

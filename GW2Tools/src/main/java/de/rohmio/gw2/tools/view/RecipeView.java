@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import de.rohmio.gw2.tools.model.Data;
+import de.rohmio.gw2.tools.main.Data;
 import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.BooleanProperty;

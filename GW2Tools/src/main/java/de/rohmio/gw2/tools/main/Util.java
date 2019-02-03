@@ -1,4 +1,4 @@
-package de.rohmio.gw2.tools.model;
+package de.rohmio.gw2.tools.main;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,7 +14,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
-import de.rohmio.gw2.tools.model.RequestProgress.RequestType;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

@@ -1,4 +1,4 @@
-package de.rohmio.gw2.tools.model;
+package de.rohmio.gw2.tools.main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,33 +26,14 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 	
 	private static Logger log = Logger.getLogger("RequestProgress");
 	
-	public enum RequestType {
-		ITEM(Item.class, "item"), RECIPE(Recipe.class, "recipe");
-		
-		private Class<?> clazz;
-		private String path;
-		
-		private RequestType(Class<?> clazz, String path) {
-			this.clazz = clazz;
-			this.path = path;
-		}
-		
-		public Class<?> getClazz() {
-			return clazz;
-		}
-		public String getPath() {
-			return path;
-		}
-	}
-
 	// double value for how much percentage this data type is loaded
 	private DoubleProperty progress = new SimpleDoubleProperty();
 	
 	// list of all ids available for this data type
 	private List<Integer> allIds;
 	private RequestType type;
-//	private List<Integer> toRequest;
 
+	// function to get all ids of this data type
 	private Callable<List<Integer>> idCaller;
 	private Function<int[], Void> infoFunction;
 
@@ -148,7 +129,6 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 	public RequestProgress<T> getByIds(List<Integer> itemIds) {
 		List<Integer> toRequest = new ArrayList<>();
 		
-		// TODO keep track of toRequest
 		for(Integer id : itemIds) {
 			log.finest("Iterating getByIds: "+id);
 			if(!containsKey(id)) {

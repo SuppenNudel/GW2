@@ -1,10 +1,9 @@
-package de.rohmio.gw2.tools.model;
+package de.rohmio.gw2.tools.main;
 
 import java.io.File;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import de.rohmio.gw2.tools.model.RequestProgress.RequestType;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

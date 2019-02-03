@@ -3,18 +3,13 @@ package de.rohmio.gw2.tools.view.recipeTree;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 
-import de.rohmio.gw2.tools.model.Data;
-import de.rohmio.gw2.tools.model.Util;
+import de.rohmio.gw2.tools.main.Data;
+import de.rohmio.gw2.tools.main.Util;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -56,8 +51,8 @@ public class ItemView extends VBox {
 	// TODO put detailed recipe contextMenu here
 
 	private void init() throws NullPointerException {
-		ContextMenu contextMenu = createContextMenu();
-		Node owner = this;
+//		ContextMenu contextMenu = createContextMenu();
+//		Node owner = this;
 //		setOnContextMenuRequested(event -> {
 //			contextMenu.show(owner, event.getScreenX(), event.getScreenY());
 //			event.consume();
@@ -133,21 +128,21 @@ public class ItemView extends VBox {
 		}
 	}
 
-	private ContextMenu createContextMenu() {
-		MenuItem openWiki = new MenuItem("Open Wiki");
-		openWiki.setOnAction(event -> {
-			if (java.awt.Desktop.isDesktopSupported()) {
-				try {
-					String path = item.getName().replace(" ", "_");
-					java.awt.Desktop.getDesktop().browse(new URI("https://wiki.guildwars2.com/wiki/"+path));
-				} catch (IOException e) {
-					e.printStackTrace();
-				} catch (URISyntaxException e) {
-					e.printStackTrace();
-				}
-			}
-		});
-		return new ContextMenu(openWiki);
-	}
+//	private ContextMenu createContextMenu() {
+//		MenuItem openWiki = new MenuItem("Open Wiki");
+//		openWiki.setOnAction(event -> {
+//			if (java.awt.Desktop.isDesktopSupported()) {
+//				try {
+//					String path = item.getName().replace(" ", "_");
+//					java.awt.Desktop.getDesktop().browse(new URI("https://wiki.guildwars2.com/wiki/"+path));
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				} catch (URISyntaxException e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		});
+//		return new ContextMenu(openWiki);
+//	}
 
 }

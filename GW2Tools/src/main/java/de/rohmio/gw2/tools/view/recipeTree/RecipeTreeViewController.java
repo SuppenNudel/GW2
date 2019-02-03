@@ -2,7 +2,7 @@ package de.rohmio.gw2.tools.view.recipeTree;
 
 import java.util.List;
 
-import de.rohmio.gw2.tools.model.Data;
+import de.rohmio.gw2.tools.main.Data;
 import de.rohmio.gw2.tools.view.RecipeView;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

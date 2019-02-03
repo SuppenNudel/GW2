@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import de.rohmio.gw2.tools.model.Util;
+import de.rohmio.gw2.tools.main.Util;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
