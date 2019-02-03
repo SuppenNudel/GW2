@@ -44,10 +44,11 @@
                   <Label fx:id="lbl_accountName" />
                </children>
             </HBox>
-            <HBox spacing="10.0">
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
                <children>
                   <ChoiceBox fx:id="choice_charName" prefWidth="150.0" />
                   <Button mnemonicParsing="false" onAction="#onSelectCharacter" text="reload" />
+                  <CheckBox fx:id="chbx_pauseFilter" mnemonicParsing="false" text="%pause_filter" />
                </children>
             </HBox>
             <HBox fx:id="hbox_disciplineCheck" />

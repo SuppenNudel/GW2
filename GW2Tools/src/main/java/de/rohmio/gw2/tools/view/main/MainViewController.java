@@ -10,12 +10,18 @@ import java.util.stream.Collectors;
 import de.rohmio.gw2.tools.App;
 import de.rohmio.gw2.tools.main.Data;
 import de.rohmio.gw2.tools.main.RequestProgress;
-import de.rohmio.gw2.tools.view.RecipeView;
+import de.rohmio.gw2.tools.model.RecipeFilter;
 import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.application.Platform;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
+import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
@@ -47,6 +53,9 @@ public class MainViewController implements Initializable {
 	private ChoiceBox<String> choice_charName;
 	
 	@FXML
+	private CheckBox chbx_pauseFilter;
+
+	@FXML
 	private Label lbl_accountName;
 
 	@FXML
@@ -69,7 +78,7 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private CheckBox chbx_showAlreadyLearned;
-	
+
 	@FXML
 	private Label lbl_currentlyDisplayed;
 
@@ -88,6 +97,8 @@ public class MainViewController implements Initializable {
 	private List<Integer> unlockedRecipes;
 	private CharacterCraftingLevel characterCrafting;
 
+	private ObservableSet<Recipe> recipesToDisplay = FXCollections.observableSet();
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		initResourceBundle(resources);
@@ -95,10 +106,12 @@ public class MainViewController implements Initializable {
 		// progress display
 		pb_getItems.progressProperty().bind(Data.getInstance().getItemProgress().getProgress());
 		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipeProgress().getProgress());
-		
-		new Thread(() -> {
+
+		Thread thread = new Thread(() -> {
 			Data.getInstance().getRecipeProgress().getAll();
-		}).start();
+		});
+		thread.setDaemon(true);
+		thread.start();
 
 		// discipline selection
 		disciplineToggle = new ToggleGroup();
@@ -125,6 +138,50 @@ public class MainViewController implements Initializable {
 				onSelectCharacter();
 			} catch (GuildWars2Exception e) {
 				e.printStackTrace();
+			}
+		});
+		
+		chbx_pauseFilter.selectedProperty().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+				if(!newValue) { // got deselected
+					try {
+						compareRecipes();
+					} catch (GuildWars2Exception | IOException | InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+
+		recipesToDisplay.addListener(new SetChangeListener<Recipe>() {
+			@Override
+			public void onChanged(Change<? extends Recipe> change) {
+				if (change.wasAdded() && !chbx_pauseFilter.isSelected()) {
+					Recipe recipe = change.getElementAdded();
+					Platform.runLater(() -> {
+						RecipeTreeViewController view = new RecipeTreeViewController(recipe, false);
+						scroll_recipes.getChildren().add(view);
+					});
+				} else if (change.wasRemoved()) {
+					Recipe recipe = change.getElementRemoved();
+					Platform.runLater(() -> {
+						RecipeTreeViewController toRemove = null;
+						for (Node node : scroll_recipes.getChildren()) {
+							if (node instanceof RecipeTreeViewController) {
+								RecipeTreeViewController view = (RecipeTreeViewController) node;
+								if (view.getRecipe() == recipe) {
+									toRemove = view;
+									break;
+								}
+							}
+						}
+						scroll_recipes.getChildren().remove(toRemove);
+					});
+				} else {
+					System.err.println("Change on nothing added or removed");
+				}
+				lbl_currentlyDisplayed.setText("Recipes: " + recipesToDisplay.size());
 			}
 		});
 	}
@@ -167,7 +224,7 @@ public class MainViewController implements Initializable {
 	@FXML
 	private void onSelectCharacter() throws GuildWars2Exception {
 		String characterName = choice_charName.getSelectionModel().getSelectedItem();
-		if(characterName == null) {
+		if (characterName == null) {
 			return;
 		}
 
@@ -232,82 +289,101 @@ public class MainViewController implements Initializable {
 		// clear previous
 		scroll_recipes.getChildren().clear();
 
-		Thread thread = new Thread(() -> {
-			// get ALL recipes
-			System.out.println("Getting all recipes");
-			RequestProgress<Recipe> recipeProgress = Data.getInstance().getRecipeProgress().getAll();
+		// get ALL recipes
+		System.out.println("Getting all recipes");
+		RequestProgress<Recipe> recipeProgress = Data.getInstance().getRecipeProgress().getAll();
 
-			// wait until all recipes are loaded 
-			while (recipeProgress.getProgress().get() < 1.0) {
-				try {
-					System.out.println(recipeProgress.getProgress().get());
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+		// wait until all recipes are loaded
+		while (recipeProgress.getProgress().get() < 1.0) {
+			try {
+				System.out.println(recipeProgress.getProgress().get());
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println(recipeProgress.getProgress().get());
+		System.out.println("All recipes received");
+
+		List<Recipe> allRecipes = new ArrayList<>(recipeProgress.values());
+		System.out.println("All Recipe Count: " + allRecipes.size());
+
+		List<Recipe> filteredRecipes = allRecipes.stream().filter(recipe -> {
+			for (Discipline charDiscipline : characterCrafting.getCrafting()) {
+				// check if character is able to craft this
+				if (recipe.getDisciplines().contains(charDiscipline.getDiscipline())
+						&& recipe.getMinRating() <= charDiscipline.getRating()) {
+					return true;
 				}
 			}
-			System.out.println(recipeProgress.getProgress().get());
-			System.out.println("All recipes received");
+			return false;
+		}).collect(Collectors.toList());
+		int size = filteredRecipes.size();
+		System.out.println("Filtered by discipline and rating Recipe Count: " + size);
 
-			List<Recipe> allRecipes = new ArrayList<>(recipeProgress.values());
-			System.out.println("All Recipe Count: "+allRecipes.size());
-			
-			List<Recipe> filteredRecipes = allRecipes.stream().filter(r -> {
-				for (Discipline discipline :  characterCrafting.getCrafting()) {
-					if (r.getDisciplines().contains(discipline.getDiscipline())
-							&& r.getMinRating() <= discipline.getRating()) {
-						return true;
+		// fetch all Item information here, so they don't have to be called individually
+		List<Integer> itemIds = new ArrayList<>();
+		for (Recipe recipe : filteredRecipes) {
+			itemIds.add(recipe.getOutputItemId());
+			List<Integer> ingredientIds = recipe.getIngredients().stream().map(Ingredient::getItemId)
+					.collect(Collectors.toList());
+			itemIds.addAll(ingredientIds);
+		}
+
+		RequestProgress<Item> itemProgress = Data.getInstance().getItemProgress().getByIds(itemIds);
+
+		System.out.println("waiting..");
+		while (!itemProgress.values().stream().map(i -> i.getId()).collect(Collectors.toList()).containsAll(itemIds)) {
+			try {
+				System.out.print(".");
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("All needed items received");
+
+		createRecipeViews(filteredRecipes);
+	}
+
+	private void createRecipeViews(List<Recipe> recipes) {
+		recipesToDisplay.clear();
+		for (Recipe recipe : recipes) {
+			RecipeFilter recipeFilter = new RecipeFilter(recipe, characterRecipes, unlockedRecipes);
+
+			recipeFilter.addItemNameFilter(txt_itemNameFilter.textProperty());
+			recipeFilter.addRecipeLevelFilter(txt_minLevel.textProperty());
+			recipeFilter.addDisciplineFilter(disciplineToggle.selectedToggleProperty());
+			recipeFilter.addByableRecipeFilter(chbx_byableRecipe.selectedProperty());
+			recipeFilter.addAlreadyLearnedFilter(chbx_showAlreadyLearned.selectedProperty());
+
+			recipeFilter.displayProperty().addListener(new ChangeListener<Boolean>() {
+				@Override
+				public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+					if (newValue) { // if display
+						recipesToDisplay.add(recipe);
+					} else {
+						recipesToDisplay.remove(recipe);
 					}
 				}
-				return false;
-			}).collect(Collectors.toList());
-			int size = filteredRecipes.size();
-			System.out.println("Filtered by discipline and rating Recipe Count: "+size);
+			});
 
-			// fetch all Item information here, so they don't have to be called individually
-			List<Integer> itemIds = new ArrayList<>();
-			for (Recipe recipe : filteredRecipes) {
-				itemIds.add(recipe.getOutputItemId());
-				List<Integer> ingredientIds = recipe.getIngredients().stream().map(Ingredient::getItemId)
-						.collect(Collectors.toList());
-				itemIds.addAll(ingredientIds);
-			}
-			
-            RequestProgress<Item> itemProgress = Data.getInstance().getItemProgress().getByIds(itemIds);
-            
-            System.out.println("waiting..");
-            while(!itemProgress.values().stream().map(i -> i.getId()).collect(Collectors.toList()).containsAll(itemIds)) {
-                try {
-                    System.out.print(".");
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            System.out.println("All needed items received");
-            
-            Platform.runLater(() -> lbl_currentlyDisplayed.setText("Recipes: "+filteredRecipes.size()));
-            
-			// display all discoverable recipes
-			for (Recipe recipe : filteredRecipes) {
-				Thread recipeViewThread = new Thread(() -> {
-					RecipeView recipeView = new RecipeTreeViewController(recipe, characterRecipes, unlockedRecipes, false);
-					recipeView.addItemNameFilter(txt_itemNameFilter.textProperty());
-					recipeView.addRecipeLevelFilter(txt_minLevel.textProperty());
-					recipeView.addDisciplineFilter(disciplineToggle.selectedToggleProperty());
-					recipeView.addByableRecipeFilter(chbx_byableRecipe.selectedProperty());
-					recipeView.addAlreadyLearnedFilter(chbx_showAlreadyLearned.selectedProperty());
-					// chbx_showWholeRecipe.selectedProperty());
-					recipeView.handleFilter(true);
-					Platform.runLater(() -> scroll_recipes.getChildren().add(recipeView));
-				}, "Thread - create recipe view for " + recipe.getId());
-				recipeViewThread.setDaemon(true);
-				recipeViewThread.start();
-			}
-			txt_itemNameFilter.setDisable(false);
-		}, "Thread - Load all Recipes");
-		thread.setDaemon(true);
-		thread.start();
+			recipeFilter.handleFilter(true);
+			/*
+			 * Thread recipeViewThread = new Thread(() -> { RecipeView recipeView = new
+			 * RecipeTreeViewController(recipe, characterRecipes, unlockedRecipes, false);
+			 * recipeView.addItemNameFilter(txt_itemNameFilter.textProperty());
+			 * recipeView.addRecipeLevelFilter(txt_minLevel.textProperty());
+			 * recipeView.addDisciplineFilter(disciplineToggle.selectedToggleProperty());
+			 * recipeView.addByableRecipeFilter(chbx_byableRecipe.selectedProperty());
+			 * recipeView.addAlreadyLearnedFilter(chbx_showAlreadyLearned.selectedProperty()
+			 * ); // chbx_showWholeRecipe.selectedProperty());
+			 * recipeView.handleFilter(true); Platform.runLater(() ->
+			 * scroll_recipes.getChildren().add(recipeView)); },
+			 * "Thread - create recipe view for " + recipe.getId());
+			 * recipeViewThread.setDaemon(true); recipeViewThread.start();
+			 */
+		}
 	}
 
 }

@@ -34,8 +34,9 @@ public class Data {
 	private RequestProgress<Item> itemProgress;
 	private RequestProgress<Recipe> recipeProgress;
 	
+	private StringProperty accessTokenProperty = new SimpleStringProperty();
+	
 	private ObjectProperty<ResourceBundle> resources = new SimpleObjectProperty<>();
-	private StringProperty accessToken = new SimpleStringProperty();
 
 	private Data() throws NullPointerException, GuildWars2Exception {
 		GuildWars2.setInstance(ClientFactory.getClient());
@@ -78,11 +79,13 @@ public class Data {
 		Locale locale = new Locale(lang.getValue());
 		ResourceBundle resources = ResourceBundle.getBundle("bundle.MyBundle", locale);
 		setResources(resources);
+		settings.setLang(lang);
 		saveSettings();
 	}
 	
 	public void setAccessToken(String accessToken) {
-		accessTokenProperty().set(accessToken);
+		settings.setAccessToken(accessToken);
+		accessTokenProperty.set(accessToken);
 		saveSettings();
 	}
 	
@@ -96,11 +99,8 @@ public class Data {
 		};
 	}
 	
-	public StringProperty accessTokenProperty() {
-		return accessToken;
-	}
 	public final String getAccessToken() {
-		return accessTokenProperty().get();
+		return settings.getAccessToken();
 	}
 	
 	private void loadSettings() {
@@ -118,33 +118,12 @@ public class Data {
 		Util.writeFile(settingsFile, settings);
 	}
 	
-	public class Settings {
-		
-		private LanguageSelect lang;
-		private String accessToken;
-		
-		private Settings(String accessToken, LanguageSelect lang) {
-			this.accessToken = accessToken;
-			this.lang = lang;
-		}
-
-		public void setAccessToken(String accessToken) {
-			this.accessToken = accessToken;
-		}
-
-		public void setLang(LanguageSelect lang) {
-			this.lang = lang;
-		}
-		
-		public String getAccessToken() {
-			return accessToken;
-		}
-
-		public LanguageSelect getLang() {
-			return lang;
-		}
-		
+	public Settings getSettings() {
+		return settings;
 	}
-
+	
+	public StringProperty accessTokenProperty() {
+		return accessTokenProperty;
+	}
 	
 }

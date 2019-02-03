@@ -12,23 +12,21 @@ import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe.Ingredient;
-import me.xhsun.guildwars2wrapper.model.v2.character.CharacterRecipes;
 
 public class RecipeTreeViewController extends RecipeView { // Anchor Pane
 
 	private boolean detailed;
 
-	public RecipeTreeViewController(Recipe recipe, CharacterRecipes characterRecipes, List<Integer> unlockedRecipes,
-			boolean detailed) {
-		super(recipe, characterRecipes, unlockedRecipes);
+	public RecipeTreeViewController(Recipe recipe, boolean detailed) {
+		super(recipe);
 
 		this.detailed = detailed;
-		
+
 		setPrefWidth(USE_COMPUTED_SIZE);
 		setPrefHeight(USE_COMPUTED_SIZE);
 
 		HBox hBox = new HBox(createTree(recipe, -1));
-		
+
 		hBox.setPrefWidth(USE_COMPUTED_SIZE);
 		hBox.setPrefHeight(USE_COMPUTED_SIZE);
 		hBox.setAlignment(Pos.TOP_CENTER);
@@ -38,15 +36,15 @@ public class RecipeTreeViewController extends RecipeView { // Anchor Pane
 	private VBox createTree(Recipe recipe, int prevCount) {
 		VBox root = new VBox(10.0);
 		root.setPadding(new Insets(10.0));
-		
+
 		root.setPrefWidth(USE_COMPUTED_SIZE);
 		root.setPrefHeight(USE_COMPUTED_SIZE);
-		
+
 		root.setStyle("-fx-border-color: black;" + "-fx-border-width: 5;");
 		root.setAlignment(Pos.TOP_CENTER);
 
 		int outputCount;
-		if(prevCount < 0) {
+		if (prevCount < 0) {
 			outputCount = recipe.getOutputItemCount();
 		} else {
 			outputCount = prevCount;
