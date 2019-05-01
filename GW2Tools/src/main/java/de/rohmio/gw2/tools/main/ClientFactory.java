@@ -16,8 +16,11 @@ import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 
 public class ClientFactory {
-
+	
 	public static OkHttpClient getClient() {
+		if(!ProxyCredentials.useProxy) {
+			return new OkHttpClient();
+		}
 		OkHttpClient client;
 		if(ProxyCredentials.proxyHost == null) {
 			client = new OkHttpClient();
