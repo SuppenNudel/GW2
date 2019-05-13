@@ -7,6 +7,8 @@ The combined file size can go up to 50MB. If you don't want the files to get sto
 
 Before you can use it you have to enter your GW2 API Key by opening Edit -> Settings.
 
+The key needs to give access to at least account, characters and unlocks
+
 There you are also able to set your prefered Language.
 
 
