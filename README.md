@@ -1,7 +1,7 @@
 # GW2
 Download the GW2 Tools_[version].jar file.
 
-You can just execute it. The application will store a bunch of files on your local drive under C:\Users\<UserName>\AppData\Roaming\GW2 Tools.
+You can just execute it. The application will store a bunch of files on your local drive under C:\Users\\<UserName>\AppData\Roaming\GW2 Tools.
 
 The combined file size can go up to 50MB. If you don't want the files to get stored don't use the app and wait for a version where you have the option to let the application get the data everytime you have a request. (But don't hold your breath for it) ^^
 
