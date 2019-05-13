@@ -1,4 +1,4 @@
-package de.rohmio.gw2.tools.model;
+package de.rohmio.gw2.tools.main;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,7 +14,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
-import de.rohmio.gw2.tools.model.RequestProgress.RequestType;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -25,7 +24,7 @@ public class Util {
 
 	public static File getImage(String url) throws IOException {
 		String fileName = String.format("data/img/%s", new File(url).getName());
-		final File file = new File(fileName);
+		final File file = new File(Data.DOCS, fileName);
 		if (!file.exists()) {
 			Request request = new Request.Builder().url(url).build();
 			OkHttpClient client = ClientFactory.getClient();
@@ -36,18 +35,18 @@ public class Util {
 	}
 
 	private static File getFilePath(RequestType type, int id) {
-		File file = null;
+		String fileName = null;
 		switch (type) {
 		case ITEM:
-			file = new File(String.format("data/cache/%s/%s/%d.json", type.getPath(), GuildWars2.getLanguage().getValue(), id));
+			fileName = String.format("data/cache/%s/%s/%d.json", type.getPath(), GuildWars2.getLanguage().getValue(), id);
 			break;
 		case RECIPE:
-			file = new File(String.format("data/cache/%s/%d.json", type.getPath(), id));
+			fileName = String.format("data/cache/%s/%d.json", type.getPath(), id);
 			break;
 		default:
 			break;
 		}
-		return file;
+		return new File(Data.DOCS, fileName);
 	}
 
 	public static <T> T getCache(RequestType type, int id, Type clazz) {

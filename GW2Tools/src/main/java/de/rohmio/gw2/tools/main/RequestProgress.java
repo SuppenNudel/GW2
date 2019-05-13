@@ -1,4 +1,4 @@
-package de.rohmio.gw2.tools.model;
+package de.rohmio.gw2.tools.main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javafx.beans.property.DoubleProperty;
@@ -23,33 +24,16 @@ import retrofit2.Response;
 
 public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer, T> {
 	
-	public enum RequestType {
-		ITEM(Item.class, "item"), RECIPE(Recipe.class, "recipe");
-		
-		private Class<?> clazz;
-		private String path;
-		
-		private RequestType(Class<?> clazz, String path) {
-			this.clazz = clazz;
-			this.path = path;
-		}
-		
-		public Class<?> getClazz() {
-			return clazz;
-		}
-		public String getPath() {
-			return path;
-		}
-	}
-
+	private static Logger log = Logger.getLogger("RequestProgress");
+	
 	// double value for how much percentage this data type is loaded
 	private DoubleProperty progress = new SimpleDoubleProperty();
 	
 	// list of all ids available for this data type
 	private List<Integer> allIds;
 	private RequestType type;
-//	private List<Integer> toRequest;
 
+	// function to get all ids of this data type
 	private Callable<List<Integer>> idCaller;
 	private Function<int[], Void> infoFunction;
 
@@ -143,17 +127,23 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 	}
 
 	public RequestProgress<T> getByIds(List<Integer> itemIds) {
-		List<Integer> toRequest = new ArrayList<>(itemIds);
+		List<Integer> toRequest = new ArrayList<>();
 		
-		// TODO keep track of toRequest
 		for(Integer id : itemIds) {
-			if(containsKey(id)) {
-				toRequest.remove(id);
-			} else { // not already loaded
+			log.finest("Iterating getByIds: "+id);
+			if(!containsKey(id)) {
+				// if not already loaded
+				log.finest("Iterating getByIds: "+id+" is not loaded yet");
+				// try to get from cache
 				T value = Util.getCache(type, id, type.getClazz());
 				if(value != null) {
-					toRequest.remove(id);
+					// if found add to loaded
 					put(id, value);
+					log.finest("Iterating getByIds: "+id+" found in cache and added");
+				} else {
+					// if not found add to toRequest
+					toRequest.add(id);
+					log.finest("Iterating getByIds: "+id+" NOT found in cache -> to request");
 				}
 			}
 		}

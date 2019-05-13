@@ -1,10 +1,9 @@
-package de.rohmio.gw2.tools.model;
+package de.rohmio.gw2.tools.main;
 
 import java.io.File;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import de.rohmio.gw2.tools.model.RequestProgress.RequestType;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -18,33 +17,33 @@ import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 
 public class Data {
 	
+	// singleton
 	private static Data data;
+	
+	/**
+	 * location where all app data is stored
+	 */
+	public static File DOCS = new File(System.getProperty("user.home")+"/AppData/Roaming/GW2 Tools");
 
-	private static File settingsFile = new File("data/settings.json");
+	/**
+	 * settings file location
+	 */
+	private static File settingsFile = new File(DOCS, "settings.json");
+	private Settings settings;
 	
 	private RequestProgress<Item> itemProgress;
 	private RequestProgress<Recipe> recipeProgress;
 	
+	private StringProperty accessTokenProperty = new SimpleStringProperty();
+	
 	private ObjectProperty<ResourceBundle> resources = new SimpleObjectProperty<>();
-	private StringProperty accessToken = new SimpleStringProperty();
 
 	private Data() throws NullPointerException, GuildWars2Exception {
-		try {
-			GuildWars2.setInstance(ClientFactory.getClient());
-		} catch (GuildWars2Exception e) {
-			e.printStackTrace();
-		}
+		GuildWars2.setInstance(ClientFactory.getClient());
+		loadSettings();
 		
 		itemProgress = new RequestProgress<>(RequestType.ITEM);
 		recipeProgress = new RequestProgress<>(RequestType.RECIPE);
-		
-		Settings settings = Util.readFile(settingsFile, Settings.class);
-		if(settings == null) {
-			setLanguage(GuildWars2.getLanguage());
-		} else {
-			setLanguage(settings.getLang());
-			setAccessToken(settings.getAccessToken());
-		}
 	}
 
 	public static Data getInstance() {
@@ -76,10 +75,17 @@ public class Data {
 	}
 	
 	public void setLanguage(LanguageSelect lang) {
-		Locale locale = new Locale(lang.getValue());
 		GuildWars2.setLanguage(lang);
+		Locale locale = new Locale(lang.getValue());
 		ResourceBundle resources = ResourceBundle.getBundle("bundle.MyBundle", locale);
 		setResources(resources);
+		settings.setLang(lang);
+		saveSettings();
+	}
+	
+	public void setAccessToken(String accessToken) {
+		settings.setAccessToken(accessToken);
+		accessTokenProperty.set(accessToken);
 		saveSettings();
 	}
 	
@@ -93,48 +99,31 @@ public class Data {
 		};
 	}
 	
-	public StringProperty accessTokenProperty() {
-		return accessToken;
-	}
 	public final String getAccessToken() {
-		return accessTokenProperty().get();
+		return settings.getAccessToken();
 	}
-	public final void setAccessToken(String accessToken) {
-		accessTokenProperty().set(accessToken);
-		saveSettings();
+	
+	private void loadSettings() {
+		if(settingsFile.exists()) {
+			settings = Util.readFile(settingsFile, Settings.class);
+		} else {
+			settings = new Settings("", GuildWars2.getLanguage());
+			setLanguage(settings.getLang());
+		}
+		setLanguage(settings.getLang());
+		setAccessToken(settings.getAccessToken());
 	}
 	
 	private void saveSettings() {
-		Util.writeFile(settingsFile, new Settings(getAccessToken(), GuildWars2.getLanguage()));
+		Util.writeFile(settingsFile, settings);
 	}
 	
-	public class Settings {
-		
-		private LanguageSelect lang;
-		private String accessToken;
-		
-		private Settings(String accessToken, LanguageSelect lang) {
-			this.accessToken = accessToken;
-			this.lang = lang;
-		}
-
-		public void setAccessToken(String accessToken) {
-			this.accessToken = accessToken;
-		}
-
-		public void setLang(LanguageSelect lang) {
-			this.lang = lang;
-		}
-		
-		public String getAccessToken() {
-			return accessToken;
-		}
-
-		public LanguageSelect getLang() {
-			return lang;
-		}
-		
+	public Settings getSettings() {
+		return settings;
 	}
-
+	
+	public StringProperty accessTokenProperty() {
+		return accessTokenProperty;
+	}
 	
 }
