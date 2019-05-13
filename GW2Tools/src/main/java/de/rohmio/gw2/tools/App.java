@@ -43,7 +43,10 @@ public class App extends Application {
 		stage = primaryStage;
 		setScene(startingView);
 		primaryStage.setTitle("Guild Wars 2 Tools");
-		primaryStage.setOnCloseRequest(event -> Platform.exit());
+		primaryStage.setOnCloseRequest(event -> { 
+			Platform.exit();
+			System.exit(0);
+		});
 		primaryStage.show();
 	}
 	
