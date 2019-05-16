@@ -101,6 +101,8 @@ public class MainViewController implements Initializable {
 	 * information about recipes that are unlocked for an account
 	 * <br>
 	 * an array, each value being the ID of a recipe that can be resolved against /v2/recipes
+	 * <br>
+	 * mostly learned from item
 	 */
 	private List<Integer> unlockedRecipes;
 	
