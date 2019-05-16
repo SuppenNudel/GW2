@@ -15,7 +15,6 @@ import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.application.Platform;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
@@ -93,8 +92,21 @@ public class MainViewController implements Initializable {
 
 	private ToggleGroup disciplineToggle;
 
+	/**
+	 * probably recipes unlocked by a character
+	 */
 	private CharacterRecipes characterRecipes;
+	
+	/**
+	 * information about recipes that are unlocked for an account
+	 * <br>
+	 * an array, each value being the ID of a recipe that can be resolved against /v2/recipes
+	 */
 	private List<Integer> unlockedRecipes;
+	
+	/**
+	 * An array containing an entry for each crafting discipline the character has unlocked
+	 */
 	private CharacterCraftingLevel characterCrafting;
 
 	private ObservableSet<Recipe> recipesToDisplay = FXCollections.observableSet();
@@ -141,48 +153,42 @@ public class MainViewController implements Initializable {
 			}
 		});
 		
-		chbx_pauseFilter.selectedProperty().addListener(new ChangeListener<Boolean>() {
-			@Override
-			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-				if(!newValue) { // got deselected
-					try {
-						compareRecipes();
-					} catch (GuildWars2Exception | IOException | InterruptedException e) {
-						e.printStackTrace();
-					}
+		chbx_pauseFilter.selectedProperty().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> {
+			if(!newValue) { // got deselected
+				try {
+					compareRecipes();
+				} catch (GuildWars2Exception | IOException | InterruptedException e) {
+					e.printStackTrace();
 				}
 			}
 		});
 
-		recipesToDisplay.addListener(new SetChangeListener<Recipe>() {
-			@Override
-			public void onChanged(Change<? extends Recipe> change) {
-				if (change.wasAdded() && !chbx_pauseFilter.isSelected()) {
-					Recipe recipe = change.getElementAdded();
-					Platform.runLater(() -> {
-						RecipeTreeViewController view = new RecipeTreeViewController(recipe, false);
-						scroll_recipes.getChildren().add(view);
-					});
-				} else if (change.wasRemoved()) {
-					Recipe recipe = change.getElementRemoved();
-					Platform.runLater(() -> {
-						RecipeTreeViewController toRemove = null;
-						for (Node node : scroll_recipes.getChildren()) {
-							if (node instanceof RecipeTreeViewController) {
-								RecipeTreeViewController view = (RecipeTreeViewController) node;
-								if (view.getRecipe() == recipe) {
-									toRemove = view;
-									break;
-								}
+		recipesToDisplay.addListener((SetChangeListener<Recipe>) change -> {
+			if (change.wasAdded() && !chbx_pauseFilter.isSelected()) {
+				Recipe recipe1 = change.getElementAdded();
+				Platform.runLater(() -> {
+					RecipeTreeViewController view1 = new RecipeTreeViewController(recipe1, false);
+					scroll_recipes.getChildren().add(view1);
+				});
+			} else if (change.wasRemoved()) {
+				Recipe recipe2 = change.getElementRemoved();
+				Platform.runLater(() -> {
+					RecipeTreeViewController toRemove = null;
+					for (Node node : scroll_recipes.getChildren()) {
+						if (node instanceof RecipeTreeViewController) {
+							RecipeTreeViewController view2 = (RecipeTreeViewController) node;
+							if (view2.getRecipe() == recipe2) {
+								toRemove = view2;
+								break;
 							}
 						}
-						scroll_recipes.getChildren().remove(toRemove);
-					});
-				} else {
-					System.err.println("Change on nothing added or removed");
-				}
-				lbl_currentlyDisplayed.setText("Recipes: " + recipesToDisplay.size());
+					}
+					scroll_recipes.getChildren().remove(toRemove);
+				});
+			} else {
+				System.err.println("Change on nothing added or removed");
 			}
+			lbl_currentlyDisplayed.setText("Recipes: " + recipesToDisplay.size());
 		});
 	}
 
@@ -220,7 +226,15 @@ public class MainViewController implements Initializable {
 		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(Data.getInstance().getAccessToken());
 		choice_charName.getItems().addAll(allCharacterName);
 	}
-
+	
+	// TODO do loading on separate thread, so that the program doesn't freeze when it takes longer
+	/**
+	 * <ul>
+	 * 	<li>reset filters</li>
+	 * 	<li>start displaying recipes unlockable by the character</li>
+	 * </ul>
+	 * @throws GuildWars2Exception
+	 */
 	@FXML
 	private void onSelectCharacter() throws GuildWars2Exception {
 		String characterName = choice_charName.getSelectionModel().getSelectedItem();
@@ -229,48 +243,11 @@ public class MainViewController implements Initializable {
 		}
 
 		System.out.println(String.format("Get character crafting for '%s'", characterName));
-
 		characterCrafting = GuildWars2.getInstance().getSynchronous()
 				.getCharacterCrafting(Data.getInstance().getAccessToken(), characterName);
 
-		// reset
-		for (Toggle toggle : disciplineToggle.getToggles()) {
-			if (toggle instanceof RadioButton) {
-				RadioButton radio = (RadioButton) toggle;
-				Object userData = radio.getUserData();
-				if (userData instanceof CraftingDisciplines) {
-					CraftingDisciplines craftingDiscipline = (CraftingDisciplines) userData;
-					radio.setText(craftingDiscipline.name());
-					radio.setDisable(true);
-				} else {
-					throw new ClassCastException("user data is not a CraftingDiscipline");
-				}
-			} else {
-				throw new ClassCastException("toggle is not a radio button");
-			}
-		}
-
-		// set
-		for (Toggle toggle : disciplineToggle.getToggles()) {
-			if (toggle instanceof RadioButton) {
-				RadioButton radio = (RadioButton) toggle;
-				Object userData = radio.getUserData();
-				if (userData instanceof CraftingDisciplines) {
-					CraftingDisciplines craftingDiscipline = (CraftingDisciplines) userData;
-					for (Discipline discipline : characterCrafting.getCrafting()) {
-						if (discipline.getDiscipline() == craftingDiscipline) {
-							radio.setDisable(!discipline.isActive());
-							radio.setText(discipline.getDiscipline().name() + " - " + discipline.getRating());
-						}
-					}
-				} else {
-					throw new ClassCastException("user data is not a CraftingDiscipline");
-				}
-			} else {
-				throw new ClassCastException("toggle is not a radio button");
-			}
-		}
-
+		resetFilters();
+		
 		unlockedRecipes = GuildWars2.getInstance().getSynchronous()
 				.getUnlockedRecipes(Data.getInstance().getAccessToken());
 		characterRecipes = GuildWars2.getInstance().getSynchronous()
@@ -284,7 +261,51 @@ public class MainViewController implements Initializable {
 			e.printStackTrace();
 		}
 	}
+	
+	private void resetFilters() {
+		for (Toggle toggle : disciplineToggle.getToggles()) {
+			if (toggle instanceof RadioButton) {
+				RadioButton radio = (RadioButton) toggle;
+				Object userData = radio.getUserData();
+				if (userData instanceof CraftingDisciplines) {
+					CraftingDisciplines craftingDiscipline = (CraftingDisciplines) userData; // discipline of the current button
+					
+					// default
+					boolean disableButton = true;
+					String buttonText = craftingDiscipline.name();
+					
+					// check if the selected character has information about the discipline
+					for (Discipline discipline : characterCrafting.getCrafting()) {
+						if (discipline.getDiscipline() == craftingDiscipline) {
+							disableButton = !discipline.isActive();
+							buttonText = buttonText + " - " + discipline.getRating();
+							break; // don't look further
+						}
+					}
+					radio.setDisable(disableButton);
+					radio.setText(buttonText);
+				} else {
+					throw new ClassCastException("user data is not a CraftingDiscipline");
+				}
+			} else {
+				throw new ClassCastException("toggle is not a radio button");
+			}
+		}
+		
+		// TODO here some of the init functions could be used for resetting the filters
+	}
 
+
+	/*
+	 * TODO don't clear recipes; instead add or remove recipes according to filter changes
+	 * so only go through recipes that are currently filtered out if the filter gets looser
+	 * and only go through recipes that are currently displayed if the filter gets harsher
+	 */
+	/**
+	 * @throws GuildWars2Exception
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	private void compareRecipes() throws GuildWars2Exception, IOException, InterruptedException {
 		// clear previous
 		scroll_recipes.getChildren().clear();
@@ -357,32 +378,15 @@ public class MainViewController implements Initializable {
 			recipeFilter.addByableRecipeFilter(chbx_byableRecipe.selectedProperty());
 			recipeFilter.addAlreadyLearnedFilter(chbx_showAlreadyLearned.selectedProperty());
 
-			recipeFilter.displayProperty().addListener(new ChangeListener<Boolean>() {
-				@Override
-				public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-					if (newValue) { // if display
-						recipesToDisplay.add(recipe);
-					} else {
-						recipesToDisplay.remove(recipe);
-					}
+			recipeFilter.displayProperty().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> {
+				if (newValue) { // if display
+					recipesToDisplay.add(recipe);
+				} else {
+					recipesToDisplay.remove(recipe);
 				}
 			});
 
 			recipeFilter.handleFilter(true);
-			/*
-			 * Thread recipeViewThread = new Thread(() -> { RecipeView recipeView = new
-			 * RecipeTreeViewController(recipe, characterRecipes, unlockedRecipes, false);
-			 * recipeView.addItemNameFilter(txt_itemNameFilter.textProperty());
-			 * recipeView.addRecipeLevelFilter(txt_minLevel.textProperty());
-			 * recipeView.addDisciplineFilter(disciplineToggle.selectedToggleProperty());
-			 * recipeView.addByableRecipeFilter(chbx_byableRecipe.selectedProperty());
-			 * recipeView.addAlreadyLearnedFilter(chbx_showAlreadyLearned.selectedProperty()
-			 * ); // chbx_showWholeRecipe.selectedProperty());
-			 * recipeView.handleFilter(true); Platform.runLater(() ->
-			 * scroll_recipes.getChildren().add(recipeView)); },
-			 * "Thread - create recipe view for " + recipe.getId());
-			 * recipeViewThread.setDaemon(true); recipeViewThread.start();
-			 */
 		}
 	}
 
