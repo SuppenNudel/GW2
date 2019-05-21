@@ -15,6 +15,7 @@ import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.application.Platform;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
@@ -147,11 +148,14 @@ public class MainViewController implements Initializable {
 		checkApiKey(apiKeyProperty.get());
 		apiKeyProperty.addListener((observable, oldValue, newValue) -> checkApiKey(newValue));
 
-		choice_charName.setOnAction(event -> {
-			try {
-				onSelectCharacter();
-			} catch (GuildWars2Exception e) {
-				e.printStackTrace();
+		choice_charName.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
+			@Override
+			public void changed(ObservableValue<? extends String> arg0, String arg1, String arg2) {
+				try {
+					onSelectCharacter();
+				} catch (GuildWars2Exception e) {
+					e.printStackTrace();
+				}
 			}
 		});
 		
