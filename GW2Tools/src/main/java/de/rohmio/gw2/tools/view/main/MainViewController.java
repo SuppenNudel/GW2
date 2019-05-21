@@ -27,12 +27,9 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -65,10 +62,10 @@ public class MainViewController implements Initializable {
 	private TextField txt_minLevel;
 
 	@FXML // selection for disciplines
-	private HBox hbox_disciplineCheck;
+	private VBox vbox_disciplineCheck;
 
 	@FXML // all recipes displayed
-	private FlowPane scroll_recipes;
+	private VBox vbox_recipes;
 
 	@FXML
 	private CheckBox chbx_byableRecipe;
@@ -90,6 +87,9 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private ProgressBar pb_getRecipes;
+	
+	@FXML
+	private Label lbl_recipes_progress;
 
 	private ToggleGroup disciplineToggle;
 
@@ -121,6 +121,12 @@ public class MainViewController implements Initializable {
 		// progress display
 		pb_getItems.progressProperty().bind(Data.getInstance().getItemProgress().getProgress());
 		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipeProgress().getProgress());
+		Data.getInstance().getRecipeProgress().getProgress().addListener(new ChangeListener<Number>() {
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				Platform.runLater(() -> lbl_recipes_progress.setText(String.format("%.2f%%", 100*(double) newValue)));
+			}
+		});
 
 		Thread thread = new Thread(() -> {
 			Data.getInstance().getRecipeProgress().getAll();
@@ -131,10 +137,10 @@ public class MainViewController implements Initializable {
 		// discipline selection
 		disciplineToggle = new ToggleGroup();
 		for (CraftingDisciplines discipline : CraftingDisciplines.values()) {
-			RadioButton radioButton = new RadioButton(discipline.name());
-			radioButton.setToggleGroup(disciplineToggle);
-			hbox_disciplineCheck.getChildren().add(radioButton);
-			radioButton.setUserData(discipline);
+			CheckBox beckbox = new CheckBox(discipline.name());
+//			beckbox.setToggleGroup(disciplineToggle);
+			vbox_disciplineCheck.getChildren().add(beckbox);
+			beckbox.setUserData(discipline);
 			// disable property bind to character crafting active
 		}
 
@@ -174,13 +180,13 @@ public class MainViewController implements Initializable {
 				Recipe recipe1 = change.getElementAdded();
 				Platform.runLater(() -> {
 					RecipeTreeViewController view1 = new RecipeTreeViewController(recipe1, false);
-					scroll_recipes.getChildren().add(view1);
+					vbox_recipes.getChildren().add(view1);
 				});
 			} else if (change.wasRemoved()) {
 				Recipe recipe2 = change.getElementRemoved();
 				Platform.runLater(() -> {
 					RecipeTreeViewController toRemove = null;
-					for (Node node : scroll_recipes.getChildren()) {
+					for (Node node : vbox_recipes.getChildren()) {
 						if (node instanceof RecipeTreeViewController) {
 							RecipeTreeViewController view2 = (RecipeTreeViewController) node;
 							if (view2.getRecipe() == recipe2) {
@@ -189,7 +195,7 @@ public class MainViewController implements Initializable {
 							}
 						}
 					}
-					scroll_recipes.getChildren().remove(toRemove);
+					vbox_recipes.getChildren().remove(toRemove);
 				});
 			} else {
 				System.err.println("Change on nothing added or removed");
@@ -270,10 +276,10 @@ public class MainViewController implements Initializable {
 	
 	private void resetFilters() {
 		for (Toggle toggle : disciplineToggle.getToggles()) {
-			if (toggle instanceof RadioButton) {
-				RadioButton radio = (RadioButton) toggle;
-				radio.setSelected(false);
-				Object userData = radio.getUserData();
+			if (toggle instanceof CheckBox) {
+				CheckBox check = (CheckBox) toggle;
+				check.setSelected(false);
+				Object userData = check.getUserData();
 				if (userData instanceof CraftingDisciplines) {
 					CraftingDisciplines craftingDiscipline = (CraftingDisciplines) userData; // discipline of the current button
 					
@@ -289,8 +295,8 @@ public class MainViewController implements Initializable {
 							break; // don't look further
 						}
 					}
-					radio.setDisable(disableButton);
-					radio.setText(buttonText);
+					check.setDisable(disableButton);
+					check.setText(buttonText);
 				} else {
 					throw new ClassCastException("user data is not a CraftingDiscipline");
 				}
