@@ -268,6 +268,7 @@ public class MainViewController implements Initializable {
 		for (Toggle toggle : disciplineToggle.getToggles()) {
 			if (toggle instanceof RadioButton) {
 				RadioButton radio = (RadioButton) toggle;
+				radio.setSelected(false);
 				Object userData = radio.getUserData();
 				if (userData instanceof CraftingDisciplines) {
 					CraftingDisciplines craftingDiscipline = (CraftingDisciplines) userData; // discipline of the current button
@@ -309,9 +310,6 @@ public class MainViewController implements Initializable {
 	 * @throws InterruptedException
 	 */
 	private void compareRecipes() throws GuildWars2Exception, IOException, InterruptedException {
-		// clear previous
-		scroll_recipes.getChildren().clear();
-
 		// get ALL recipes
 		System.out.println("Getting all recipes");
 		RequestProgress<Recipe> recipeProgress = Data.getInstance().getRecipeProgress().getAll();
@@ -331,9 +329,16 @@ public class MainViewController implements Initializable {
 		List<Recipe> allRecipes = new ArrayList<>(recipeProgress.values());
 		System.out.println("All Recipe Count: " + allRecipes.size());
 
+		/* 
+		 * recipes that will never be displayed for this character, because
+		 * <ul>
+		 * 	<li>he has the wrong disciplines</li>
+		 * 	<li>not the right level</li>
+		 * </ul>
+		 */
 		List<Recipe> filteredRecipes = allRecipes.stream().filter(recipe -> {
 			for (Discipline charDiscipline : characterCrafting.getCrafting()) {
-				// check if character is able to craft this
+				// check if character is able to craft this due to his discipline
 				if (recipe.getDisciplines().contains(charDiscipline.getDiscipline())
 						&& recipe.getMinRating() <= charDiscipline.getRating()) {
 					return true;
@@ -345,6 +350,7 @@ public class MainViewController implements Initializable {
 		System.out.println("Filtered by discipline and rating Recipe Count: " + size);
 
 		// fetch all Item information here, so they don't have to be called individually
+		// don't do that, that takes ages
 		List<Integer> itemIds = new ArrayList<>();
 		for (Recipe recipe : filteredRecipes) {
 			itemIds.add(recipe.getOutputItemId());
