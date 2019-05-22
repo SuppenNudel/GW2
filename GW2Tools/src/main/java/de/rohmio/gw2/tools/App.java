@@ -18,14 +18,14 @@ public class App extends Application {
 	
 	private static Stage stage;
 	private static Class<? extends Initializable> startingView = MainViewController.class;
-	private static String viewName = "MainViewNew";
 	
 	public static void main(String[] args) {
 		launch(args);
 	}
 	
 	public static Scene createScene(Class<? extends Initializable> controllerClass) throws IOException {
-		URL location = controllerClass.getResource(String.format("/fxml/%s.fxml", viewName));
+		String fileName_view = controllerClass.getSimpleName().replaceAll("Controller", "");
+		URL location = controllerClass.getResource(String.format("/fxml/%s.fxml", fileName_view));
 		
 		ResourceBundle resources = Data.getInstance().getResources();
 		Parent root = FXMLLoader.load(location, resources);

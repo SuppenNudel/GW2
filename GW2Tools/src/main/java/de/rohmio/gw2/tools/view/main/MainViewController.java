@@ -2,46 +2,37 @@ package de.rohmio.gw2.tools.view.main;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
 
 import de.rohmio.gw2.tools.App;
 import de.rohmio.gw2.tools.main.Data;
-import de.rohmio.gw2.tools.main.RequestProgress;
-import de.rohmio.gw2.tools.model.RecipeFilter;
-import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.application.Platform;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
-import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
-import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
-import me.xhsun.guildwars2wrapper.model.v2.Recipe.Ingredient;
 import me.xhsun.guildwars2wrapper.model.v2.account.Account;
 import me.xhsun.guildwars2wrapper.model.v2.character.CharacterCraftingLevel;
 import me.xhsun.guildwars2wrapper.model.v2.character.CharacterCraftingLevel.Discipline;
-import me.xhsun.guildwars2wrapper.model.v2.character.CharacterRecipes;
 import me.xhsun.guildwars2wrapper.model.v2.util.comm.CraftingDisciplines;
 
 public class MainViewController implements Initializable {
@@ -60,6 +51,9 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private TextField txt_minLevel;
+	
+	@FXML
+	private TextField txt_maxLevel;
 
 	@FXML // selection for disciplines
 	private VBox vbox_disciplineCheck;
@@ -90,33 +84,17 @@ public class MainViewController implements Initializable {
 	
 	@FXML
 	private Label lbl_recipes_progress;
-
-	private ToggleGroup disciplineToggle;
-
-	/**
-	 * probably recipes unlocked by a character
-	 */
-	private CharacterRecipes characterRecipes;
 	
-	/**
-	 * information about recipes that are unlocked for an account
-	 * <br>
-	 * an array, each value being the ID of a recipe that can be resolved against /v2/recipes
-	 * <br>
-	 * mostly learned from item
-	 */
-	private List<Integer> unlockedRecipes;
-	
-	/**
-	 * An array containing an entry for each crafting discipline the character has unlocked
-	 */
-	private CharacterCraftingLevel characterCrafting;
+	private Map<CraftingDisciplines, CheckBox> disciplineChecks = new HashMap<>();
 
-	private ObservableSet<Recipe> recipesToDisplay = FXCollections.observableSet();
+	private ObservableSet<Recipe> displayedRecipies = FXCollections.observableSet();
+	private ObservableSet<Recipe> filteredRecipies = FXCollections.observableSet();
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		initResourceBundle(resources);
+
+		Platform.runLater(() -> Data.getInstance().getRecipeProgress().getAll());
 
 		// progress display
 		pb_getItems.progressProperty().bind(Data.getInstance().getItemProgress().getProgress());
@@ -125,85 +103,59 @@ public class MainViewController implements Initializable {
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
 				Platform.runLater(() -> lbl_recipes_progress.setText(String.format("%.2f%%", 100*(double) newValue)));
+				// when all recipes got loaded
+				if(newValue.equals(1.0)) {
+					filteredRecipies.addAll(Data.getInstance().getRecipeProgress().values());
+				}
 			}
 		});
-
-		Thread thread = new Thread(() -> {
-			Data.getInstance().getRecipeProgress().getAll();
-		});
-		thread.setDaemon(true);
-		thread.start();
 
 		// discipline selection
-		disciplineToggle = new ToggleGroup();
 		for (CraftingDisciplines discipline : CraftingDisciplines.values()) {
-			CheckBox beckbox = new CheckBox(discipline.name());
-//			beckbox.setToggleGroup(disciplineToggle);
-			vbox_disciplineCheck.getChildren().add(beckbox);
-			beckbox.setUserData(discipline);
-			// disable property bind to character crafting active
+			CheckBox checkbox = new CheckBox(discipline.name());
+			disciplineChecks.put(discipline, checkbox);
+			vbox_disciplineCheck.getChildren().add(checkbox);
+			checkbox.setUserData(discipline);
 		}
 
-		txt_minLevel.textProperty().addListener((observable, oldValue, newValue) -> {
-			if (!newValue.matches("\\d*")) {
-				txt_minLevel.setText(newValue.replaceAll("[^\\d]", ""));
-			}
-		});
+		txt_minLevel.textProperty().addListener(new IntOnlyTextFieldChangeListener(txt_minLevel));
+		txt_maxLevel.textProperty().addListener(new IntOnlyTextFieldChangeListener(txt_maxLevel));
 
 		StringProperty apiKeyProperty = Data.getInstance().accessTokenProperty();
 		checkApiKey(apiKeyProperty.get());
 		apiKeyProperty.addListener((observable, oldValue, newValue) -> checkApiKey(newValue));
 
-		choice_charName.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
-			@Override
-			public void changed(ObservableValue<? extends String> arg0, String arg1, String arg2) {
-				try {
-					onSelectCharacter();
-				} catch (GuildWars2Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+		choice_charName.setOnAction((event) -> onSelectCharacter());
 		
-		chbx_pauseFilter.selectedProperty().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> {
-			if(!newValue) { // got deselected
-				try {
-					compareRecipes();
-				} catch (GuildWars2Exception | IOException | InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		});
-
-		recipesToDisplay.addListener((SetChangeListener<Recipe>) change -> {
-			if (change.wasAdded() && !chbx_pauseFilter.isSelected()) {
-				Recipe recipe1 = change.getElementAdded();
-				Platform.runLater(() -> {
-					RecipeTreeViewController view1 = new RecipeTreeViewController(recipe1, false);
-					vbox_recipes.getChildren().add(view1);
-				});
-			} else if (change.wasRemoved()) {
-				Recipe recipe2 = change.getElementRemoved();
-				Platform.runLater(() -> {
-					RecipeTreeViewController toRemove = null;
-					for (Node node : vbox_recipes.getChildren()) {
-						if (node instanceof RecipeTreeViewController) {
-							RecipeTreeViewController view2 = (RecipeTreeViewController) node;
-							if (view2.getRecipe() == recipe2) {
-								toRemove = view2;
-								break;
-							}
-						}
-					}
-					vbox_recipes.getChildren().remove(toRemove);
-				});
-			} else {
-				System.err.println("Change on nothing added or removed");
-			}
-			lbl_currentlyDisplayed.setText("Recipes: " + recipesToDisplay.size());
-		});
+//		displayedRecipies.addListener((SetChangeListener<Recipe>) change -> {
+//			if (change.wasAdded() && !chbx_pauseFilter.isSelected()) {
+//				Recipe recipe1 = change.getElementAdded();
+//				Platform.runLater(() -> {
+//					RecipeTreeViewController view1 = new RecipeTreeViewController(recipe1, false);
+//					vbox_recipes.getChildren().add(view1);
+//				});
+//			} else if (change.wasRemoved()) {
+//				Recipe recipe2 = change.getElementRemoved();
+//				Platform.runLater(() -> {
+//					RecipeTreeViewController toRemove = null;
+//					for (Node node : vbox_recipes.getChildren()) {
+//						if (node instanceof RecipeTreeViewController) {
+//							RecipeTreeViewController view2 = (RecipeTreeViewController) node;
+//							if (view2.getRecipe() == recipe2) {
+//								toRemove = view2;
+//								break;
+//							}
+//						}
+//					}
+//					vbox_recipes.getChildren().remove(toRemove);
+//				});
+//			} else {
+//				System.err.println("Change on nothing added or removed");
+//			}
+//			lbl_currentlyDisplayed.setText("Recipes: " + displayedRecipies.size());
+//		});
 	}
-
+	
 	private void initResourceBundle(ResourceBundle resource) {
 		chbx_byableRecipe.textProperty().bind(Data.getInstance().getStringBinding("show_buyable_recipes"));
 		chbx_showWholeRecipe.textProperty().bind(Data.getInstance().getStringBinding("show_whole_recipe"));
@@ -247,61 +199,60 @@ public class MainViewController implements Initializable {
 	 * </ul>
 	 * @throws GuildWars2Exception
 	 */
-	@FXML
-	private void onSelectCharacter() throws GuildWars2Exception {
+	private void onSelectCharacter() {
 		String characterName = choice_charName.getSelectionModel().getSelectedItem();
 		if (characterName == null) {
 			return;
 		}
-
-		System.out.println(String.format("Get character crafting for '%s'", characterName));
-		characterCrafting = GuildWars2.getInstance().getSynchronous()
-				.getCharacterCrafting(Data.getInstance().getAccessToken(), characterName);
-
-		resetFilters();
 		
-		unlockedRecipes = GuildWars2.getInstance().getSynchronous()
-				.getUnlockedRecipes(Data.getInstance().getAccessToken());
-		characterRecipes = GuildWars2.getInstance().getSynchronous()
-				.getCharacterUnlockedRecipes(Data.getInstance().getAccessToken(), characterName);
-
 		try {
-			compareRecipes();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
+			resetFilters();
+
+			/**
+			 * An array containing an entry for each crafting discipline the character has unlocked
+			 */
+			System.out.println(String.format("Get character crafting for '%s'", characterName));
+			CharacterCraftingLevel characterCrafting = GuildWars2.getInstance().getSynchronous()
+					.getCharacterCrafting(Data.getInstance().getAccessToken(), characterName);
+	
+			/**
+			 * information about recipes that are unlocked for an account
+			 * <br>
+			 * an array, each value being the ID of a recipe that can be resolved against /v2/recipes
+			 * <br>
+			 * mostly learned from item
+			 */
+//			List<Integer> unlockedRecipes = GuildWars2.getInstance().getSynchronous()
+//					.getUnlockedRecipes(Data.getInstance().getAccessToken());
+
+			/**
+			 * An array containing an entry for each crafting discipline the character has unlocked
+			 */
+//			CharacterRecipes characterRecipes = GuildWars2.getInstance().getSynchronous()
+//					.getCharacterUnlockedRecipes(Data.getInstance().getAccessToken(), characterName);
+
+			for(Discipline discipline : characterCrafting.getCrafting()) {
+				CheckBox checkBox = disciplineChecks.get(discipline.getDiscipline());
+				checkBox.setText(String.format("%s - %d", checkBox.getUserData(), discipline.getRating()));
+				checkBox.setSelected(true);
+			}
+		} catch (GuildWars2Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
 	private void resetFilters() {
-		for (Toggle toggle : disciplineToggle.getToggles()) {
-			if (toggle instanceof CheckBox) {
-				CheckBox check = (CheckBox) toggle;
-				check.setSelected(false);
-				Object userData = check.getUserData();
-				if (userData instanceof CraftingDisciplines) {
-					CraftingDisciplines craftingDiscipline = (CraftingDisciplines) userData; // discipline of the current button
-					
-					// default
-					boolean disableButton = true;
-					String buttonText = craftingDiscipline.name();
-					
-					// check if the selected character has information about the discipline
-					for (Discipline discipline : characterCrafting.getCrafting()) {
-						if (discipline.getDiscipline() == craftingDiscipline) {
-							disableButton = !discipline.isActive();
-							buttonText = buttonText + " - " + discipline.getRating();
-							break; // don't look further
-						}
-					}
-					check.setDisable(disableButton);
-					check.setText(buttonText);
-				} else {
-					throw new ClassCastException("user data is not a CraftingDiscipline");
-				}
+		System.out.println("Reset Filter");
+		for (CheckBox diciplineCheck : disciplineChecks.values()) {
+			diciplineCheck.setSelected(false);
+			Object userData = diciplineCheck.getUserData();
+			if (userData instanceof CraftingDisciplines) {
+				CraftingDisciplines craftingDiscipline = (CraftingDisciplines) userData; // discipline of the current button
+				
+				String buttonText = craftingDiscipline.name();
+				diciplineCheck.setText(buttonText);
 			} else {
-				throw new ClassCastException("toggle is not a radio button");
+				throw new ClassCastException("user data is not a CraftingDiscipline");
 			}
 		}
 		
@@ -319,50 +270,20 @@ public class MainViewController implements Initializable {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	private void compareRecipes() throws GuildWars2Exception, IOException, InterruptedException {
-		// get ALL recipes
-		System.out.println("Getting all recipes");
-		RequestProgress<Recipe> recipeProgress = Data.getInstance().getRecipeProgress().getAll();
-
-		// wait until all recipes are loaded
-		while (recipeProgress.getProgress().get() < 1.0) {
-			try {
-				System.out.println(recipeProgress.getProgress().get());
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+	@FXML
+	private void searchForRecipes() throws GuildWars2Exception, IOException, InterruptedException {
+		/*
 		System.out.println(recipeProgress.getProgress().get());
 		System.out.println("All recipes received");
 
 		List<Recipe> allRecipes = new ArrayList<>(recipeProgress.values());
 		System.out.println("All Recipe Count: " + allRecipes.size());
 
-		/* 
-		 * recipes that will never be displayed for this character, because
-		 * <ul>
-		 * 	<li>he has the wrong disciplines</li>
-		 * 	<li>not the right level</li>
-		 * </ul>
-		 */
-		List<Recipe> filteredRecipes = allRecipes.stream().filter(recipe -> {
-			for (Discipline charDiscipline : characterCrafting.getCrafting()) {
-				// check if character is able to craft this due to his discipline
-				if (recipe.getDisciplines().contains(charDiscipline.getDiscipline())
-						&& recipe.getMinRating() <= charDiscipline.getRating()) {
-					return true;
-				}
-			}
-			return false;
-		}).collect(Collectors.toList());
-		int size = filteredRecipes.size();
-		System.out.println("Filtered by discipline and rating Recipe Count: " + size);
-
+		
 		// fetch all Item information here, so they don't have to be called individually
 		// don't do that, that takes ages
 		List<Integer> itemIds = new ArrayList<>();
-		for (Recipe recipe : filteredRecipes) {
+		for (Recipe recipe : allRecipes) {
 			itemIds.add(recipe.getOutputItemId());
 			List<Integer> ingredientIds = recipe.getIngredients().stream().map(Ingredient::getItemId)
 					.collect(Collectors.toList());
@@ -382,29 +303,20 @@ public class MainViewController implements Initializable {
 		}
 		System.out.println("All needed items received");
 
-		createRecipeViews(filteredRecipes);
+		createRecipeViews(allRecipes);
+		*/
 	}
 
-	private void createRecipeViews(List<Recipe> recipes) {
-		recipesToDisplay.clear();
-		for (Recipe recipe : recipes) {
-			RecipeFilter recipeFilter = new RecipeFilter(recipe, characterRecipes, unlockedRecipes);
-
-			recipeFilter.addItemNameFilter(txt_itemNameFilter.textProperty());
-			recipeFilter.addRecipeLevelFilter(txt_minLevel.textProperty());
-			recipeFilter.addDisciplineFilter(disciplineToggle.selectedToggleProperty());
-			recipeFilter.addByableRecipeFilter(chbx_byableRecipe.selectedProperty());
-			recipeFilter.addAlreadyLearnedFilter(chbx_showAlreadyLearned.selectedProperty());
-
-			recipeFilter.displayProperty().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> {
-				if (newValue) { // if display
-					recipesToDisplay.add(recipe);
-				} else {
-					recipesToDisplay.remove(recipe);
-				}
-			});
-
-			recipeFilter.handleFilter(true);
+	private void createRecipeViews() {
+		Collection<Recipe> recipies = Data.getInstance().getRecipeProgress().getAll().values();
+		lbl_currentlyDisplayed.setText(String.valueOf(recipies.size()));
+		for (Recipe recipe : recipies) {
+			/*
+			RecipeTreeViewController recipeTreeViewController = new RecipeTreeViewController(recipe, false);
+			recipeTreeViewController.setManaged(false);
+			recipeTreeViewController.setVisible(false);
+			Platform.runLater(() -> vbox_recipes.getChildren().add(recipeTreeViewController));
+			*/
 		}
 	}
 

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
@@ -10,79 +9,153 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.paint.Color?>
+<?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
-   <bottom>
-      <VBox fx:id="vbox_tasks" BorderPane.alignment="CENTER">
-         <children>
-            <HBox>
-               <children>
-                  <Label text="%recipes" />
-                  <ProgressBar fx:id="pb_getRecipes" progress="0.0" HBox.hgrow="ALWAYS">
-                     <HBox.margin>
-                        <Insets />
-                     </HBox.margin>
-                  </ProgressBar>
-                  <Label text="%items" />
-                  <ProgressBar fx:id="pb_getItems" maxWidth="1.7976931348623157E308" progress="0.0" HBox.hgrow="ALWAYS" />
-               </children>
-            </HBox>
-         </children>
-      </VBox>
-   </bottom>
+
+<BorderPane prefHeight="518.0" prefWidth="790.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
    <center>
-      <VBox BorderPane.alignment="CENTER">
-         <children>
-            <HBox>
+    <SplitPane dividerPositions="0.5534521158129176, 0.7505567928730512" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0">
+      <items>
+            <VBox maxWidth="-Infinity" spacing="5.0">
                <children>
-                  <Label text="Account Name: " />
-                  <Label fx:id="lbl_accountName" />
+                  <Label fx:id="lbl_accountName" text="Account Name" />
+                  <Separator prefWidth="200.0" />
+                  <Label contentDisplay="RIGHT" text="Item Name">
+                     <graphic>
+                        <TextField fx:id="txt_itemNameFilter" />
+                     </graphic>
+                  </Label>
+                  <HBox alignment="CENTER_LEFT" spacing="5.0">
+                     <children>
+                        <Label contentDisplay="RIGHT" minWidth="-Infinity" text="Level Min" HBox.hgrow="SOMETIMES">
+                           <HBox.margin>
+                              <Insets />
+                           </HBox.margin>
+                           <graphic>
+                              <TextField fx:id="txt_minLevel" />
+                           </graphic>
+                        </Label>
+                        <Label contentDisplay="RIGHT" minWidth="-Infinity" text="Max" HBox.hgrow="SOMETIMES">
+                           <graphic>
+                              <TextField fx:id="txt_maxLevel" />
+                           </graphic>
+                        </Label>
+                     </children>
+                  </HBox>
+                  <VBox fx:id="vbox_disciplineCheck" />
+                  <Label contentDisplay="RIGHT" text="Character">
+                     <graphic>
+                        <ChoiceBox fx:id="choice_charName" />
+                     </graphic>
+                  </Label>
+                  <Separator prefWidth="200.0" />
+                  <CheckBox fx:id="chbx_byableRecipe" mnemonicParsing="false" text="%show_buyable_recipes" />
+                  <CheckBox fx:id="chbx_showAlreadyLearned" mnemonicParsing="false" text="%show_already_learned" />
+                  <Separator prefWidth="200.0" />
+                  <Label fx:id="lbl_currentlyDisplayed" text="Number of Recipies" />
+                  <Label fx:id="lbl_recipes_progress" text="\%">
+                     <graphic>
+                        <ProgressBar fx:id="pb_getRecipes" prefWidth="200.0" />
+                     </graphic>
+                  </Label>
+                  <Label text="\%">
+                     <graphic>
+                        <ProgressBar fx:id="pb_getItems" prefWidth="200.0" />
+                     </graphic>
+                  </Label>
+                  <CheckBox fx:id="chbx_pauseFilter" mnemonicParsing="false" text="%show_whole_recipe" />
+                  <CheckBox fx:id="chbx_showWholeRecipe" mnemonicParsing="false" text="Whole" />
                </children>
-            </HBox>
-            <HBox alignment="CENTER_LEFT" spacing="10.0">
-               <children>
-                  <ChoiceBox fx:id="choice_charName" prefWidth="150.0" />
-                  <Button mnemonicParsing="false" onAction="#onSelectCharacter" text="reload" />
-                  <CheckBox fx:id="chbx_pauseFilter" mnemonicParsing="false" text="%pause_filter" />
-               </children>
-            </HBox>
-            <HBox fx:id="hbox_disciplineCheck" />
-            <HBox alignment="CENTER_LEFT" spacing="10.0">
-               <children>
-                  <CheckBox fx:id="chbx_byableRecipe" mnemonicParsing="false" text="include from recipe" />
-                  <CheckBox fx:id="chbx_showWholeRecipe" disable="true" mnemonicParsing="false" text="Show Recipes Recursively" />
-                  <CheckBox fx:id="chbx_showAlreadyLearned" mnemonicParsing="false" text="Show already learned" />
-                  <Label fx:id="lbl_currentlyDisplayed" text="Recipes: 0" />
-               </children>
-            </HBox>
-            <HBox>
-               <children>
-                  <TextField fx:id="txt_itemNameFilter" promptText="%filter" HBox.hgrow="SOMETIMES" />
-                  <TextField fx:id="txt_minLevel" promptText="%min_level" />
-               </children>
-            </HBox>
-            <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
+            </VBox>
+        <ScrollPane prefHeight="-1.0" prefWidth="-1.0">
                <content>
-                  <FlowPane fx:id="scroll_recipes" hgap="10.0" vgap="20.0" />
+                  <VBox fx:id="vbox_recipes" alignment="TOP_CENTER" />
                </content>
-            </ScrollPane>
-         </children>
-      </VBox>
+        </ScrollPane>
+        <AnchorPane>
+          <children>
+            <Label alignment="CENTER" layoutX="14.0" layoutY="14.0" style="&#10;" text="Details" textAlignment="CENTER" wrapText="false">
+                     <textFill>
+                <Color blue="0.624" green="0.624" red="0.624" fx:id="x2" />
+                     </textFill>
+                     <font>
+                <Font size="18.0" fx:id="x1" />
+                     </font>
+                  </Label>
+          </children>
+        </AnchorPane>
+      </items>
+    </SplitPane>
    </center>
    <top>
-      <MenuBar BorderPane.alignment="CENTER">
-        <menus>
-          <Menu mnemonicParsing="false" text="%edit">
-            <items>
-              <MenuItem mnemonicParsing="false" onAction="#openSettings" text="%settings" />
-            </items>
-          </Menu>
-        </menus>
-      </MenuBar>
+    <MenuBar BorderPane.alignment="CENTER">
+      <menus>
+        <Menu mnemonicParsing="false" text="File">
+          <items>
+            <MenuItem mnemonicParsing="false" text="New" />
+            <MenuItem mnemonicParsing="false" text="Open…" />
+            <Menu mnemonicParsing="false" text="Open Recent" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Close" />
+            <MenuItem mnemonicParsing="false" text="Save" />
+            <MenuItem mnemonicParsing="false" text="Save As…" />
+            <MenuItem mnemonicParsing="false" text="Revert" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Preferences…" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Quit" />
+          </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Edit">
+          <items>
+                  <MenuItem mnemonicParsing="false" onAction="#openSettings" text="Settings" />
+            <MenuItem mnemonicParsing="false" text="Undo" />
+            <MenuItem mnemonicParsing="false" text="Redo" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Cut" />
+            <MenuItem mnemonicParsing="false" text="Copy" />
+            <MenuItem mnemonicParsing="false" text="Paste" />
+            <MenuItem mnemonicParsing="false" text="Delete" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Select All" />
+            <MenuItem mnemonicParsing="false" text="Unselect All" />
+          </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Help">
+          <items>
+            <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
+          </items>
+        </Menu>
+      </menus>
+    </MenuBar>
    </top>
+   <bottom>
+    <HBox id="HBox" alignment="CENTER_LEFT" spacing="5.0" BorderPane.alignment="CENTER">
+      <children>
+        <Label maxHeight="1.7976931348623157E308" maxWidth="-1.0" text="Left status" HBox.hgrow="ALWAYS">
+          <font>
+            <Font size="11.0" fx:id="x3" />
+          </font>
+          <textFill>
+            <Color blue="0.625" green="0.625" red="0.625" fx:id="x4" />
+          </textFill>
+        </Label>
+        <Pane prefHeight="-1.0" prefWidth="-1.0" HBox.hgrow="ALWAYS" />
+        <Label font="$x3" maxWidth="-1.0" text="Right status" textFill="$x4" HBox.hgrow="NEVER" />
+      </children>
+      <padding>
+        <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
+      </padding>
+    </HBox>
+   </bottom>
 </BorderPane>
