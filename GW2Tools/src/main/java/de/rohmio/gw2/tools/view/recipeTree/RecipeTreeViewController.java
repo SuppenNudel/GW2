@@ -1,17 +1,13 @@
 package de.rohmio.gw2.tools.view.recipeTree;
 
-import java.util.List;
-
-import de.rohmio.gw2.tools.main.Data;
 import de.rohmio.gw2.tools.view.RecipeView;
+import javafx.beans.Observable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import me.xhsun.guildwars2wrapper.GuildWars2;
-import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
-import me.xhsun.guildwars2wrapper.model.v2.Recipe.Ingredient;
 
 public class RecipeTreeViewController extends RecipeView { // Anchor Pane
 
@@ -32,6 +28,11 @@ public class RecipeTreeViewController extends RecipeView { // Anchor Pane
 		hBox.setAlignment(Pos.TOP_CENTER);
 		getChildren().add(hBox);
 	}
+	
+	public void addFilter(Observable observable) {
+		observable.
+		
+	}
 
 	private VBox createTree(Recipe recipe, int prevCount) {
 		VBox root = new VBox(10.0);
@@ -50,9 +51,11 @@ public class RecipeTreeViewController extends RecipeView { // Anchor Pane
 			outputCount = prevCount;
 		}
 		int outputItemId = recipe.getOutputItemId();
-		// Item outputItem = Data.getInstance().getItemProgress().getById(outputItemId);
-		root.getChildren().add(new ItemView(outputItemId, outputCount, detailed));
+//		Item outputItem = Data.getInstance().getItemProgress().getById(outputItemId);
+		root.getChildren().add(new Label(String.format("%dx %d", outputCount, outputItemId)));
+//		root.getChildren().add(new ItemView(outputItemId, outputCount, detailed));
 
+		/*
 		HBox hbox_ingredients = new HBox(10.0);
 		hbox_ingredients.setAlignment(Pos.TOP_CENTER);
 		hbox_ingredients.setPrefWidth(USE_COMPUTED_SIZE);
@@ -78,6 +81,7 @@ public class RecipeTreeViewController extends RecipeView { // Anchor Pane
 			}
 		}
 		root.getChildren().add(hbox_ingredients);
+		 */
 		return root;
 	}
 

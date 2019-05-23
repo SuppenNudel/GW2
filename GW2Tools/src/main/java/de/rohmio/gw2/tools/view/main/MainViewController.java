@@ -10,12 +10,11 @@ import java.util.ResourceBundle;
 
 import de.rohmio.gw2.tools.App;
 import de.rohmio.gw2.tools.main.Data;
+import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.application.Platform;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableSet;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
@@ -87,9 +86,6 @@ public class MainViewController implements Initializable {
 	
 	private Map<CraftingDisciplines, CheckBox> disciplineChecks = new HashMap<>();
 
-	private ObservableSet<Recipe> displayedRecipies = FXCollections.observableSet();
-	private ObservableSet<Recipe> filteredRecipies = FXCollections.observableSet();
-
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		initResourceBundle(resources);
@@ -105,11 +101,11 @@ public class MainViewController implements Initializable {
 				Platform.runLater(() -> lbl_recipes_progress.setText(String.format("%.2f%%", 100*(double) newValue)));
 				// when all recipes got loaded
 				if(newValue.equals(1.0)) {
-					filteredRecipies.addAll(Data.getInstance().getRecipeProgress().values());
+					createRecipeViews();
 				}
 			}
 		});
-
+		
 		// discipline selection
 		for (CraftingDisciplines discipline : CraftingDisciplines.values()) {
 			CheckBox checkbox = new CheckBox(discipline.name());
@@ -259,64 +255,14 @@ public class MainViewController implements Initializable {
 		// TODO here some of the init functions could be used for resetting the filters
 	}
 
-
-	/*
-	 * TODO don't clear recipes; instead add or remove recipes according to filter changes
-	 * so only go through recipes that are currently filtered out if the filter gets looser
-	 * and only go through recipes that are currently displayed if the filter gets harsher
-	 */
-	/**
-	 * @throws GuildWars2Exception
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	@FXML
-	private void searchForRecipes() throws GuildWars2Exception, IOException, InterruptedException {
-		/*
-		System.out.println(recipeProgress.getProgress().get());
-		System.out.println("All recipes received");
-
-		List<Recipe> allRecipes = new ArrayList<>(recipeProgress.values());
-		System.out.println("All Recipe Count: " + allRecipes.size());
-
-		
-		// fetch all Item information here, so they don't have to be called individually
-		// don't do that, that takes ages
-		List<Integer> itemIds = new ArrayList<>();
-		for (Recipe recipe : allRecipes) {
-			itemIds.add(recipe.getOutputItemId());
-			List<Integer> ingredientIds = recipe.getIngredients().stream().map(Ingredient::getItemId)
-					.collect(Collectors.toList());
-			itemIds.addAll(ingredientIds);
-		}
-
-		RequestProgress<Item> itemProgress = Data.getInstance().getItemProgress().getByIds(itemIds);
-
-		System.out.println("waiting..");
-		while (!itemProgress.values().stream().map(i -> i.getId()).collect(Collectors.toList()).containsAll(itemIds)) {
-			try {
-				System.out.print(".");
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		System.out.println("All needed items received");
-
-		createRecipeViews(allRecipes);
-		*/
-	}
-
 	private void createRecipeViews() {
 		Collection<Recipe> recipies = Data.getInstance().getRecipeProgress().getAll().values();
 		lbl_currentlyDisplayed.setText(String.valueOf(recipies.size()));
 		for (Recipe recipe : recipies) {
-			/*
 			RecipeTreeViewController recipeTreeViewController = new RecipeTreeViewController(recipe, false);
 			recipeTreeViewController.setManaged(false);
 			recipeTreeViewController.setVisible(false);
 			Platform.runLater(() -> vbox_recipes.getChildren().add(recipeTreeViewController));
-			*/
 		}
 	}
 

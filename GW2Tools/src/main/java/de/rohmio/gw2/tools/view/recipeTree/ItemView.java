@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
-import de.rohmio.gw2.tools.main.Data;
 import de.rohmio.gw2.tools.main.Util;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
@@ -35,7 +34,7 @@ public class ItemView extends VBox {
 
 		this.detailed = detailed;
 
-		item = Data.getInstance().getItemProgress().getById(itemId);
+//		item = Data.getInstance().getItemProgress().getById(itemId);
 		this.count = count;
 		try {
 			init();
