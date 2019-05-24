@@ -1,4 +1,4 @@
-package de.rohmio.gw2.tools.main;
+package de.rohmio.gw2.tools.model;
 
 import me.xhsun.guildwars2wrapper.GuildWars2.LanguageSelect;
 

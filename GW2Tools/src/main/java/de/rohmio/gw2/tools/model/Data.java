@@ -1,9 +1,11 @@
-package de.rohmio.gw2.tools.main;
+package de.rohmio.gw2.tools.model;
 
 import java.io.File;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import de.rohmio.gw2.tools.main.ClientFactory;
+import de.rohmio.gw2.tools.main.Util;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -12,7 +14,6 @@ import javafx.beans.property.StringProperty;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.GuildWars2.LanguageSelect;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
-import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 
 public class Data {
@@ -31,21 +32,18 @@ public class Data {
 	private static File settingsFile = new File(DOCS, "settings.json");
 	private Settings settings;
 	
-	private RequestProgress<Item> itemProgress;
-	private RequestProgress<Recipe> recipeProgress;
-	
 	private StringProperty accessTokenProperty = new SimpleStringProperty();
 	
 	private ObjectProperty<ResourceBundle> resources = new SimpleObjectProperty<>();
-
+	
+	private RequestProgress<Recipe> recipes;
+	
 	private Data() throws NullPointerException, GuildWars2Exception {
 		GuildWars2.setInstance(ClientFactory.getClient());
-		loadSettings();
-		
-		itemProgress = new RequestProgress<>(RequestType.ITEM);
-		recipeProgress = new RequestProgress<>(RequestType.RECIPE);
+		getSettings();
+		recipes = new RequestProgress<>(RequestType.RECIPE);
 	}
-
+	
 	public static Data getInstance() {
 		if (data == null) {
 			try {
@@ -57,36 +55,26 @@ public class Data {
 		return data;
 	}
 	
-	public RequestProgress<Item> getItemProgress() {
-		return itemProgress;
-	}
-	public RequestProgress<Recipe> getRecipeProgress() {
-		return recipeProgress;
-	}
-	
 	public ObjectProperty<ResourceBundle> resourcesProperty() {
 		return resources;
-	}
-	public final ResourceBundle getResources() {
-		return resourcesProperty().get();
 	}
 	private final void setResources(ResourceBundle resources) {
 		resourcesProperty().set(resources);
 	}
-	
-	public void setLanguage(LanguageSelect lang) {
-		GuildWars2.setLanguage(lang);
-		Locale locale = new Locale(lang.getValue());
-		ResourceBundle resources = ResourceBundle.getBundle("bundle.MyBundle", locale);
-		setResources(resources);
-		settings.setLang(lang);
-		saveSettings();
+	public final ResourceBundle getResources() {
+		return resourcesProperty().get();
 	}
 	
+	public StringProperty accessTokenProperty() {
+		return accessTokenProperty;
+	}
 	public void setAccessToken(String accessToken) {
 		settings.setAccessToken(accessToken);
 		accessTokenProperty.set(accessToken);
 		saveSettings();
+	}
+	public final String getAccessToken() {
+		return settings.getAccessToken();
 	}
 	
 	public StringBinding getStringBinding(String key) {
@@ -99,19 +87,13 @@ public class Data {
 		};
 	}
 	
-	public final String getAccessToken() {
-		return settings.getAccessToken();
-	}
-	
-	private void loadSettings() {
-		if(settingsFile.exists()) {
-			settings = Util.readFile(settingsFile, Settings.class);
-		} else {
-			settings = new Settings("", GuildWars2.getLanguage());
-			setLanguage(settings.getLang());
-		}
-		setLanguage(settings.getLang());
-		setAccessToken(settings.getAccessToken());
+	public void setLanguage(LanguageSelect lang) {
+		GuildWars2.setLanguage(lang);
+		Locale locale = new Locale(lang.getValue());
+		ResourceBundle resources = ResourceBundle.getBundle("bundle.MyBundle", locale);
+		setResources(resources);
+		settings.setLang(lang);
+		saveSettings();
 	}
 	
 	private void saveSettings() {
@@ -119,11 +101,22 @@ public class Data {
 	}
 	
 	public Settings getSettings() {
+		if(settings == null) {
+			if(settingsFile.exists()) {
+				settings = Util.readFile(settingsFile, Settings.class);
+			} else {
+				// settings file does not exist yet
+				// create settings file
+				settings = new Settings("", GuildWars2.getLanguage());
+			}
+			setLanguage(settings.getLang());
+			setAccessToken(settings.getAccessToken());
+		}
 		return settings;
 	}
 	
-	public StringProperty accessTokenProperty() {
-		return accessTokenProperty;
+	public RequestProgress<Recipe> getRecipes() {
+		return recipes;
 	}
 	
 }

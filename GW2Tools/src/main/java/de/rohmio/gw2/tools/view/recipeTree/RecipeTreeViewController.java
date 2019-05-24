@@ -1,20 +1,27 @@
 package de.rohmio.gw2.tools.view.recipeTree;
 
+import java.util.Map;
+
 import de.rohmio.gw2.tools.view.RecipeView;
-import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
+import me.xhsun.guildwars2wrapper.model.v2.util.comm.CraftingDisciplines;
 
 public class RecipeTreeViewController extends RecipeView { // Anchor Pane
 
 	private boolean detailed;
-
+	
 	public RecipeTreeViewController(Recipe recipe, boolean detailed) {
 		super(recipe);
+		
+		setManaged(false);
+		setVisible(false);
 
 		this.detailed = detailed;
 
@@ -27,11 +34,6 @@ public class RecipeTreeViewController extends RecipeView { // Anchor Pane
 		hBox.setPrefHeight(USE_COMPUTED_SIZE);
 		hBox.setAlignment(Pos.TOP_CENTER);
 		getChildren().add(hBox);
-	}
-	
-	public void addFilter(Observable observable) {
-		observable.
-		
 	}
 
 	private VBox createTree(Recipe recipe, int prevCount) {

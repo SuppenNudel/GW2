@@ -1,7 +1,6 @@
-package de.rohmio.gw2.tools.main;
+package de.rohmio.gw2.tools.model;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -9,8 +8,11 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import de.rohmio.gw2.tools.main.Util;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
 import me.xhsun.guildwars2wrapper.AsynchronousRequest;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.SynchronousRequest;
@@ -22,12 +24,14 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer, T> {
+public class RequestProgress<T extends IdentifiableInt> {
 	
 	private static Logger log = Logger.getLogger("RequestProgress");
 	
 	// double value for how much percentage this data type is loaded
 	private DoubleProperty progress = new SimpleDoubleProperty();
+	
+	private ObservableMap<Integer, T> values = FXCollections.observableHashMap();
 	
 	// list of all ids available for this data type
 	private List<Integer> allIds;
@@ -37,7 +41,11 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 	private Callable<List<Integer>> idCaller;
 	private Function<int[], Void> infoFunction;
 
-	public RequestProgress(RequestType type) throws NullPointerException, GuildWars2Exception {
+	public ObservableMap<Integer, T> getValues() {
+		return values;
+	}
+	
+	public RequestProgress(RequestType type) {
 		this.type = type;
 
 		SynchronousRequest synchronous = GuildWars2.getInstance().getSynchronous();
@@ -110,28 +118,26 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 	}
 	
 	private void updateProgress() {
-		progress.set(1.0 * size() / allIds.size());
+		progress.set(1.0 * values.size() / allIds.size());
 	}
 
-	@Override
 	public T put(Integer key, T value) {
-		T put = super.put(key, value);
+		T put = values.put(key, value);
 		updateProgress();
 		return put;
 	}
 	
-	@Override
 	public void putAll(Map<? extends Integer, ? extends T> m) {
-		super.putAll(m);
+		values.putAll(m);
 		updateProgress();
 	}
 
-	public RequestProgress<T> getByIds(List<Integer> itemIds) {
+	public synchronized RequestProgress<T> getByIds(List<Integer> itemIds) {
 		List<Integer> toRequest = new ArrayList<>();
 		
 		for(Integer id : itemIds) {
 			log.finest("Iterating getByIds: "+id);
-			if(!containsKey(id)) {
+			if(!values.containsKey(id)) {
 				// if not already loaded
 				log.finest("Iterating getByIds: "+id+" is not loaded yet");
 				// try to get from cache
@@ -165,7 +171,7 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 	public T getById(int id) {
 		List<Integer> list = new ArrayList<>();
 		list.add(id);
-		T result = getByIds(list).get(id);
+		T result = getByIds(list).getValues().get(id);
 		return result;
 	}
 		
@@ -174,15 +180,11 @@ public class RequestProgress<T extends IdentifiableInt> extends HashMap<Integer,
 		return getByIds(toRequest);
 	}
 	
-	private RequestProgress<T> getThis() {
-		return this;
-	}
-	
 	private void handleResult(List<T> result) {
 		result.forEach(r -> Util.writeCache(type, r.getId(), r));							
 		Map<Integer, T> collect = result.stream().collect(Collectors.toMap(T::getId, r -> r));
 		putAll(collect);
-		System.out.println("Iteration: "+getThis().size());
+		System.out.println("Iteration: "+values.size());
 	}
 
 }

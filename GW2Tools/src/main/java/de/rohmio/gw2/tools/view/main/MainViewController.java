@@ -2,19 +2,17 @@ package de.rohmio.gw2.tools.view.main;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
 import de.rohmio.gw2.tools.App;
-import de.rohmio.gw2.tools.main.Data;
+import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
 import javafx.application.Platform;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
@@ -89,23 +87,20 @@ public class MainViewController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		initResourceBundle(resources);
-
-		Platform.runLater(() -> Data.getInstance().getRecipeProgress().getAll());
-
-		// progress display
-		pb_getItems.progressProperty().bind(Data.getInstance().getItemProgress().getProgress());
-		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipeProgress().getProgress());
-		Data.getInstance().getRecipeProgress().getProgress().addListener(new ChangeListener<Number>() {
+		
+		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipes().getProgress());
+		Data.getInstance().getRecipes().getValues().addListener(new MapChangeListener<Integer, Recipe>() {
 			@Override
-			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-				Platform.runLater(() -> lbl_recipes_progress.setText(String.format("%.2f%%", 100*(double) newValue)));
-				// when all recipes got loaded
-				if(newValue.equals(1.0)) {
-					createRecipeViews();
-				}
+			public void onChanged(Change<? extends Integer, ? extends Recipe> change) {
+				int current = change.getMap().size();
+				int all = Data.getInstance().getRecipes().getIds().size();
+				double progress = (100.0 * current) / all;
+				Platform.runLater(() -> lbl_recipes_progress.setText(String.format("%.2f%%", progress)));
+				createRecipeView(change.getValueAdded());
 			}
 		});
-		
+		new Thread(() -> Data.getInstance().getRecipes().getAll()).start();
+
 		// discipline selection
 		for (CraftingDisciplines discipline : CraftingDisciplines.values()) {
 			CheckBox checkbox = new CheckBox(discipline.name());
@@ -255,15 +250,10 @@ public class MainViewController implements Initializable {
 		// TODO here some of the init functions could be used for resetting the filters
 	}
 
-	private void createRecipeViews() {
-		Collection<Recipe> recipies = Data.getInstance().getRecipeProgress().getAll().values();
-		lbl_currentlyDisplayed.setText(String.valueOf(recipies.size()));
-		for (Recipe recipe : recipies) {
-			RecipeTreeViewController recipeTreeViewController = new RecipeTreeViewController(recipe, false);
-			recipeTreeViewController.setManaged(false);
-			recipeTreeViewController.setVisible(false);
-			Platform.runLater(() -> vbox_recipes.getChildren().add(recipeTreeViewController));
-		}
+	private void createRecipeView(Recipe recipe) {
+		RecipeTreeViewController recipeTreeViewController = new RecipeTreeViewController(recipe, false);
+		recipeTreeViewController.addDisciplineFilter(disciplineChecks);
+		Platform.runLater(() -> vbox_recipes.getChildren().add(recipeTreeViewController));
 	}
 
 }

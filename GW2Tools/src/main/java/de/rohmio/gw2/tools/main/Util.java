@@ -14,6 +14,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
+import de.rohmio.gw2.tools.model.Data;
+import de.rohmio.gw2.tools.model.RequestType;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -75,6 +77,7 @@ public class Util {
 
 	public static void writeCache(RequestType type, int id, Object object) {
 		File file = getFilePath(type, id);
+		System.out.println("Writing cache "+file);
 		writeFile(file, object);
 	}
 	
@@ -87,6 +90,11 @@ public class Util {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static List<int[]> chunkUp(int chunkSize, List<Integer> integers) {
+		int[] allIdArray = integers.stream().mapToInt(i -> i).toArray();
+		return chunkUp(chunkSize, allIdArray);
 	}
 
 	public static List<int[]> chunkUp(int chunkSize, int[] array) {

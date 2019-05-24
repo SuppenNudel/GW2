@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import de.rohmio.gw2.tools.main.Data;
+import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.view.main.MainViewController;
 import javafx.application.Application;
 import javafx.application.Platform;
