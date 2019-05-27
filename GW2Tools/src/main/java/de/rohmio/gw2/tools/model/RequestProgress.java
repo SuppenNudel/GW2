@@ -132,7 +132,7 @@ public class RequestProgress<T extends IdentifiableInt> {
 		updateProgress();
 	}
 
-	public synchronized RequestProgress<T> getByIds(List<Integer> itemIds) {
+	public synchronized ObservableMap<Integer, T> getByIds(List<Integer> itemIds) {
 		List<Integer> toRequest = new ArrayList<>();
 		
 		for(Integer id : itemIds) {
@@ -165,17 +165,18 @@ public class RequestProgress<T extends IdentifiableInt> {
 			infoFunction.apply(ids);
 		}
 
-		return this;
+		return values;
 	}
 	
 	public T getById(int id) {
+		// convert single id to ArrayList
 		List<Integer> list = new ArrayList<>();
 		list.add(id);
-		T result = getByIds(list).getValues().get(id);
+		T result = getByIds(list).get(id);
 		return result;
 	}
 		
-	public RequestProgress<T> getAll() {
+	public ObservableMap<Integer, T> getAll() {
 		List<Integer> toRequest = new ArrayList<>(allIds);
 		return getByIds(toRequest);
 	}

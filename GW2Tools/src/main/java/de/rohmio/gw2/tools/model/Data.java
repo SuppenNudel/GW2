@@ -14,36 +14,39 @@ import javafx.beans.property.StringProperty;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.GuildWars2.LanguageSelect;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
+import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 
 public class Data {
-	
+
 	// singleton
 	private static Data data;
-	
+
 	/**
 	 * location where all app data is stored
 	 */
-	public static File DOCS = new File(System.getProperty("user.home")+"/AppData/Roaming/GW2 Tools");
+	public static File DOCS = new File(System.getProperty("user.home") + "/AppData/Roaming/GW2 Tools");
 
 	/**
 	 * settings file location
 	 */
 	private static File settingsFile = new File(DOCS, "settings.json");
 	private Settings settings;
-	
+
 	private StringProperty accessTokenProperty = new SimpleStringProperty();
-	
+
 	private ObjectProperty<ResourceBundle> resources = new SimpleObjectProperty<>();
-	
+
 	private RequestProgress<Recipe> recipes;
-	
+	private RequestProgress<Item> items;
+
 	private Data() throws NullPointerException, GuildWars2Exception {
 		GuildWars2.setInstance(ClientFactory.getClient());
 		getSettings();
 		recipes = new RequestProgress<>(RequestType.RECIPE);
+		items = new RequestProgress<>(RequestType.ITEM);
 	}
-	
+
 	public static Data getInstance() {
 		if (data == null) {
 			try {
@@ -54,39 +57,46 @@ public class Data {
 		}
 		return data;
 	}
-	
+
 	public ObjectProperty<ResourceBundle> resourcesProperty() {
 		return resources;
 	}
+
 	private final void setResources(ResourceBundle resources) {
 		resourcesProperty().set(resources);
 	}
+
 	public final ResourceBundle getResources() {
 		return resourcesProperty().get();
 	}
-	
+
 	public StringProperty accessTokenProperty() {
 		return accessTokenProperty;
 	}
+
 	public void setAccessToken(String accessToken) {
 		settings.setAccessToken(accessToken);
 		accessTokenProperty.set(accessToken);
 		saveSettings();
 	}
+
 	public final String getAccessToken() {
 		return settings.getAccessToken();
 	}
-	
+
 	public StringBinding getStringBinding(String key) {
 		return new StringBinding() {
-			{ bind(resourcesProperty()); }
+			{
+				bind(resourcesProperty());
+			}
+
 			@Override
 			protected String computeValue() {
 				return getResources().getString(key);
 			}
 		};
 	}
-	
+
 	public void setLanguage(LanguageSelect lang) {
 		GuildWars2.setLanguage(lang);
 		Locale locale = new Locale(lang.getValue());
@@ -95,14 +105,14 @@ public class Data {
 		settings.setLang(lang);
 		saveSettings();
 	}
-	
+
 	private void saveSettings() {
 		Util.writeFile(settingsFile, settings);
 	}
-	
+
 	public Settings getSettings() {
-		if(settings == null) {
-			if(settingsFile.exists()) {
+		if (settings == null) {
+			if (settingsFile.exists()) {
 				settings = Util.readFile(settingsFile, Settings.class);
 			} else {
 				// settings file does not exist yet
@@ -114,9 +124,13 @@ public class Data {
 		}
 		return settings;
 	}
-	
+
 	public RequestProgress<Recipe> getRecipes() {
 		return recipes;
 	}
-	
+
+	public RequestProgress<Item> getItems() {
+		return items;
+	}
+
 }

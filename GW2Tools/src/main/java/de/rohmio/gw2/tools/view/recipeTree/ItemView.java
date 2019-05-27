@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 
 import de.rohmio.gw2.tools.main.Util;
+import de.rohmio.gw2.tools.model.Data;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -25,21 +26,30 @@ import retrofit2.Response;
 public class ItemView extends VBox {
 
 	private boolean detailed;
+	private int itemId;
 	private Item item;
 	private int count;
 
 	public ItemView(int itemId, int count, boolean detailed) {
 		setPrefWidth(USE_COMPUTED_SIZE);
 		setPrefHeight(USE_COMPUTED_SIZE);
-
+		
+		this.itemId = itemId;
+		
 		this.detailed = detailed;
 
-//		item = Data.getInstance().getItemProgress().getById(itemId);
 		this.count = count;
 		try {
 			init();
 		} catch (NullPointerException e) {
 			System.err.println("Can't load Item with ID " + itemId);
+		}
+	}
+	
+	public void show(boolean show) {
+		if(show) {
+			item = Data.getInstance().getItems().getById(itemId);
+			init();
 		}
 	}
 
@@ -61,8 +71,8 @@ public class ItemView extends VBox {
 		if (item == null) {
 			return;
 		}
-		getChildren().add(new Label(String.format("%dx %s", count, item.getName())));
 		Platform.runLater(() -> {
+			getChildren().add(new Label(String.format("%dx %s", count, item.getName())));
 			try {
 				File imgFile = Util.getImage(item.getIcon());
 				Image image = new Image(new FileInputStream(imgFile), 64, 64, false, false);

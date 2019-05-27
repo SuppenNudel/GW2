@@ -2,6 +2,7 @@ package de.rohmio.gw2.tools.view.main;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,7 @@ import java.util.ResourceBundle;
 
 import de.rohmio.gw2.tools.App;
 import de.rohmio.gw2.tools.model.Data;
-import de.rohmio.gw2.tools.view.recipeTree.RecipeTreeViewController;
+import de.rohmio.gw2.tools.view.RecipeView;
 import javafx.application.Platform;
 import javafx.beans.property.StringProperty;
 import javafx.collections.MapChangeListener;
@@ -96,7 +97,19 @@ public class MainViewController implements Initializable {
 				int all = Data.getInstance().getRecipes().getIds().size();
 				double progress = (100.0 * current) / all;
 				Platform.runLater(() -> lbl_recipes_progress.setText(String.format("%.2f%%", progress)));
-				createRecipeView(change.getValueAdded());
+				RecipeView recipeView = createRecipeView(change.getValueAdded());
+				
+				if(progress == 100) {
+					System.out.println("FIN");
+					List<Integer> outputItemIds = new ArrayList<>();
+					for(Recipe recipe : Data.getInstance().getRecipes().getValues().values()) {
+						outputItemIds.add(recipe.getOutputItemId());					
+					}
+					System.out.println("Requesting items");
+					Data.getInstance().getItems().getByIds(outputItemIds);
+					System.out.println("Finished requesting items");
+					recipeView.showItems(true);
+				}
 			}
 		});
 		new Thread(() -> Data.getInstance().getRecipes().getAll()).start();
@@ -250,10 +263,11 @@ public class MainViewController implements Initializable {
 		// TODO here some of the init functions could be used for resetting the filters
 	}
 
-	private void createRecipeView(Recipe recipe) {
-		RecipeTreeViewController recipeTreeViewController = new RecipeTreeViewController(recipe, false);
-		recipeTreeViewController.addDisciplineFilter(disciplineChecks);
-		Platform.runLater(() -> vbox_recipes.getChildren().add(recipeTreeViewController));
+	private RecipeView createRecipeView(Recipe recipe) {
+		RecipeView recipeView = new RecipeView(recipe, false);
+		recipeView.addDisciplineFilter(disciplineChecks);
+		Platform.runLater(() -> vbox_recipes.getChildren().add(recipeView));
+		return recipeView;
 	}
 
 }
