@@ -1,4 +1,4 @@
-package de.rohmio.gw2.tools.model;
+package de.rohmio.gw2.tools.model.settings;
 
 import me.xhsun.guildwars2wrapper.GuildWars2.LanguageSelect;
 
@@ -7,11 +7,6 @@ public class Settings {
 	private LanguageSelect lang;
 	private String accessToken;
 	
-	public Settings(String accessToken, LanguageSelect lang) {
-		this.accessToken = accessToken;
-		this.lang = lang;
-	}
-
 	public void setAccessToken(String accessToken) {
 		this.accessToken = accessToken;
 	}

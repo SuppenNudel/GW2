@@ -14,19 +14,23 @@ import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
-import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.model.RequestType;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
 public class Util {
+
+	/**
+	 * location where all app data is stored
+	 */
+	public static File DOCS = new File(System.getProperty("user.home") + "/AppData/Roaming/GW2 Tools");
 	
 	private static Gson gson = new Gson();
 
 	public static File getImage(String url) throws IOException {
 		String fileName = String.format("data/img/%s", new File(url).getName());
-		final File file = new File(Data.DOCS, fileName);
+		final File file = new File(DOCS, fileName);
 		if (!file.exists()) {
 			Request request = new Request.Builder().url(url).build();
 			OkHttpClient client = ClientFactory.getClient();
@@ -48,7 +52,7 @@ public class Util {
 		default:
 			break;
 		}
-		return new File(Data.DOCS, fileName);
+		return new File(DOCS, fileName);
 	}
 
 	public static <T> T getCache(RequestType type, int id, Type clazz) {

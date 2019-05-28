@@ -26,7 +26,7 @@ public class App extends Application {
 		String fileName_view = controllerClass.getSimpleName().replaceAll("Controller", "");
 		URL location = controllerClass.getResource(String.format("/fxml/%s.fxml", fileName_view));
 		
-		ResourceBundle resources = Data.getInstance().getResources();
+		ResourceBundle resources = Data.getInstance().getResources().get();
 		Parent root = FXMLLoader.load(location, resources);
 		Scene scene = new Scene(root);
 		return scene;

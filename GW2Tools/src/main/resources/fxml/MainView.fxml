@@ -21,8 +21,7 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-
-<BorderPane prefHeight="518.0" prefWidth="790.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
+<BorderPane prefHeight="518.0" prefWidth="790.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
    <center>
     <SplitPane dividerPositions="0.5534521158129176, 0.7505567928730512" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0">
       <items>
@@ -73,8 +72,8 @@
                         <ProgressBar fx:id="pb_getItems" prefWidth="200.0" />
                      </graphic>
                   </Label>
-                  <CheckBox fx:id="chbx_pauseFilter" mnemonicParsing="false" text="%show_whole_recipe" />
-                  <CheckBox fx:id="chbx_showWholeRecipe" mnemonicParsing="false" text="Whole" />
+                  <CheckBox fx:id="chbx_pauseFilter" mnemonicParsing="false" text="%pause_filter" />
+                  <CheckBox fx:id="chbx_showWholeRecipe" mnemonicParsing="false" text="%show_whole_recipe" />
                </children>
             </VBox>
         <ScrollPane prefHeight="-1.0" prefWidth="-1.0">

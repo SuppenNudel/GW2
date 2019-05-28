@@ -41,10 +41,6 @@ public class RequestProgress<T extends IdentifiableInt> {
 	private Callable<List<Integer>> idCaller;
 	private Function<int[], Void> infoFunction;
 
-	public ObservableMap<Integer, T> getValues() {
-		return values;
-	}
-	
 	public RequestProgress(RequestType type) {
 		this.type = type;
 
