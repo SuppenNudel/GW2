@@ -2,16 +2,12 @@ package de.rohmio.gw2.tools.view;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import de.rohmio.gw2.tools.view.recipeTree.ItemView;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -21,7 +17,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
-import me.xhsun.guildwars2wrapper.model.v2.util.comm.CraftingDisciplines;
 
 public class RecipeView extends AnchorPane {
 
@@ -73,7 +68,7 @@ public class RecipeView extends AnchorPane {
 		return recipe;
 	}
 	
-	private void show(boolean show) {
+	public void show(boolean show) {
 		setVisible(show);
 		setManaged(show);
 		if(show) {
@@ -84,30 +79,6 @@ public class RecipeView extends AnchorPane {
 	public void showItems(boolean show) {
 		for(ItemView itemView : itemViews) {
 			itemView.show(show);
-		}
-	}
-
-	public void addDisciplineFilter(Map<CraftingDisciplines, CheckBox> disciplineChecks) {
-		// only check for those disciplines that are relevant for this Recipe
-		for(CraftingDisciplines discipline : recipe.getDisciplines()) {
-			CheckBox checkBox = disciplineChecks.get(discipline);
-			checkBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-				@Override
-				public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-					if(newValue) {
-						show(true);
-					} else {
-						for(CraftingDisciplines discipline : recipe.getDisciplines()) {
-							CheckBox checkBox = disciplineChecks.get(discipline);
-							if(checkBox.isSelected()) {
-								show(true);
-								return;
-							}
-						}
-						show(false);
-					}
-				}
-			});
 		}
 	}
 
@@ -134,33 +105,6 @@ public class RecipeView extends AnchorPane {
 		itemViews.add(itemView);
 		root.getChildren().add(itemView);
 
-		/*
-		HBox hbox_ingredients = new HBox(10.0);
-		hbox_ingredients.setAlignment(Pos.TOP_CENTER);
-		hbox_ingredients.setPrefWidth(USE_COMPUTED_SIZE);
-		hbox_ingredients.setPrefHeight(USE_COMPUTED_SIZE);
-		for (Ingredient ingredient : recipe.getIngredients()) {
-			int ingredientId = ingredient.getItemId();
-			int count = ingredient.getCount();
-			if (detailed) {
-				List<Integer> searchRecipes = null;
-				try {
-					searchRecipes = GuildWars2.getInstance().getSynchronous().searchRecipes(false, ingredientId);
-				} catch (GuildWars2Exception e) {
-					e.printStackTrace();
-				}
-				if (searchRecipes != null && !searchRecipes.isEmpty()) {
-					Recipe subRecipe = Data.getInstance().getRecipes().getById(searchRecipes.get(0));
-					hbox_ingredients.getChildren().add(createTree(subRecipe, count));
-				} else {
-					hbox_ingredients.getChildren().add(new ItemView(ingredientId, count, detailed));
-				}
-			} else {
-				hbox_ingredients.getChildren().add(new ItemView(ingredientId, count, detailed));
-			}
-		}
-		root.getChildren().add(hbox_ingredients);
-		 */
 		return root;
 	}
 

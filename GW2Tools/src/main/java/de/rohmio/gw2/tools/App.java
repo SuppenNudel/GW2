@@ -7,7 +7,6 @@ import java.util.ResourceBundle;
 import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.view.main.MainViewController;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
@@ -44,10 +43,11 @@ public class App extends Application {
 		setScene(startingView);
 		primaryStage.setTitle("Guild Wars 2 Tools");
 		primaryStage.setOnCloseRequest(event -> { 
-			Platform.exit();
 			System.exit(0);
 		});
 		primaryStage.show();
+		
+		new Thread(() -> Data.getInstance().getRecipes().getAll()).start();
 	}
 	
 	public static Stage getStage() {
