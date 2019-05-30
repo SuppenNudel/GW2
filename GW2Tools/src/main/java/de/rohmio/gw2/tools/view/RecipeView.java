@@ -3,7 +3,10 @@ package de.rohmio.gw2.tools.view;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.rohmio.gw2.tools.model.RecipeWrapper;
 import de.rohmio.gw2.tools.view.recipeTree.ItemView;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -20,20 +23,30 @@ import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 
 public class RecipeView extends AnchorPane {
 
-	private Recipe recipe;
+	private RecipeWrapper wrapper;
 	private boolean detailed;
 	
 	private List<ItemView> itemViews = new ArrayList<>();
 	
-	public RecipeView(Recipe recipe, boolean detailed) {
-		this.recipe = recipe;
+	public RecipeView(RecipeWrapper wrapper, boolean detailed) {
+		this.wrapper = wrapper;
+
+		visibleProperty().bind(wrapper.getShow());
+		managedProperty().bind(wrapper.getShow());
 		
-		show(false);
+		wrapper.getShow().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+				if(newValue) {
+					showItems(true);
+				}
+			}
+		});
 
 		setPrefWidth(USE_COMPUTED_SIZE);
 		setPrefHeight(USE_COMPUTED_SIZE);
 		
-		HBox hBox = new HBox(createTree(recipe, -1));
+		HBox hBox = new HBox(createTree(wrapper.getRecipe(), -1));
 
 		hBox.setPrefWidth(USE_COMPUTED_SIZE);
 		hBox.setPrefHeight(USE_COMPUTED_SIZE);
@@ -50,7 +63,7 @@ public class RecipeView extends AnchorPane {
 	private ContextMenu createContextMenu() {
 		MenuItem showDetailed = new MenuItem("Show Detailed");
 		showDetailed.setOnAction(event -> {
-			RecipeView recipeTreeView = new RecipeView(recipe, true);
+			RecipeView recipeTreeView = new RecipeView(wrapper, true);
 			ScrollPane scrollPane = new ScrollPane(recipeTreeView);
 			scrollPane.setPrefHeight(USE_COMPUTED_SIZE);
 			scrollPane.setPrefWidth(USE_COMPUTED_SIZE);
@@ -64,21 +77,18 @@ public class RecipeView extends AnchorPane {
 		return new ContextMenu(showDetailed);
 	}
 
-	public Recipe getRecipe() {
-		return recipe;
+	public RecipeWrapper getRecipeWrapper() {
+		return wrapper;
 	}
 	
-	public void show(boolean show) {
-		setVisible(show);
-		setManaged(show);
-		if(show) {
-			showItems(show);
-		}
-	}
+	private boolean itemsShown = false;
 	
 	public void showItems(boolean show) {
-		for(ItemView itemView : itemViews) {
-			itemView.show(show);
+		if(!itemsShown) {
+			itemsShown = true;
+			for(ItemView itemView : itemViews) {
+				itemView.show(show);
+			}
 		}
 	}
 

@@ -1,62 +1,72 @@
 package de.rohmio.gw2.tools.model;
 
-import java.util.Collections;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.value.ObservableIntegerValue;
+import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.ObservableList;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
+import me.xhsun.guildwars2wrapper.model.v2.character.Character;
 import me.xhsun.guildwars2wrapper.model.v2.util.comm.CraftingDisciplines;
 
 public class RecipeFilter {
-
-	private List<Recipe> recipesShown = new CopyOnWriteArrayList<>();
-	private List<Recipe> recipesNotShown = new CopyOnWriteArrayList<>();
-
-	public ObservableList<CraftingDisciplines> disciplines = FXCollections.observableArrayList();
-
+	
+	private List<RecipeWrapper> recipes = new ArrayList<>();
+	
+	private ObservableList<CraftingDisciplines> disciplines;
+	private ObservableIntegerValue minLevel;
+	private ObservableIntegerValue maxLevel;
+	
 	public RecipeFilter() {
-		long date = new Date().getTime();
-		System.out.println("Getting all recipes");
-		recipesNotShown.addAll(Data.getInstance().getRecipes().getAll().values());
-		System.out.println("after recipes: "+(new Date().getTime()-date));
-		
-		disciplines.addListener(new ListChangeListener<CraftingDisciplines>() {
-			@Override
-			public void onChanged(Change<? extends CraftingDisciplines> c) {
-				System.out.println("trigger filter changed");
-				while (c.next()) {
-					if (c.wasAdded() || c.wasRemoved()) {
-						for (CraftingDisciplines remitem : c.getRemoved()) {
-							System.out.println("remove: "+remitem);
-							for(Recipe recipe : recipesShown) {
-								boolean noMatch = Collections.disjoint(recipe.getDisciplines(), disciplines);
-								if(noMatch) {
-									recipesShown.remove(recipe);
-									recipesNotShown.add(recipe);
-								}
-							}
-						}
-						for (CraftingDisciplines additem : c.getAddedSubList()) {
-							System.out.println("add: "+additem);
-							for(Recipe recipe : recipesNotShown) {
-								boolean match = !Collections.disjoint(recipe.getDisciplines(), disciplines);
-								if(match) {
-									recipesNotShown.remove(recipe);
-									recipesShown.add(recipe);
-								}
-							}
-						}
-					} 
-				}
-				System.out.println("after filter: "+(new Date().getTime()-date));
-				System.out.println(recipesShown);
-			}
-
-		});
+		for(Recipe recipe : Data.getInstance().getRecipes().getAll().values()) {
+			recipes.add(new RecipeWrapper(recipe));
+		}
+	};
+	
+	public List<RecipeWrapper> getRecipes() {
+		return recipes;
+	}
+	
+	public ObservableList<CraftingDisciplines> getDisciplines() {
+		return disciplines;
+	}
+	
+	public ObservableIntegerValue getMinLevel() {
+		return minLevel;
+	}
+	
+	public ObservableIntegerValue getMaxLevel() {
+		return maxLevel;
+	}
+	
+	public void addDisciplineFilter(ObservableList<CraftingDisciplines> disciplines) {
+		System.out.println("RecipeFilter.addDisciplineFilter()");
+		this.disciplines = disciplines;
+		for(RecipeWrapper recipeWrapper : recipes) {
+			recipeWrapper.addDisciplineFilter(disciplines);
+		}
+	}
+	
+	public void addLevelFilter(ObservableIntegerValue minLevel, ObservableIntegerValue maxLevel) {
+		System.out.println("RecipeFilter.addLevelFilter()");
+		this.minLevel = minLevel;
+		this.maxLevel = maxLevel;
+		for(RecipeWrapper recipeWrapper : recipes) {
+			recipeWrapper.addLevelFilter(minLevel, maxLevel);
+		}
+	}
+	
+	public void addCharacterFilter(ObservableObjectValue<Character> character) {
+		System.out.println("RecipeFilter.addCharacterFilter()");
+		for(RecipeWrapper recipeWrapper : recipes) {
+			recipeWrapper.addCharacterFilter(character);
+		}
+	}
+	
+	public long currentlyDisplayed() {
+		return recipes.stream().map(RecipeWrapper::getShow).map(BooleanProperty::get).filter(b -> b == true).count();
 	}
 
 }

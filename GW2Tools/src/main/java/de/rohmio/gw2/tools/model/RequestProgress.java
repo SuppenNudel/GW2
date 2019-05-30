@@ -104,6 +104,10 @@ public class RequestProgress<T extends IdentifiableInt> {
 			e.printStackTrace();
 		}
 	}
+	
+	public ObservableMap<Integer, T> getValues() {
+		return values;
+	}
 
 	public DoubleProperty getProgress() {
 		return progress;
