@@ -3,7 +3,7 @@ package de.rohmio.gw2.tools.view;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.rohmio.gw2.tools.model.RecipeWrapper;
+import de.rohmio.gw2.tools.model.RecipeFilter;
 import de.rohmio.gw2.tools.view.recipeTree.ItemView;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -23,18 +23,18 @@ import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 
 public class RecipeView extends AnchorPane {
 
-	private RecipeWrapper wrapper;
 	private boolean detailed;
+	private RecipeFilter recipeFilter;
 	
 	private List<ItemView> itemViews = new ArrayList<>();
 	
-	public RecipeView(RecipeWrapper wrapper, boolean detailed) {
-		this.wrapper = wrapper;
-
-		visibleProperty().bind(wrapper.getShow());
-		managedProperty().bind(wrapper.getShow());
+	public RecipeView(Recipe recipe, boolean detailed) {
+		recipeFilter = new RecipeFilter(recipe);
 		
-		wrapper.getShow().addListener(new ChangeListener<Boolean>() {
+		visibleProperty().bind(recipeFilter.getShow());
+		managedProperty().bind(recipeFilter.getShow());
+		
+		recipeFilter.getShow().addListener(new ChangeListener<Boolean>() {
 			@Override
 			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
 				if(newValue) {
@@ -46,7 +46,7 @@ public class RecipeView extends AnchorPane {
 		setPrefWidth(USE_COMPUTED_SIZE);
 		setPrefHeight(USE_COMPUTED_SIZE);
 		
-		HBox hBox = new HBox(createTree(wrapper.getRecipe(), -1));
+		HBox hBox = new HBox(createTree(recipeFilter.getRecipe(), -1));
 
 		hBox.setPrefWidth(USE_COMPUTED_SIZE);
 		hBox.setPrefHeight(USE_COMPUTED_SIZE);
@@ -63,7 +63,7 @@ public class RecipeView extends AnchorPane {
 	private ContextMenu createContextMenu() {
 		MenuItem showDetailed = new MenuItem("Show Detailed");
 		showDetailed.setOnAction(event -> {
-			RecipeView recipeTreeView = new RecipeView(wrapper, true);
+			RecipeView recipeTreeView = new RecipeView(recipeFilter.getRecipe(), true);
 			ScrollPane scrollPane = new ScrollPane(recipeTreeView);
 			scrollPane.setPrefHeight(USE_COMPUTED_SIZE);
 			scrollPane.setPrefWidth(USE_COMPUTED_SIZE);
@@ -77,8 +77,8 @@ public class RecipeView extends AnchorPane {
 		return new ContextMenu(showDetailed);
 	}
 
-	public RecipeWrapper getRecipeWrapper() {
-		return wrapper;
+	public RecipeFilter getRecipeFilter() {
+		return recipeFilter;
 	}
 	
 	private boolean itemsShown = false;

@@ -1,72 +1,68 @@
 package de.rohmio.gw2.tools.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableObjectValue;
+import javafx.beans.value.ObservableStringValue;
 import javafx.collections.ObservableList;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 import me.xhsun.guildwars2wrapper.model.v2.character.Character;
 import me.xhsun.guildwars2wrapper.model.v2.util.comm.CraftingDisciplines;
 
 public class RecipeFilter {
-	
-	private List<RecipeWrapper> recipes = new ArrayList<>();
-	
-	private ObservableList<CraftingDisciplines> disciplines;
-	private ObservableIntegerValue minLevel;
-	private ObservableIntegerValue maxLevel;
-	
-	public RecipeFilter() {
-		for(Recipe recipe : Data.getInstance().getRecipes().getAll().values()) {
-			recipes.add(new RecipeWrapper(recipe));
-		}
-	};
-	
-	public List<RecipeWrapper> getRecipes() {
-		return recipes;
+
+	private Recipe recipe;
+
+	private BooleanProperty show = new SimpleBooleanProperty();
+
+	private BooleanProperty discipline = new SimpleBooleanProperty();
+	private BooleanProperty level = new SimpleBooleanProperty();
+	private BooleanProperty learnedFromItem = new SimpleBooleanProperty();
+	private BooleanProperty autoLearned = new SimpleBooleanProperty();
+	private BooleanProperty character = new SimpleBooleanProperty();
+	private BooleanProperty itemName = new SimpleBooleanProperty();
+
+	public RecipeFilter(Recipe recipe) {
+		this.recipe = recipe;
+		show.bind(level.and(discipline).and(character)); //.and(learnedFromItem).and(autoLearned));
 	}
 	
-	public ObservableList<CraftingDisciplines> getDisciplines() {
-		return disciplines;
+	public BooleanProperty getShow() {
+		return show;
 	}
 	
-	public ObservableIntegerValue getMinLevel() {
-		return minLevel;
+	public Recipe getRecipe() {
+		return recipe;
 	}
-	
-	public ObservableIntegerValue getMaxLevel() {
-		return maxLevel;
-	}
-	
+
 	public void addDisciplineFilter(ObservableList<CraftingDisciplines> disciplines) {
-		System.out.println("RecipeFilter.addDisciplineFilter()");
-		this.disciplines = disciplines;
-		for(RecipeWrapper recipeWrapper : recipes) {
-			recipeWrapper.addDisciplineFilter(disciplines);
-		}
+		discipline.bind(Bindings.createBooleanBinding( () -> !Collections.disjoint(disciplines, recipe.getDisciplines()), disciplines ));
+	}
+
+	public void addLevelFilter(ObservableIntegerValue minLevel, ObservableIntegerValue maxLevel) {
+		int minRating = recipe.getMinRating();
+		level.bind(Bindings.greaterThanOrEqual(minRating, minLevel).and(Bindings.lessThanOrEqual(minRating, maxLevel)));
 	}
 	
-	public void addLevelFilter(ObservableIntegerValue minLevel, ObservableIntegerValue maxLevel) {
-		System.out.println("RecipeFilter.addLevelFilter()");
-		this.minLevel = minLevel;
-		this.maxLevel = maxLevel;
-		for(RecipeWrapper recipeWrapper : recipes) {
-			recipeWrapper.addLevelFilter(minLevel, maxLevel);
-		}
+	public void addItemNameFilter(ObservableStringValue itemName) {
+//		this.itemName.bind(observable);
+	}
+	
+	public void addLearnedFromItemFilter(ObservableBooleanValue learnedFromItem) {
+		this.learnedFromItem.bind(learnedFromItem);
+	}
+	
+	public void addAutoLearnedFilter(ObservableBooleanValue autoLearned) {
+		this.autoLearned.bind(autoLearned);
 	}
 	
 	public void addCharacterFilter(ObservableObjectValue<Character> character) {
-		System.out.println("RecipeFilter.addCharacterFilter()");
-		for(RecipeWrapper recipeWrapper : recipes) {
-			recipeWrapper.addCharacterFilter(character);
-		}
-	}
-	
-	public long currentlyDisplayed() {
-		return recipes.stream().map(RecipeWrapper::getShow).map(BooleanProperty::get).filter(b -> b == true).count();
+		this.character.bind(Bindings.createBooleanBinding(() -> !character.get().getRecipes().contains(recipe.getId()), character));		
 	}
 
 }

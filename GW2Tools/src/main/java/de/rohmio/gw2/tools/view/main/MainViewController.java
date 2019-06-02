@@ -3,18 +3,18 @@ package de.rohmio.gw2.tools.view.main;
 import java.io.IOException;
 import java.net.URL;
 import java.text.NumberFormat;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.Callable;
 
 import de.rohmio.gw2.tools.App;
 import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.model.RecipeFilter;
-import de.rohmio.gw2.tools.model.RecipeWrapper;
 import de.rohmio.gw2.tools.view.RecipeView;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -38,6 +38,7 @@ import javafx.stage.Stage;
 import javafx.util.converter.NumberStringConverter;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
+import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 import me.xhsun.guildwars2wrapper.model.v2.account.Account;
 import me.xhsun.guildwars2wrapper.model.v2.character.Character;
 import me.xhsun.guildwars2wrapper.model.v2.util.comm.CraftingDisciplines;
@@ -96,10 +97,10 @@ public class MainViewController implements Initializable {
 	
 	// end view elements
 
-	private Map<CraftingDisciplines, CheckBox> disciplineChecks = new HashMap<>();
-	
 	private ObjectProperty<Character> selectedCharacter = new SimpleObjectProperty<>();
-	private RecipeFilter recipeFilter = new RecipeFilter();
+	private ObservableList<CraftingDisciplines> disciplinesFilter = FXCollections.observableArrayList();
+	private SimpleIntegerProperty minLevel = new SimpleIntegerProperty();
+	private SimpleIntegerProperty maxLevel = new SimpleIntegerProperty();
 	
 //	private ObservableList<RecipeView> recipeViews = FXCollections.observableArrayList();
 	
@@ -108,19 +109,24 @@ public class MainViewController implements Initializable {
 		// internationalization
 		initResourceBundle();
 		
-		pb_getRecipes.progressProperty().bind(Data.getInstance().getRecipes().getProgress());
-//		StringConverter<Number> converter = new PercentageStringConverter();
-//		Bindings.bindBidirectional(lbl_recipes_progress.textProperty(), Data.getInstance().getRecipes().getProgress(), converter);
-		
-		Data.getInstance().getRecipes().getProgress().addListener(new ChangeListener<Number>() {
+		// bind progress 
+		DoubleProperty progress = Data.getInstance().getRecipes().getProgress();
+		progress.addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-		        NumberFormat format = NumberFormat.getPercentInstance();
-				Platform.runLater(() -> lbl_recipes_progress.setText(format.format(newValue)));
+				Platform.runLater(() -> {
+					pb_getRecipes.setProgress(newValue.doubleValue());
+					NumberFormat format = NumberFormat.getPercentInstance();
+					lbl_recipes_progress.setText(format.format(newValue));
+				});
 			}
 		});
+		Platform.runLater(() -> {
+			pb_getRecipes.setProgress(progress.doubleValue());
+			NumberFormat format = NumberFormat.getPercentInstance();
+			lbl_recipes_progress.setText(format.format(progress.doubleValue()));
+		});
 		
-		ObservableList<CraftingDisciplines> disciplines = FXCollections.observableArrayList();
 		
 		// discipline selection
 		for (CraftingDisciplines discipline : CraftingDisciplines.values()) {
@@ -129,17 +135,17 @@ public class MainViewController implements Initializable {
 				@Override
 				public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
 					if(newValue) {
-						disciplines.add(discipline);
+						disciplinesFilter.add(discipline);
 					} else {
-						disciplines.remove(discipline);
+						disciplinesFilter.remove(discipline);
 					}
 				}
 			});
-			disciplineChecks.put(discipline, checkbox);
 			vbox_disciplineCheck.getChildren().add(checkbox);
 			checkbox.setUserData(discipline);
 		}
 
+		// level filter integer only
 		txt_minLevel.textProperty().addListener(new IntOnlyTextFieldChangeListener(txt_minLevel));
 		txt_maxLevel.textProperty().addListener(new IntOnlyTextFieldChangeListener(txt_maxLevel));
 
@@ -149,26 +155,32 @@ public class MainViewController implements Initializable {
 
 		choice_charName.setOnAction((event) -> onSelectCharacter());
 		
-		for(RecipeWrapper wrapper : recipeFilter.getRecipes()) {
-			createRecipeView(wrapper);
-			wrapper.getShow().addListener(new ChangeListener<Boolean>() {
-				@Override
-				public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-					lbl_currentlyDisplayed.setText(String.valueOf(recipeFilter.currentlyDisplayed()));
-				}
-			});
-		}
 		
-		recipeFilter.addDisciplineFilter(disciplines);
-		SimpleIntegerProperty minLevel = new SimpleIntegerProperty();
-		SimpleIntegerProperty maxLevel = new SimpleIntegerProperty();
 		Bindings.bindBidirectional(txt_minLevel.textProperty(), minLevel, new NumberStringConverter());
 		Bindings.bindBidirectional(txt_maxLevel.textProperty(), maxLevel, new NumberStringConverter());
-		recipeFilter.addLevelFilter(minLevel, maxLevel);
+		
+		// create recipe views		
+		List<RecipeView> recipeViews = new ArrayList<>();
+		new Thread(() -> {
+			for(Recipe recipe : Data.getInstance().getRecipes().getAll().values()) {
+				RecipeView recipeView = createRecipeView(recipe);
+				recipeViews.add(recipeView);
+			}
+		}).start();
+
+		lbl_currentlyDisplayed.textProperty().bind(Bindings.createStringBinding(new Callable<String>() {
+			@Override
+			public String call() throws Exception {
+				return String.valueOf(recipeViews.stream().map(view -> view.getRecipeFilter()).filter(filter -> filter.getShow().get()).count());
+			}
+		}));
 	}
 
-	private RecipeView createRecipeView(RecipeWrapper recipe) {
+	private RecipeView createRecipeView(Recipe recipe) {
 		RecipeView recipeView = new RecipeView(recipe, false);
+		RecipeFilter recipeFilter = recipeView.getRecipeFilter();
+		recipeFilter.addDisciplineFilter(disciplinesFilter);
+		recipeFilter.addLevelFilter(minLevel, maxLevel);
 		Platform.runLater(() -> flow_recipes.getChildren().add(recipeView));
 		return recipeView;
 	}
@@ -226,66 +238,11 @@ public class MainViewController implements Initializable {
 		
 		try {
 			selectedCharacter.set(GuildWars2.getInstance().getSynchronous().getCharacter(Data.getInstance().getSettingsWrapper().accessTokenProperty().get(), characterName));
-			recipeFilter.addCharacterFilter(selectedCharacter);
+//			recipeFilter.addCharacterFilter(selectedCharacter);
 		} catch (GuildWars2Exception e) {
 			e.printStackTrace();
 		}
-		
 
-//		try {
-//			resetFilters();
-//
-//			/**
-//			 * An array containing an entry for each crafting discipline the character has
-//			 * unlocked
-//			 */
-//			System.out.println(String.format("Get character crafting for '%s'", characterName));
-//			CharacterCraftingLevel characterCrafting = GuildWars2.getInstance().getSynchronous()
-//					.getCharacterCrafting(Data.getInstance().getSettingsWrapper().accessTokenProperty().get(), characterName);
-//
-//			/**
-//			 * information about recipes that are unlocked for an account <br>
-//			 * an array, each value being the ID of a recipe that can be resolved against
-//			 * /v2/recipes <br>
-//			 * mostly learned from item
-//			 */
-////			List<Integer> unlockedRecipes = GuildWars2.getInstance().getSynchronous()
-////					.getUnlockedRecipes(Data.getInstance().getAccessToken());
-//
-//			/**
-//			 * An array containing an entry for each crafting discipline the character has
-//			 * unlocked
-//			 */
-////			CharacterRecipes characterRecipes = GuildWars2.getInstance().getSynchronous()
-////					.getCharacterUnlockedRecipes(Data.getInstance().getAccessToken(), characterName);
-//
-//			for (Discipline discipline : characterCrafting.getCrafting()) {
-//				CheckBox checkBox = disciplineChecks.get(discipline.getDiscipline());
-//				checkBox.setText(String.format("%s - %d", checkBox.getUserData(), discipline.getRating()));
-//				checkBox.setSelected(true);
-//			}
-//		} catch (GuildWars2Exception e) {
-//			e.printStackTrace();
-//		}
-	}
-
-	private void resetFilters() {
-		System.out.println("Reset Filter");
-		for (CheckBox diciplineCheck : disciplineChecks.values()) {
-			diciplineCheck.setSelected(false);
-			Object userData = diciplineCheck.getUserData();
-			if (userData instanceof CraftingDisciplines) {
-				CraftingDisciplines craftingDiscipline = (CraftingDisciplines) userData; // discipline of the current
-																							// button
-
-				String buttonText = craftingDiscipline.name();
-				diciplineCheck.setText(buttonText);
-			} else {
-				throw new ClassCastException("user data is not a CraftingDiscipline");
-			}
-		}
-
-		// TODO here some of the init functions could be used for resetting the filters
 	}
 
 }

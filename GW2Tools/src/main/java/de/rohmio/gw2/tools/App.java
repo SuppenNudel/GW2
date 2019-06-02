@@ -46,8 +46,6 @@ public class App extends Application {
 			System.exit(0);
 		});
 		primaryStage.show();
-		
-		new Thread(() -> Data.getInstance().getRecipes().getAll()).start();
 	}
 	
 	public static Stage getStage() {

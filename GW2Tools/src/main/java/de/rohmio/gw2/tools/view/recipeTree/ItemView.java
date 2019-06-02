@@ -48,8 +48,10 @@ public class ItemView extends VBox {
 	
 	public void show(boolean show) {
 		if(show) {
-			item = Data.getInstance().getItems().getById(itemId);
-			init();
+			new Thread(() -> { 
+				item = Data.getInstance().getItems().getById(itemId);
+				init();
+			}).start();
 		}
 	}
 

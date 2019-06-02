@@ -13,9 +13,11 @@ import org.apache.commons.io.FileUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
 import de.rohmio.gw2.tools.model.RequestType;
 import me.xhsun.guildwars2wrapper.GuildWars2;
+import me.xhsun.guildwars2wrapper.model.identifiable.IdentifiableInt;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
@@ -40,14 +42,14 @@ public class Util {
 		return file;
 	}
 
-	private static File getFilePath(RequestType type, int id) {
+	public static File getFilePath(RequestType type) {
 		String fileName = null;
 		switch (type) {
 		case ITEM:
-			fileName = String.format("data/cache/%s/%s/%d.json", type.getPath(), GuildWars2.getLanguage().getValue(), id);
+			fileName = String.format("data/cache/%s/%s.json", type.getPath(), GuildWars2.getLanguage().getValue());
 			break;
 		case RECIPE:
-			fileName = String.format("data/cache/%s/%d.json", type.getPath(), id);
+			fileName = String.format("data/cache/%s.json", type.getPath());
 			break;
 		default:
 			break;
@@ -55,9 +57,29 @@ public class Util {
 		return new File(DOCS, fileName);
 	}
 
-	public static <T> T getCache(RequestType type, int id, Type clazz) {
+	public static File getFilePath(RequestType type, int id) {
+		String fileName = null;
+		switch (type) {
+		case ITEM:
+			fileName = String.format("data/cache/%s/%s/%d.json", type.getPath(), GuildWars2.getLanguage().getValue(), id);
+			break;
+		case RECIPE:
+			fileName = String.format("data/cache/%s/%s.json", type.getPath(), id);
+			break;
+		default:
+			break;
+		}
+		return new File(DOCS, fileName);
+	}
+	
+	public static <T> T getCache(RequestType type, int id) {
 		File file = getFilePath(type, id);
-		return readFile(file, clazz);
+		return readFile(file, type.getClazz());
+	}
+
+	public static <T> T getCache(RequestType type) {
+		File file = getFilePath(type);
+		return readFile(file, new TypeToken<T>(){}.getType());
 	}
 	
 	public static <T> T readFile(File file, Type clazz) {
@@ -79,8 +101,20 @@ public class Util {
 		return object;
 	}
 
-	public static void writeCache(RequestType type, int id, Object object) {
-		File file = getFilePath(type, id);
+	public static void writeCache(RequestType type, List<? extends IdentifiableInt> object) throws Exception {
+		if(!object.get(0).getClass().isAssignableFrom(type.getClazz())) {
+			throw new Exception(object.getClass()+" not assignable from "+type.getClazz());
+		}
+		File file = getFilePath(type);
+		System.out.println("Writing cache "+file);
+		writeFile(file, object);
+	}
+
+	public static void writeCache(RequestType type, IdentifiableInt object) throws Exception {
+		if(!object.getClass().isAssignableFrom(type.getClazz())) {
+			throw new Exception(object.getClass()+" not assignable from "+type.getClazz());
+		}
+		File file = getFilePath(type, object.getId());
 		System.out.println("Writing cache "+file);
 		writeFile(file, object);
 	}
