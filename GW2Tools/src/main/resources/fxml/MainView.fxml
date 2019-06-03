@@ -22,7 +22,7 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="518.0" prefWidth="790.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
+<BorderPane prefHeight="518.0" prefWidth="790.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
    <center>
     <SplitPane dividerPositions="0.5534521158129176, 0.7505567928730512" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0">
       <items>
@@ -60,7 +60,7 @@
                   </Label>
                   <Separator prefWidth="200.0" />
                   <CheckBox fx:id="chbx_byableRecipe" mnemonicParsing="false" text="%show_buyable_recipes" />
-                  <CheckBox fx:id="chbx_showAlreadyLearned" mnemonicParsing="false" text="%show_already_learned" />
+                  <CheckBox fx:id="chbx_showAutoLearned" mnemonicParsing="false" text="%show_auto_learned" />
                   <Separator prefWidth="200.0" />
                   <Label fx:id="lbl_currentlyDisplayed" text="Number of Recipies" />
                   <Label fx:id="lbl_recipes_progress" text="\%">

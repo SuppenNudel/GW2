@@ -5,8 +5,10 @@ import java.util.List;
 
 import de.rohmio.gw2.tools.model.RecipeFilter;
 import de.rohmio.gw2.tools.view.recipeTree.ItemView;
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -27,12 +29,14 @@ public class RecipeView extends AnchorPane {
 	private RecipeFilter recipeFilter;
 	
 	private List<ItemView> itemViews = new ArrayList<>();
+	private ObservableList<RecipeView> recipeViews;
 	
-	public RecipeView(Recipe recipe, boolean detailed) {
+	public RecipeView(Recipe recipe, boolean detailed, ObservableList<RecipeView> recipeViews) {
+		this.recipeViews = recipeViews;
 		recipeFilter = new RecipeFilter(recipe);
 		
-		visibleProperty().bind(recipeFilter.getShow());
-		managedProperty().bind(recipeFilter.getShow());
+		visibleProperty().bind(recipeFilter.getShow().and(Bindings.createBooleanBinding(() -> count() <= 200, recipeViews)));
+		managedProperty().bind(recipeFilter.getShow().and(Bindings.createBooleanBinding(() -> count() <= 200, recipeViews)));
 		
 		recipeFilter.getShow().addListener(new ChangeListener<Boolean>() {
 			@Override
@@ -59,11 +63,15 @@ public class RecipeView extends AnchorPane {
 			contextMenu.show(owner, event.getScreenX(), event.getScreenY());
 		});
 	}
+	
+	private long count() {
+		return recipeViews.stream().map(view -> view.getRecipeFilter()).filter(filter -> filter.getShow().get()).count();
+	}
 
 	private ContextMenu createContextMenu() {
 		MenuItem showDetailed = new MenuItem("Show Detailed");
 		showDetailed.setOnAction(event -> {
-			RecipeView recipeTreeView = new RecipeView(recipeFilter.getRecipe(), true);
+			RecipeView recipeTreeView = new RecipeView(recipeFilter.getRecipe(), true, recipeViews);
 			ScrollPane scrollPane = new ScrollPane(recipeTreeView);
 			scrollPane.setPrefHeight(USE_COMPUTED_SIZE);
 			scrollPane.setPrefWidth(USE_COMPUTED_SIZE);

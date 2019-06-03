@@ -3,7 +3,6 @@ package de.rohmio.gw2.tools.view.main;
 import java.io.IOException;
 import java.net.URL;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.concurrent.Callable;
@@ -78,7 +77,7 @@ public class MainViewController implements Initializable {
 	private CheckBox chbx_showWholeRecipe;
 
 	@FXML
-	private CheckBox chbx_showAlreadyLearned;
+	private CheckBox chbx_showAutoLearned;
 
 	@FXML
 	private Label lbl_currentlyDisplayed;
@@ -155,15 +154,14 @@ public class MainViewController implements Initializable {
 
 		choice_charName.setOnAction((event) -> onSelectCharacter());
 		
-		
 		Bindings.bindBidirectional(txt_minLevel.textProperty(), minLevel, new NumberStringConverter());
 		Bindings.bindBidirectional(txt_maxLevel.textProperty(), maxLevel, new NumberStringConverter());
 		
-		// create recipe views		
-		List<RecipeView> recipeViews = new ArrayList<>();
+		// create recipe views
+		ObservableList<RecipeView> recipeViews = FXCollections.observableArrayList();
 		new Thread(() -> {
 			for(Recipe recipe : Data.getInstance().getRecipes().getAll().values()) {
-				RecipeView recipeView = createRecipeView(recipe);
+				RecipeView recipeView = createRecipeView(recipe, recipeViews);
 				recipeViews.add(recipeView);
 			}
 		}).start();
@@ -175,20 +173,23 @@ public class MainViewController implements Initializable {
 			}
 		}));
 	}
-
-	private RecipeView createRecipeView(Recipe recipe) {
-		RecipeView recipeView = new RecipeView(recipe, false);
+	
+	private RecipeView createRecipeView(Recipe recipe, ObservableList<RecipeView> recipeViews) {
+		RecipeView recipeView = new RecipeView(recipe, false, recipeViews);
 		RecipeFilter recipeFilter = recipeView.getRecipeFilter();
 		recipeFilter.addDisciplineFilter(disciplinesFilter);
 		recipeFilter.addLevelFilter(minLevel, maxLevel);
+		recipeFilter.addCharacterFilter(selectedCharacter);
+		recipeFilter.addLearnedFromItemFilter(chbx_byableRecipe.selectedProperty());
+		recipeFilter.addAutoLearnedFilter(chbx_showAutoLearned.selectedProperty());
 		Platform.runLater(() -> flow_recipes.getChildren().add(recipeView));
 		return recipeView;
 	}
 
 	private void initResourceBundle() {
 		chbx_byableRecipe.textProperty().bind(Data.getInstance().getStringBinding("show_buyable_recipes"));
+		chbx_showAutoLearned.textProperty().bind(Data.getInstance().getStringBinding("show_auto_learned"));
 		chbx_showWholeRecipe.textProperty().bind(Data.getInstance().getStringBinding("show_whole_recipe"));
-		chbx_showAlreadyLearned.textProperty().bind(Data.getInstance().getStringBinding("show_already_learned"));
 	}
 
 	private void checkApiKey(String apiKey) {
@@ -238,7 +239,6 @@ public class MainViewController implements Initializable {
 		
 		try {
 			selectedCharacter.set(GuildWars2.getInstance().getSynchronous().getCharacter(Data.getInstance().getSettingsWrapper().accessTokenProperty().get(), characterName));
-//			recipeFilter.addCharacterFilter(selectedCharacter);
 		} catch (GuildWars2Exception e) {
 			e.printStackTrace();
 		}

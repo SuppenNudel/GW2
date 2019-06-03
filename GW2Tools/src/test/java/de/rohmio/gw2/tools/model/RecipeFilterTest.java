@@ -30,9 +30,10 @@ public class RecipeFilterTest {
 
 	private List<RecipeFilter> recipeFilters;
 
-	private ObservableList<CraftingDisciplines> disciplinesFilter = FXCollections.observableArrayList();
+	private ObservableList<CraftingDisciplines> disciplines = FXCollections.observableArrayList();
 	private IntegerProperty minLevel = new SimpleIntegerProperty();
 	private IntegerProperty maxLevel = new SimpleIntegerProperty();
+	private ObjectProperty<Character> character = new SimpleObjectProperty<>();
 	
 	@BeforeClass
 	public static void loadRecipes() {
@@ -59,15 +60,53 @@ public class RecipeFilterTest {
 		System.out.println(message+": "+count);
 	}
 	
+	@Test
+	public void craftingDiscipines() {
+		System.out.println("RecipeFilterTest.craftingDiscipines()");
+		
+		recipeFilters.forEach(filter -> filter.addDisciplineFilter(disciplines));
+		
+		disciplines.add(CraftingDisciplines.Huntsman);
+		testForDisciplines();
+		
+		disciplines.addAll(CraftingDisciplines.Armorsmith, CraftingDisciplines.Artificer);
+		testForDisciplines();
+		
+		disciplines.remove(CraftingDisciplines.Huntsman);
+		testForDisciplines();
+		
+		disciplines.add(CraftingDisciplines.Chef);
+		testForDisciplines();
+	}
+	
 	private void testForDisciplines() {
 		for(RecipeFilter filters : recipeFilters) {
 			List<CraftingDisciplines> recipeDisciplines = filters.getRecipe().getDisciplines();
 			boolean show = filters.getShow().get();
-			boolean containsAny = !Collections.disjoint(disciplinesFilter, recipeDisciplines);
+			boolean containsAny = !Collections.disjoint(disciplines, recipeDisciplines);
 			// if is shown then it should contain the discipline 
 			Assert.assertTrue(show == containsAny);
 		}
-		printAmountOfShownRecipes(disciplinesFilter.toString());
+		printAmountOfShownRecipes(disciplines.toString());
+	}
+	
+	@Test
+	public void level() {
+		System.out.println("RecipeFilterTest.level()");
+		recipeFilters.forEach(filter -> filter.addLevelFilter(minLevel, maxLevel));
+		
+		minLevel.set(0);
+		maxLevel.set(500);
+		
+		printAmountOfShownRecipes("Before level filter");
+		
+		minLevel.set(150);
+		testForLevel();
+		printAmountOfShownRecipes("After first");
+		
+		maxLevel.set(350);
+		testForLevel();
+		printAmountOfShownRecipes("After second");
 	}
 	
 	private void testForLevel() {
@@ -86,64 +125,22 @@ public class RecipeFilterTest {
 	}
 	
 	@Test
-	public void craftingDiscipines() {
-		System.out.println("RecipeFilterTest.craftingDiscipines()");
-		ObservableList<CraftingDisciplines> craftingDisciplines = FXCollections.observableArrayList();
-		
-		recipeFilters.forEach(filter -> filter.addDisciplineFilter(craftingDisciplines));
-		
-		craftingDisciplines.add(CraftingDisciplines.Huntsman);
-		testForDisciplines();
-		
-		craftingDisciplines.addAll(CraftingDisciplines.Armorsmith, CraftingDisciplines.Artificer);
-		testForDisciplines();
-		
-		craftingDisciplines.remove(CraftingDisciplines.Huntsman);
-		testForDisciplines();
-		
-		craftingDisciplines.add(CraftingDisciplines.Chef);
-		testForDisciplines();
-	}
-	
-	@Test
-	public void level() {
-		System.out.println("RecipeFilterTest.level()");
-		recipeFilters.forEach(filter -> filter.addLevelFilter(minLevel, maxLevel));
-		recipeFilters.forEach(filter -> filter.addDisciplineFilter(disciplinesFilter));
-		disciplinesFilter.addAll(CraftingDisciplines.values());
-		
-		minLevel.set(0);
-		maxLevel.set(500);
-		
-		printAmountOfShownRecipes("Before level filter");
-		
-		minLevel.set(150);
-		testForLevel();
-		printAmountOfShownRecipes("After first");
-		
-		maxLevel.set(350);
-		testForLevel();
-		printAmountOfShownRecipes("After second");
-	}
-	
-	@Test
 	public void character() throws GuildWars2Exception {
 		System.out.println("RecipeFilterTest.character()");
 		
-		ObjectProperty<Character> character = new SimpleObjectProperty<>();
 		character.set(GuildWars2.getInstance().getSynchronous().getCharacter(apiKey, charName));
 		
 		printAmountOfShownRecipes("Before character");
 		recipeFilters.forEach(filter -> filter.addCharacterFilter(character));
 		printAmountOfShownRecipes("After character");
+		
+		testForCharacter();
+	}
 
+	private void testForCharacter() {
 		for(RecipeFilter filter : recipeFilters) {
-			int recipeId = filter.getRecipe().getId();
-			
-			boolean show = filter.getShow().get();
-			List<Integer> recipes = character.get().getRecipes();
-			
-			Assert.assertTrue(show == (!recipes.contains(recipeId)));
+			boolean contains = character.get().getRecipes().contains(filter.getRecipe().getId());
+			Assert.assertTrue(filter.getShow().get() != contains);
 		}
 	}
 

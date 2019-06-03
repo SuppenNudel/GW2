@@ -6,12 +6,13 @@ import java.util.Date;
 import java.util.List;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import de.rohmio.gw2.tools.main.ClientFactory;
 import de.rohmio.gw2.tools.main.Util;
-import junit.framework.Assert;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
@@ -25,6 +26,7 @@ public class RequestSpeedTest {
 	
 	@BeforeClass
 	public static void directFromApi() throws Exception {
+		GuildWars2.setInstance(ClientFactory.getClient());
 		allRecipeIds = GuildWars2.getInstance().getSynchronous().getAllRecipeID();
 
 		int chunk = 200; // chunk size to divide
