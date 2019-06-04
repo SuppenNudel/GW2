@@ -30,12 +30,27 @@ public class RequestProgress<T extends IdentifiableInt> {
 	// function to get all ids of this data type
 	private Callable<List<Integer>> idCaller;
 	private Function<int[], List<T>> infoFunction;
+	
+	private RequestType type;
 
 	@SuppressWarnings("unchecked")
 	public RequestProgress(RequestType type) {
+		this.type = type;
+
+//		new Thread(() -> {
+//			synchronized (values) {
+		/*
+				T[] cache = Util.getCache(type);
+				if(cache != null) {
+					for(T c : cache) {
+						values.put(c.getId(), c);
+					}
+				}
+				*/
+//			}
+//		}).start();
 
 		SynchronousRequest synchronous = GuildWars2.getInstance().getSynchronous();
-		
 		
 		switch (type) {
 		case RECIPE:
@@ -44,8 +59,7 @@ public class RequestProgress<T extends IdentifiableInt> {
 				try {
 					return (List<T>) synchronous.getRecipeInfo(ids);
 				} catch (GuildWars2Exception e) {
-					e.printStackTrace();
-					return null;
+					return onError(e, ids);
 				}
 			};
 			break;
@@ -55,8 +69,7 @@ public class RequestProgress<T extends IdentifiableInt> {
 				try {
 					return (List<T>) synchronous.getItemInfo(ids);
 				} catch (GuildWars2Exception e) {
-					e.printStackTrace();
-					return null;
+					return onError(e, ids);
 				}
 			};
 			break;
@@ -71,6 +84,20 @@ public class RequestProgress<T extends IdentifiableInt> {
 		}
 		
 		progress.bind(Bindings.createObjectBinding(() -> values.size() / allIds.size(), values));
+	}
+	
+	private List<T> onError(GuildWars2Exception e, int[] ids) {
+		if(e.getMessage().equals("Exceeded 600 requests per minute limit")) {
+			System.err.println("Repeating request "+type);
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+			return infoFunction.apply(ids);
+		}
+		e.printStackTrace();
+		return null;
 	}
 	
 	public ObservableMap<Integer, T> getValues() {
@@ -112,6 +139,11 @@ public class RequestProgress<T extends IdentifiableInt> {
 			}
 		});
 		System.out.println("Request finished");
+		try {
+			Util.writeCache(type, new ArrayList<>(values.values()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return values;
 	}
 	

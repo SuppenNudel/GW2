@@ -13,7 +13,6 @@ import org.apache.commons.io.FileUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 
 import de.rohmio.gw2.tools.model.RequestType;
 import me.xhsun.guildwars2wrapper.GuildWars2;
@@ -46,7 +45,7 @@ public class Util {
 		String fileName = null;
 		switch (type) {
 		case ITEM:
-			fileName = String.format("data/cache/%s/%s.json", type.getPath(), GuildWars2.getLanguage().getValue());
+			fileName = String.format("data/cache/%s_%s.json", type.getPath(), GuildWars2.getLanguage().getValue());
 			break;
 		case RECIPE:
 			fileName = String.format("data/cache/%s.json", type.getPath());
@@ -79,7 +78,7 @@ public class Util {
 
 	public static <T> T getCache(RequestType type) {
 		File file = getFilePath(type);
-		return readFile(file, new TypeToken<T>(){}.getType());
+		return readFile(file, type.getArrClazz());
 	}
 	
 	public static <T> T readFile(File file, Type clazz) {
@@ -102,9 +101,9 @@ public class Util {
 	}
 
 	public static void writeCache(RequestType type, List<? extends IdentifiableInt> object) throws Exception {
-		if(!object.get(0).getClass().isAssignableFrom(type.getClazz())) {
-			throw new Exception(object.getClass()+" not assignable from "+type.getClazz());
-		}
+//		if(!object.get(0).getClass().isAssignableFrom(type.getClazz())) {
+//			throw new Exception(object.getClass()+" not assignable from "+type.getClazz());
+//		}
 		File file = getFilePath(type);
 		System.out.println("Writing cache "+file);
 		writeFile(file, object);

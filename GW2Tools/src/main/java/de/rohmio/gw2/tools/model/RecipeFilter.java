@@ -24,9 +24,9 @@ public class RecipeFilter {
 
 	private BooleanProperty discipline = new SimpleBooleanProperty(true);
 	private BooleanProperty level = new SimpleBooleanProperty(true);
+	private BooleanProperty character = new SimpleBooleanProperty(true);
 	private BooleanProperty learnedFromItem = new SimpleBooleanProperty(true);
 	private BooleanProperty autoLearned = new SimpleBooleanProperty(true);
-	private BooleanProperty character = new SimpleBooleanProperty(true);
 	private BooleanProperty itemName = new SimpleBooleanProperty(true);
 
 	public RecipeFilter(Recipe recipe) {

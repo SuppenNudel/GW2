@@ -10,8 +10,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -20,6 +22,7 @@ import javafx.collections.ObservableMap;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
+import me.xhsun.guildwars2wrapper.model.v2.Recipe.Flag;
 import me.xhsun.guildwars2wrapper.model.v2.character.Character;
 import me.xhsun.guildwars2wrapper.model.v2.util.comm.CraftingDisciplines;
 
@@ -34,6 +37,8 @@ public class RecipeFilterTest {
 	private IntegerProperty minLevel = new SimpleIntegerProperty();
 	private IntegerProperty maxLevel = new SimpleIntegerProperty();
 	private ObjectProperty<Character> character = new SimpleObjectProperty<>();
+	private BooleanProperty learnedFromItem = new SimpleBooleanProperty();
+	private BooleanProperty autoLearned = new SimpleBooleanProperty();
 	
 	@BeforeClass
 	public static void loadRecipes() {
@@ -143,5 +148,42 @@ public class RecipeFilterTest {
 			Assert.assertTrue(filter.getShow().get() != contains);
 		}
 	}
+	
+	@Test
+	public void learnedFromItem() {
+		System.out.println("RecipeFilterTest.learnedFromItem()");
+		
+		learnedFromItem.set(true);
+		
+		recipeFilters.forEach(filter -> filter.addLearnedFromItemFilter(learnedFromItem));
+		
+		testForLearnedFromItem();
+	}
+	
+	private void testForLearnedFromItem() {
+		for(RecipeFilter filter : recipeFilters) {
+			boolean learnedFromItem = filter.getRecipe().getFlags().contains(Flag.LearnedFromItem);
+			Assert.assertTrue(filter.getShow().get() == learnedFromItem);
+		}
+	}
+	
+	@Test
+	public void autoLearned() {
+		System.out.println("RecipeFilterTest.learnedFromItem()");
+		
+		autoLearned.set(true);
+		
+		recipeFilters.forEach(filter -> filter.addAutoLearnedFilter(autoLearned));
+		
+		testForAutoLearned();
+	}
+	
+	private void testForAutoLearned() {
+		for(RecipeFilter filter : recipeFilters) {
+			boolean autoLearned = filter.getRecipe().getFlags().contains(Flag.AutoLearned);
+			Assert.assertTrue(filter.getShow().get() == autoLearned);
+		}
+	}
+	
 
 }

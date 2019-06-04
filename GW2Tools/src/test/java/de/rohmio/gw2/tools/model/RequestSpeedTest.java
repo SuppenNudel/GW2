@@ -106,5 +106,4 @@ public class RequestSpeedTest {
 		System.out.println("File time: "+(end.getTime()-start.getTime())+"ms");
 	}
 	
-	
 }
