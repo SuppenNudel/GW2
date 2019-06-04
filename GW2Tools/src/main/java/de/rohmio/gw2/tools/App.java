@@ -16,6 +16,7 @@ import javafx.stage.Stage;
 public class App extends Application {
 	
 	private static Stage stage;
+	private static Application app;
 	private static Class<? extends Initializable> startingView = MainViewController.class;
 	
 	public static void main(String[] args) {
@@ -39,6 +40,7 @@ public class App extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
+		app = this;
 		stage = primaryStage;
 		setScene(startingView);
 		primaryStage.setTitle("Guild Wars 2 Tools");
@@ -46,9 +48,10 @@ public class App extends Application {
 			System.exit(0);
 		});
 		primaryStage.show();
-		
-		new Thread(() -> Data.getInstance().getItems().getAll(), "Get all Items").start();
-		new Thread(() -> Data.getInstance().getRecipes().getAll(), "Get all Recipes").start();
+	}
+	
+	public static Application app() {
+		return app;
 	}
 	
 	public static Stage getStage() {

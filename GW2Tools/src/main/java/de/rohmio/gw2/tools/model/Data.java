@@ -10,7 +10,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
-import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 
 public class Data {
@@ -23,7 +22,7 @@ public class Data {
 
 	// loaded data
 	private RequestProgress<Recipe> recipes;
-	private RequestProgress<Item> items;
+//	private RequestProgress<Item> items;
 	
 	private SettingsWrapper settingsWrapper;
 
@@ -32,7 +31,7 @@ public class Data {
 		resources.set(ResourceBundle.getBundle("bundle.MyBundle", new Locale(settingsWrapper.languageProperty().get().toString())));
 		GuildWars2.setInstance(ClientFactory.getClient());
 		recipes = new RequestProgress<>(RequestType.RECIPE);
-		items = new RequestProgress<>(RequestType.ITEM);
+//		items = new RequestProgress<>(RequestType.ITEM);
 	}
 
 	public synchronized static Data getInstance() {
@@ -67,9 +66,10 @@ public class Data {
 		return recipes;
 	}
 
-	public RequestProgress<Item> getItems() {
-		return items;
-	}
+	// TODO first only with recipes
+//	public RequestProgress<Item> getItems() {
+//		return items;
+//	}
 	
 	public SettingsWrapper getSettingsWrapper() {
 		return settingsWrapper;

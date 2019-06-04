@@ -221,8 +221,6 @@ public class MainViewController implements Initializable {
 		choice_charName.getItems().addAll(allCharacterName);
 	}
 
-	// TODO do loading on separate thread, so that the program doesn't freeze when
-	// it takes longer
 	/**
 	 * <ul>
 	 * <li>reset filters</li>

@@ -8,9 +8,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableObjectValue;
-import javafx.beans.value.ObservableStringValue;
 import javafx.collections.ObservableList;
-import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe.Flag;
 import me.xhsun.guildwars2wrapper.model.v2.character.Character;
@@ -24,10 +22,10 @@ public class RecipeFilter {
 
 	private BooleanProperty discipline = new SimpleBooleanProperty(true);
 	private BooleanProperty level = new SimpleBooleanProperty(true);
-	private BooleanProperty character = new SimpleBooleanProperty(true);
 	private BooleanProperty learnedFromItem = new SimpleBooleanProperty(true);
 	private BooleanProperty autoLearned = new SimpleBooleanProperty(true);
-	private BooleanProperty itemName = new SimpleBooleanProperty(true);
+	private BooleanProperty character = new SimpleBooleanProperty(true);
+//	private BooleanProperty itemName = new SimpleBooleanProperty(true);
 
 	public RecipeFilter(Recipe recipe) {
 		this.recipe = recipe;
@@ -52,21 +50,26 @@ public class RecipeFilter {
 				.and(Bindings.lessThanOrEqual(minRating, maxLevel)));
 	}
 	
+	/* TODO implement
 	public void addItemNameFilter(ObservableStringValue itemName) {
 		Item item = Data.getInstance().getItems().getById(recipe.getOutputItemId());
 		this.itemName.bind(Bindings.createBooleanBinding(() -> 
 			item.getName().contains(itemName.get()), itemName));
 	}
+	*/
 	
+	// TODO figure out how "containsFlag" constant can be set, so that it doesn't have to be checked every time
 	public void addLearnedFromItemFilter(ObservableBooleanValue learnedFromItem) {
+		boolean containsFlag = recipe.getFlags().contains(Flag.LearnedFromItem);
 		this.learnedFromItem.bind(Bindings.createBooleanBinding(() ->
-			recipe.getFlags().contains(Flag.LearnedFromItem) && learnedFromItem.get(),
+			!containsFlag || containsFlag && learnedFromItem.get(),
 			learnedFromItem));
 	}
 	
 	public void addAutoLearnedFilter(ObservableBooleanValue autoLearned) {
+		boolean containsFlag = recipe.getFlags().contains(Flag.AutoLearned);
 		this.autoLearned.bind(Bindings.createBooleanBinding(() ->
-			recipe.getFlags().contains(Flag.AutoLearned) && autoLearned.get(),
+			!containsFlag || containsFlag && autoLearned.get(),
 			autoLearned));
 	}
 	
