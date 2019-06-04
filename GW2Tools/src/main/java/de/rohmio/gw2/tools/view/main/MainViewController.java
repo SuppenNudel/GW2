@@ -5,6 +5,7 @@ import java.net.URL;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import de.rohmio.gw2.tools.App;
 import de.rohmio.gw2.tools.model.Data;
@@ -12,6 +13,8 @@ import de.rohmio.gw2.tools.model.RecipeFilter;
 import de.rohmio.gw2.tools.view.RecipeView;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.LongBinding;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -21,6 +24,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
@@ -92,9 +96,11 @@ public class MainViewController implements Initializable {
 	
 	// filter properties
 	
+	private final ObservableList<RecipeFilter> recipeFilters = FXCollections.observableArrayList();
+	
 	private ObjectProperty<Character> selectedCharacter = new SimpleObjectProperty<>();
 	// selected Disciplines
-	private ObservableList<CraftingDisciplines> disciplinesFilter = FXCollections.observableArrayList();
+	private ObservableMap<CraftingDisciplines, Boolean> disciplinesFilter = FXCollections.observableHashMap();
 	private SimpleIntegerProperty minLevel = new SimpleIntegerProperty();
 	private SimpleIntegerProperty maxLevel = new SimpleIntegerProperty();
 	
@@ -124,14 +130,11 @@ public class MainViewController implements Initializable {
 		// discipline selection
 		for (CraftingDisciplines discipline : CraftingDisciplines.values()) {
 			CheckBox checkbox = new CheckBox(discipline.name());
+			disciplinesFilter.put(discipline, checkbox.isSelected());
 			checkbox.selectedProperty().addListener(new ChangeListener<Boolean>() {
 				@Override
 				public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-					if(newValue) {
-						disciplinesFilter.add(discipline);
-					} else {
-						disciplinesFilter.remove(discipline);
-					}
+					disciplinesFilter.put(discipline, newValue);
 				}
 			});
 			vbox_disciplineCheck.getChildren().add(checkbox);
@@ -155,22 +158,43 @@ public class MainViewController implements Initializable {
 				createRecipeView(recipe);
 			}
 		}).start();
+
+		List<BooleanProperty> collect = recipeFilters.stream().map(filter -> filter.getShow()).collect(Collectors.toList());
+		BooleanProperty[] collectArr = collect.toArray(new BooleanProperty[collect.size()]);
+		LongBinding count = Bindings.createLongBinding(() -> recipeFilters.stream().filter(f -> f.getShow().get()).count(), collectArr);
+		count.addListener(new ChangeListener<Number>() {
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				System.out.println(newValue);
+			}
+		});
 	}
 	
 	private void createRecipeView(Recipe recipe) {
-		RecipeView recipeView = new RecipeView(recipe, false);
-		RecipeFilter recipeFilter = recipeView.getRecipeFilter();
+		RecipeFilter recipeFilter = new RecipeFilter(recipe);
+		recipeFilters.add(recipeFilter);
 		recipeFilter.addDisciplineFilter(disciplinesFilter);
 		recipeFilter.addLevelFilter(minLevel, maxLevel);
 		recipeFilter.addCharacterFilter(selectedCharacter);
 		recipeFilter.addLearnedFromItemFilter(chbx_byableRecipe.selectedProperty());
 		recipeFilter.addAutoLearnedFilter(chbx_showAutoLearned.selectedProperty());
+		RecipeView recipeView = new RecipeView(recipeFilter, false);
 		recipeFilter.getShow().addListener(new ChangeListener<Boolean>() {
 			@Override
 			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
 				if(newValue && !flow_recipes.getChildren().contains(recipeView)) {
 					Platform.runLater(() -> flow_recipes.getChildren().add(recipeView));
 				}
+				int iterator = 0;
+				for(RecipeFilter filter : recipeFilters) {
+					synchronized (filter) {
+						if(filter.getShow().get()) {
+							++iterator;
+						}
+					}
+				}
+				final int count = iterator;
+				Platform.runLater(() -> lbl_currentlyDisplayed.setText(String.valueOf(count)));
 			}
 		});
 	}

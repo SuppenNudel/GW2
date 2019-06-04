@@ -1,7 +1,6 @@
 package de.rohmio.gw2.tools.model;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -17,7 +16,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
@@ -33,7 +31,7 @@ public class RecipeFilterTest {
 
 	private List<RecipeFilter> recipeFilters;
 
-	private ObservableList<CraftingDisciplines> disciplines = FXCollections.observableArrayList();
+	private ObservableMap<CraftingDisciplines, Boolean> disciplines = FXCollections.observableHashMap();
 	private IntegerProperty minLevel = new SimpleIntegerProperty();
 	private IntegerProperty maxLevel = new SimpleIntegerProperty();
 	private ObjectProperty<Character> character = new SimpleObjectProperty<>();
@@ -71,16 +69,17 @@ public class RecipeFilterTest {
 		
 		recipeFilters.forEach(filter -> filter.addDisciplineFilter(disciplines));
 		
-		disciplines.add(CraftingDisciplines.Huntsman);
+		disciplines.put(CraftingDisciplines.Huntsman, true);
 		testForDisciplines();
 		
-		disciplines.addAll(CraftingDisciplines.Armorsmith, CraftingDisciplines.Artificer);
+		disciplines.put(CraftingDisciplines.Armorsmith, true);
+		disciplines.put(CraftingDisciplines.Artificer, true);
 		testForDisciplines();
 		
-		disciplines.remove(CraftingDisciplines.Huntsman);
+		disciplines.put(CraftingDisciplines.Huntsman, false);
 		testForDisciplines();
 		
-		disciplines.add(CraftingDisciplines.Chef);
+		disciplines.put(CraftingDisciplines.Chef, true);
 		testForDisciplines();
 	}
 	
@@ -88,7 +87,14 @@ public class RecipeFilterTest {
 		for(RecipeFilter filters : recipeFilters) {
 			List<CraftingDisciplines> recipeDisciplines = filters.getRecipe().getDisciplines();
 			boolean show = filters.getShow().get();
-			boolean containsAny = !Collections.disjoint(disciplines, recipeDisciplines);
+			boolean containsAny = false;
+			for(CraftingDisciplines discipline : recipeDisciplines) {
+				Boolean selected = disciplines.get(discipline);
+				if(selected != null && selected == true) {
+					containsAny = true;
+					break;
+				}
+			}
 			// if is shown then it should contain the discipline 
 			Assert.assertTrue(show == containsAny);
 		}
@@ -187,5 +193,30 @@ public class RecipeFilterTest {
 		}
 	}
 	
-
+	@Test
+	public void kudzuExperimentTest() {
+		recipeFilters.forEach(filter -> {
+			filter.addDisciplineFilter(disciplines);
+			filter.addLevelFilter(minLevel, maxLevel);
+			filter.addLearnedFromItemFilter(learnedFromItem);
+			filter.addAutoLearnedFilter(autoLearned);
+		});
+		
+		disciplines.put(CraftingDisciplines.Huntsman, true);
+		minLevel.set(450);
+		maxLevel.set(450);
+		learnedFromItem.set(true);
+		autoLearned.set(false);
+		
+		boolean found = false;
+		for(RecipeFilter filter : recipeFilters) {
+			if(filter.getRecipe().getId() == 9957) {
+				Assert.assertTrue(filter.getShow().get());
+				found = true;
+				break;
+			}
+		}
+		Assert.assertTrue(found);
+	}
+	
 }

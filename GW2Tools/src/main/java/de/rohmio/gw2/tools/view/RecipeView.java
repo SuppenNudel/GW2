@@ -31,8 +31,7 @@ public class RecipeView extends AnchorPane {
 	
 //	private List<ItemView> itemViews = new ArrayList<>();
 	
-	public RecipeView(Recipe recipe, boolean detailed) {
-		recipeFilter = new RecipeFilter(recipe);
+	public RecipeView(RecipeFilter recipeFilter, boolean detailed) {
 		
 		visibleProperty().bind(recipeFilter.getShow()); //.and(Bindings.createBooleanBinding(() -> count() <= 200, recipeViews)));
 		managedProperty().bind(recipeFilter.getShow()); //.and(Bindings.createBooleanBinding(() -> count() <= 200, recipeViews)));
@@ -72,7 +71,7 @@ public class RecipeView extends AnchorPane {
 	private ContextMenu createContextMenu() {
 		MenuItem showDetailed = new MenuItem("Show Detailed");
 		showDetailed.setOnAction(event -> {
-			RecipeView recipeTreeView = new RecipeView(recipeFilter.getRecipe(), true);
+			RecipeView recipeTreeView = new RecipeView(recipeFilter, true);
 			ScrollPane scrollPane = new ScrollPane(recipeTreeView);
 			scrollPane.setPrefHeight(USE_COMPUTED_SIZE);
 			scrollPane.setPrefWidth(USE_COMPUTED_SIZE);

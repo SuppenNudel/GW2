@@ -1,14 +1,12 @@
 package de.rohmio.gw2.tools.model;
 
-import java.util.Collections;
-
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableObjectValue;
-import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe.Flag;
 import me.xhsun.guildwars2wrapper.model.v2.character.Character;
@@ -40,8 +38,16 @@ public class RecipeFilter {
 		return recipe;
 	}
 
-	public void addDisciplineFilter(ObservableList<CraftingDisciplines> disciplines) {
-		discipline.bind(Bindings.createBooleanBinding(() -> !Collections.disjoint(disciplines, recipe.getDisciplines()), disciplines));
+	public void addDisciplineFilter(ObservableMap<CraftingDisciplines, Boolean> disciplines) {
+		discipline.bind(Bindings.createBooleanBinding(() -> {
+			for(CraftingDisciplines discipline : recipe.getDisciplines()) {
+				Boolean contains = disciplines.get(discipline);
+				if(contains != null && contains == true) {
+					return true;
+				}
+			}
+			return false;
+		}, disciplines));
 	}
 
 	public void addLevelFilter(ObservableIntegerValue minLevel, ObservableIntegerValue maxLevel) {
