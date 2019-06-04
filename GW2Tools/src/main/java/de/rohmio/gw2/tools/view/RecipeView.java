@@ -14,18 +14,19 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
+import me.xhsun.guildwars2wrapper.model.v2.Recipe.Ingredient;
 
 public class RecipeView extends AnchorPane {
 	
-	// TODO either on click or context menu show details and copy link to clipboard
-
 //	private boolean detailed;
 	private RecipeFilter recipeFilter;
 	
@@ -53,7 +54,7 @@ public class RecipeView extends AnchorPane {
 		setPrefWidth(USE_COMPUTED_SIZE);
 		setPrefHeight(USE_COMPUTED_SIZE);
 		
-		HBox hBox = new HBox(createTree(recipeFilter.getRecipe(), -1));
+		HBox hBox = new HBox(createTree(recipeFilter.getRecipe()));
 
 		hBox.setPrefWidth(USE_COMPUTED_SIZE);
 		hBox.setPrefHeight(USE_COMPUTED_SIZE);
@@ -85,6 +86,8 @@ public class RecipeView extends AnchorPane {
 			stage.setScene(scene);
 			stage.show();
 		});
+		
+		// copy chat link for this recipe to clipboard
 		MenuItem linkToClipboard = new MenuItem("Copy Link to Clipboard");
 		linkToClipboard.setOnAction(event -> {
 			String chatLink = recipeFilter.getRecipe().getChatLink();
@@ -95,9 +98,9 @@ public class RecipeView extends AnchorPane {
 			clipboard.setContent(content);
 		});
 		
+		// open browser with the wiki article of this recipe
 		MenuItem goToWiki = new MenuItem("Go to Wiki");
 		goToWiki.setOnAction(event -> {
-//			"https://wiki.guildwars2.com/wiki/?search=%5B%26 Cb0RAAA %3D%5D"[&Cb4RAAA=]
 			String chatLink = recipeFilter.getRecipe().getChatLink();
 			try {
 				String url = String.format("https://wiki.guildwars2.com/wiki/?search=%s", URLEncoder.encode(chatLink, "UTF-8"));
@@ -127,8 +130,8 @@ public class RecipeView extends AnchorPane {
 	}
 	*/
 
-	private VBox createTree(Recipe recipe, int prevCount) {
-		VBox root = new VBox(10.0);
+	private VBox createTree(Recipe recipe) {
+		VBox root = new VBox();
 		root.setPadding(new Insets(10.0));
 
 		root.setPrefWidth(USE_COMPUTED_SIZE);
@@ -137,18 +140,36 @@ public class RecipeView extends AnchorPane {
 		root.setStyle("-fx-border-color: black;" + "-fx-border-width: 5;");
 		root.setAlignment(Pos.TOP_CENTER);
 
-		int outputCount;
-		if (prevCount < 0) {
-			outputCount = recipe.getOutputItemCount();
-		} else {
-			outputCount = prevCount;
-		}
-		int outputItemId = recipe.getOutputItemId();
-		root.getChildren().add(new Label(String.format("%dx %d", outputCount, outputItemId)));
-		root.getChildren().add(new Label(recipe.getDisciplines().toString()));
+		root.getChildren().add(new Label(String.valueOf( recipe.getOutputItemId())));
+		GridPane grid_data = new GridPane();
+		grid_data.add(new Label("Source"), 0, 0);
+		grid_data.add(new Label(recipe.getFlags().toString()), 1, 0);
+		
+		grid_data.add(new Label("Type"), 0, 1);
+		grid_data.add(new Label(String.valueOf(recipe.getType())), 1, 1);
+		
+		grid_data.add(new Label("Output qty."), 0, 2);
+		grid_data.add(new Label(String.valueOf(recipe.getOutputItemCount())), 1, 2);
+		
+		grid_data.add(new Label("Discipline"), 0, 3);
+		grid_data.add(new Label(recipe.getDisciplines().toString()), 1, 3);
+		
+		grid_data.add(new Label("Req. rating"), 0, 4);
+		grid_data.add(new Label(String.valueOf(recipe.getMinRating())), 1, 4);
+		
+		grid_data.add(new Label("Chat link"), 0, 5);
+		grid_data.add(new TextField(recipe.getChatLink()), 1, 5);
+		
 //		ItemView itemView = new ItemView(outputItemId, outputCount, detailed);
 //		itemViews.add(itemView);
 //		root.getChildren().add(itemView);
+		
+		root.getChildren().add(grid_data);
+		
+		root.getChildren().add(new Label("Ingredients"));
+		for(Ingredient ingredient : recipe.getIngredients()) {
+			root.getChildren().add(new Label(String.format("%dx %d", ingredient.getCount(), ingredient.getItemId())));
+		}
 
 		return root;
 	}

@@ -39,14 +39,12 @@ public class RequestProgress<T extends IdentifiableInt> {
 
 //		new Thread(() -> {
 //			synchronized (values) {
-		/*
-				T[] cache = Util.getCache(type);
-				if(cache != null) {
-					for(T c : cache) {
-						values.put(c.getId(), c);
-					}
-				}
-				*/
+//				T[] cache = Util.getCache(type);
+//				if(cache != null) {
+//					for(T c : cache) {
+//						values.put(c.getId(), c);
+//					}
+//				}
 //			}
 //		}).start();
 
@@ -139,11 +137,11 @@ public class RequestProgress<T extends IdentifiableInt> {
 			}
 		});
 		System.out.println("Request finished");
-		try {
-			Util.writeCache(type, new ArrayList<>(values.values()));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+//		try {
+//			Util.writeCache(type, new ArrayList<>(values.values()));
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 		return values;
 	}
 	

@@ -182,7 +182,14 @@ public class MainViewController implements Initializable {
 		recipeFilter.addCharacterFilter(selectedCharacter);
 		recipeFilter.addLearnedFromItemFilter(chbx_byableRecipe.selectedProperty());
 		recipeFilter.addAutoLearnedFilter(chbx_showAutoLearned.selectedProperty());
-		Platform.runLater(() -> flow_recipes.getChildren().add(recipeView));
+		recipeFilter.getShow().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+				if(newValue && !flow_recipes.getChildren().contains(recipeView)) {
+					Platform.runLater(() -> flow_recipes.getChildren().add(recipeView));
+				}
+			}
+		});
 		return recipeView;
 	}
 

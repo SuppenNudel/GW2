@@ -24,9 +24,9 @@
 
 <BorderPane prefHeight="518.0" prefWidth="790.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
    <center>
-    <SplitPane dividerPositions="0.5534521158129176, 0.7505567928730512" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0">
+    <SplitPane dividerPositions="0.49111675126903553, 0.75" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0">
       <items>
-            <VBox maxWidth="-Infinity" spacing="5.0">
+            <VBox spacing="5.0">
                <children>
                   <Label fx:id="lbl_accountName" text="Account Name" />
                   <Separator prefWidth="200.0" />
@@ -77,9 +77,9 @@
                   <CheckBox fx:id="chbx_showWholeRecipe" mnemonicParsing="false" text="%show_whole_recipe" />
                </children>
             </VBox>
-        <ScrollPane prefHeight="-1.0" prefWidth="-1.0">
+        <ScrollPane fitToWidth="true">
                <content>
-                  <FlowPane fx:id="flow_recipes" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
+                  <FlowPane fx:id="flow_recipes" />
                </content>
         </ScrollPane>
         <AnchorPane>
