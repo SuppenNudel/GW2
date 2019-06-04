@@ -7,10 +7,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import de.rohmio.gw2.tools.main.Util;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.SynchronousRequest;
@@ -36,17 +36,13 @@ public class RequestProgress<T extends IdentifiableInt> {
 	@SuppressWarnings("unchecked")
 	public RequestProgress(RequestType type) {
 		this.type = type;
-
-//		new Thread(() -> {
-//			synchronized (values) {
-//				T[] cache = Util.getCache(type);
-//				if(cache != null) {
-//					for(T c : cache) {
-//						values.put(c.getId(), c);
-//					}
-//				}
-//			}
-//		}).start();
+		
+		values.addListener(new MapChangeListener<Integer, T>() {
+			@Override
+			public void onChanged(Change<? extends Integer, ? extends T> change) {
+				progress.set(change.getMap().size() / allIds.size());
+			}
+		});
 
 		SynchronousRequest synchronous = GuildWars2.getInstance().getSynchronous();
 		
@@ -80,8 +76,6 @@ public class RequestProgress<T extends IdentifiableInt> {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		progress.bind(Bindings.createObjectBinding(() -> values.size() / allIds.size(), values));
 	}
 	
 	private List<T> onError(GuildWars2Exception e, int[] ids) {
@@ -126,8 +120,8 @@ public class RequestProgress<T extends IdentifiableInt> {
 			Thread thread = new Thread(() -> {
 				values.putAll(infoFunction.apply(ids).stream().collect(Collectors.toMap(T::getId, r -> r)));
 			}, "Thread "+ids);
-			thread.start();
 			threads.add(thread);
+			thread.start();
 		}
 		threads.forEach(t -> {
 			try {
@@ -137,11 +131,6 @@ public class RequestProgress<T extends IdentifiableInt> {
 			}
 		});
 		System.out.println("Request finished");
-//		try {
-//			Util.writeCache(type, new ArrayList<>(values.values()));
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
 		return values;
 	}
 	

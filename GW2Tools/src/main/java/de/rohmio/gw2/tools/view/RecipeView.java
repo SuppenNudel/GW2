@@ -5,7 +5,6 @@ import java.net.URLEncoder;
 
 import de.rohmio.gw2.tools.App;
 import de.rohmio.gw2.tools.model.RecipeFilter;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -31,10 +30,8 @@ public class RecipeView extends AnchorPane {
 	private RecipeFilter recipeFilter;
 	
 //	private List<ItemView> itemViews = new ArrayList<>();
-	private ObservableList<RecipeView> recipeViews;
 	
-	public RecipeView(Recipe recipe, boolean detailed, ObservableList<RecipeView> recipeViews) {
-		this.recipeViews = recipeViews;
+	public RecipeView(Recipe recipe, boolean detailed) {
 		recipeFilter = new RecipeFilter(recipe);
 		
 		visibleProperty().bind(recipeFilter.getShow()); //.and(Bindings.createBooleanBinding(() -> count() <= 200, recipeViews)));
@@ -75,7 +72,7 @@ public class RecipeView extends AnchorPane {
 	private ContextMenu createContextMenu() {
 		MenuItem showDetailed = new MenuItem("Show Detailed");
 		showDetailed.setOnAction(event -> {
-			RecipeView recipeTreeView = new RecipeView(recipeFilter.getRecipe(), true, recipeViews);
+			RecipeView recipeTreeView = new RecipeView(recipeFilter.getRecipe(), true);
 			ScrollPane scrollPane = new ScrollPane(recipeTreeView);
 			scrollPane.setPrefHeight(USE_COMPUTED_SIZE);
 			scrollPane.setPrefWidth(USE_COMPUTED_SIZE);

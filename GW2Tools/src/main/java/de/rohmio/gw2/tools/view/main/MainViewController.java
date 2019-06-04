@@ -5,7 +5,6 @@ import java.net.URL;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.concurrent.Callable;
 
 import de.rohmio.gw2.tools.App;
 import de.rohmio.gw2.tools.model.Data;
@@ -98,8 +97,8 @@ public class MainViewController implements Initializable {
 
 	private ObjectProperty<Character> selectedCharacter = new SimpleObjectProperty<>();
 	private ObservableList<CraftingDisciplines> disciplinesFilter = FXCollections.observableArrayList();
-	private SimpleIntegerProperty minLevel = new SimpleIntegerProperty();
-	private SimpleIntegerProperty maxLevel = new SimpleIntegerProperty();
+	private SimpleIntegerProperty minLevel = new SimpleIntegerProperty(0);
+	private SimpleIntegerProperty maxLevel = new SimpleIntegerProperty(0);
 	
 //	private ObservableList<RecipeView> recipeViews = FXCollections.observableArrayList();
 	
@@ -157,25 +156,15 @@ public class MainViewController implements Initializable {
 		Bindings.bindBidirectional(txt_minLevel.textProperty(), minLevel, new NumberStringConverter());
 		Bindings.bindBidirectional(txt_maxLevel.textProperty(), maxLevel, new NumberStringConverter());
 		
-		// create recipe views
-		ObservableList<RecipeView> recipeViews = FXCollections.observableArrayList();
 		new Thread(() -> {
 			for(Recipe recipe : Data.getInstance().getRecipes().getAll().values()) {
-				RecipeView recipeView = createRecipeView(recipe, recipeViews);
-				recipeViews.add(recipeView);
+				createRecipeView(recipe);
 			}
 		}).start();
-
-		lbl_currentlyDisplayed.textProperty().bind(Bindings.createStringBinding(new Callable<String>() {
-			@Override
-			public String call() throws Exception {
-				return String.valueOf(recipeViews.stream().map(view -> view.getRecipeFilter()).filter(filter -> filter.getShow().get()).count());
-			}
-		}));
 	}
 	
-	private RecipeView createRecipeView(Recipe recipe, ObservableList<RecipeView> recipeViews) {
-		RecipeView recipeView = new RecipeView(recipe, false, recipeViews);
+	private void createRecipeView(Recipe recipe) {
+		RecipeView recipeView = new RecipeView(recipe, false);
 		RecipeFilter recipeFilter = recipeView.getRecipeFilter();
 		recipeFilter.addDisciplineFilter(disciplinesFilter);
 		recipeFilter.addLevelFilter(minLevel, maxLevel);
@@ -190,7 +179,6 @@ public class MainViewController implements Initializable {
 				}
 			}
 		});
-		return recipeView;
 	}
 
 	private void initResourceBundle() {

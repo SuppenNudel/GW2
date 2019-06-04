@@ -162,8 +162,9 @@ public class RecipeFilterTest {
 	
 	private void testForLearnedFromItem() {
 		for(RecipeFilter filter : recipeFilters) {
+			boolean containsFlag = filter.getRecipe().getFlags().contains(Flag.LearnedFromItem);
 			boolean learnedFromItem = filter.getRecipe().getFlags().contains(Flag.LearnedFromItem);
-			Assert.assertTrue(filter.getShow().get() == learnedFromItem);
+			Assert.assertTrue(filter.getShow().get() == !containsFlag || containsFlag && learnedFromItem);
 		}
 	}
 	
@@ -180,8 +181,9 @@ public class RecipeFilterTest {
 	
 	private void testForAutoLearned() {
 		for(RecipeFilter filter : recipeFilters) {
-			boolean autoLearned = filter.getRecipe().getFlags().contains(Flag.AutoLearned);
-			Assert.assertTrue(filter.getShow().get() == autoLearned);
+			boolean containsFlag = filter.getRecipe().getFlags().contains(Flag.AutoLearned);
+			boolean autoLearned = containsFlag;
+			Assert.assertTrue(filter.getShow().get() == !containsFlag || containsFlag && autoLearned);
 		}
 	}
 	
