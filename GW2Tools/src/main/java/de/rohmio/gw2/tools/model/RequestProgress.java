@@ -36,7 +36,6 @@ public class RequestProgress<T extends IdentifiableInt> {
 
 		SynchronousRequest synchronous = GuildWars2.getInstance().getSynchronous();
 		
-		
 		switch (type) {
 		case RECIPE:
 			idCaller = () -> synchronous.getAllRecipeID();

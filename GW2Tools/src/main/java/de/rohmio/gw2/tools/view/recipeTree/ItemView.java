@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.List;
 
 import de.rohmio.gw2.tools.main.Util;
-import de.rohmio.gw2.tools.model.Data;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -26,15 +25,12 @@ import retrofit2.Response;
 public class ItemView extends VBox {
 
 	private boolean detailed;
-	private int itemId;
 	private Item item;
 	private int count;
 
-	public ItemView(int itemId, int count, boolean detailed) {
+	private ItemView(int itemId, int count, boolean detailed) {
 		setPrefWidth(USE_COMPUTED_SIZE);
 		setPrefHeight(USE_COMPUTED_SIZE);
-		
-		this.itemId = itemId;
 		
 		this.detailed = detailed;
 
@@ -46,6 +42,7 @@ public class ItemView extends VBox {
 		}
 	}
 	
+	/*
 	public void show(boolean show) {
 		if(show) {
 			new Thread(() -> { 
@@ -54,13 +51,12 @@ public class ItemView extends VBox {
 			}).start();
 		}
 	}
+	*/
 
 	// public ItemView(Item item, int count) {
 	// init(item, count);
 	// }
 	
-	// TODO put detailed recipe contextMenu here
-
 	private void init() throws NullPointerException {
 //		ContextMenu contextMenu = createContextMenu();
 //		Node owner = this;
