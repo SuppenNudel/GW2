@@ -81,9 +81,6 @@ public class MainViewController implements Initializable {
 	@FXML
 	private Label lbl_currentlyDisplayed;
 
-	@FXML // current tasks done by application
-	private VBox vbox_tasks;
-
 	@FXML // POC for progress display
 	private ProgressBar pb_getItems;
 
@@ -93,14 +90,13 @@ public class MainViewController implements Initializable {
 	@FXML
 	private Label lbl_recipes_progress;
 	
-	// end view elements
-
-	private ObjectProperty<Character> selectedCharacter = new SimpleObjectProperty<>();
-	private ObservableList<CraftingDisciplines> disciplinesFilter = FXCollections.observableArrayList();
-	private SimpleIntegerProperty minLevel = new SimpleIntegerProperty(0);
-	private SimpleIntegerProperty maxLevel = new SimpleIntegerProperty(0);
+	// filter properties
 	
-//	private ObservableList<RecipeView> recipeViews = FXCollections.observableArrayList();
+	private ObjectProperty<Character> selectedCharacter = new SimpleObjectProperty<>();
+	// selected Disciplines
+	private ObservableList<CraftingDisciplines> disciplinesFilter = FXCollections.observableArrayList();
+	private SimpleIntegerProperty minLevel = new SimpleIntegerProperty();
+	private SimpleIntegerProperty maxLevel = new SimpleIntegerProperty();
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -125,7 +121,6 @@ public class MainViewController implements Initializable {
 			lbl_recipes_progress.setText(format.format(progress.doubleValue()));
 		});
 		
-		
 		// discipline selection
 		for (CraftingDisciplines discipline : CraftingDisciplines.values()) {
 			CheckBox checkbox = new CheckBox(discipline.name());
@@ -140,7 +135,6 @@ public class MainViewController implements Initializable {
 				}
 			});
 			vbox_disciplineCheck.getChildren().add(checkbox);
-			checkbox.setUserData(discipline);
 		}
 
 		// level filter integer only

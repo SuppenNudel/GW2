@@ -41,7 +41,7 @@ public class RecipeFilter {
 	}
 
 	public void addDisciplineFilter(ObservableList<CraftingDisciplines> disciplines) {
-		discipline.bind(Bindings.createBooleanBinding( () -> !Collections.disjoint(disciplines, recipe.getDisciplines()), disciplines ));
+		discipline.bind(Bindings.createBooleanBinding(() -> !Collections.disjoint(disciplines, recipe.getDisciplines()), disciplines));
 	}
 
 	public void addLevelFilter(ObservableIntegerValue minLevel, ObservableIntegerValue maxLevel) {
