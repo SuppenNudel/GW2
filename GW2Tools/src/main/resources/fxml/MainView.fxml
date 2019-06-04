@@ -61,6 +61,7 @@
                   <Separator prefWidth="200.0" />
                   <CheckBox fx:id="chbx_byableRecipe" mnemonicParsing="false" text="%show_buyable_recipes" />
                   <CheckBox fx:id="chbx_showAutoLearned" mnemonicParsing="false" text="%show_auto_learned" />
+                  <CheckBox fx:id="chbx_showDiscoverable" mnemonicParsing="false" text="Zeige entdeckbare" />
                   <Separator prefWidth="200.0" />
                   <Label fx:id="lbl_currentlyDisplayed" text="Number of Recipies" />
                   <Label fx:id="lbl_recipes_progress" text="\%">

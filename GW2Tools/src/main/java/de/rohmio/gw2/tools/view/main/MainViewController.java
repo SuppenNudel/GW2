@@ -81,6 +81,9 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private CheckBox chbx_showAutoLearned;
+	
+	@FXML
+	private CheckBox chbx_showDiscoverable;
 
 	@FXML
 	private Label lbl_currentlyDisplayed;
@@ -108,6 +111,8 @@ public class MainViewController implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		// internationalization
 		initResourceBundle();
+		
+		chbx_showDiscoverable.setSelected(true);
 		
 		// bind progress 
 		DoubleProperty progress = Data.getInstance().getRecipes().getProgress();
@@ -178,6 +183,7 @@ public class MainViewController implements Initializable {
 		recipeFilter.addCharacterFilter(selectedCharacter);
 		recipeFilter.addLearnedFromItemFilter(chbx_byableRecipe.selectedProperty());
 		recipeFilter.addAutoLearnedFilter(chbx_showAutoLearned.selectedProperty());
+		recipeFilter.addDiscoverableFilter(chbx_showDiscoverable.selectedProperty());
 		RecipeView recipeView = new RecipeView(recipeFilter, false);
 		recipeFilter.getShow().addListener(new ChangeListener<Boolean>() {
 			@Override

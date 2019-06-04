@@ -22,12 +22,13 @@ public class RecipeFilter {
 	private BooleanProperty level = new SimpleBooleanProperty(true);
 	private BooleanProperty learnedFromItem = new SimpleBooleanProperty(true);
 	private BooleanProperty autoLearned = new SimpleBooleanProperty(true);
+	private BooleanProperty discoverable = new SimpleBooleanProperty(true);
 	private BooleanProperty character = new SimpleBooleanProperty(true);
 //	private BooleanProperty itemName = new SimpleBooleanProperty(true);
 
 	public RecipeFilter(Recipe recipe) {
 		this.recipe = recipe;
-		show.bind(level.and(discipline).and(character).and(learnedFromItem).and(autoLearned));
+		show.bind(level.and(discipline).and(character).and(learnedFromItem).and(autoLearned).and(discoverable));
 	}
 	
 	public BooleanProperty getShow() {
@@ -77,6 +78,11 @@ public class RecipeFilter {
 		this.autoLearned.bind(Bindings.createBooleanBinding(() ->
 			!containsFlag || containsFlag && autoLearned.get(),
 			autoLearned));
+	}
+	
+	public void addDiscoverableFilter(ObservableBooleanValue discoverable) {
+		boolean empty = recipe.getFlags().isEmpty();
+		this.discoverable.bind(Bindings.createBooleanBinding(() -> empty && discoverable.get(), discoverable));
 	}
 	
 	public void addCharacterFilter(ObservableObjectValue<Character> character) {
