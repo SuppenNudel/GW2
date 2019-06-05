@@ -32,6 +32,7 @@ public class RecipeView extends AnchorPane {
 //	private List<ItemView> itemViews = new ArrayList<>();
 	
 	public RecipeView(RecipeFilter recipeFilter, boolean detailed) {
+		this.recipeFilter = recipeFilter;
 		
 		visibleProperty().bind(recipeFilter.getShow()); //.and(Bindings.createBooleanBinding(() -> count() <= 200, recipeViews)));
 		managedProperty().bind(recipeFilter.getShow()); //.and(Bindings.createBooleanBinding(() -> count() <= 200, recipeViews)));

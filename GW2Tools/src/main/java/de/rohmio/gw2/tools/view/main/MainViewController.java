@@ -232,11 +232,11 @@ public class MainViewController implements Initializable {
 		stage.showAndWait();
 	}
 
-	@FXML
 	private void getCharacters() throws GuildWars2Exception {
 		choice_charName.getItems().clear();
 		GuildWars2 gw2 = GuildWars2.getInstance();
 		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(Data.getInstance().getSettingsWrapper().accessTokenProperty().get());
+		choice_charName.getItems().add(null);
 		choice_charName.getItems().addAll(allCharacterName);
 	}
 
@@ -251,6 +251,7 @@ public class MainViewController implements Initializable {
 	private void onSelectCharacter() {
 		String characterName = choice_charName.getSelectionModel().getSelectedItem();
 		if (characterName == null) {
+			selectedCharacter.set(null);
 			return;
 		}
 		
@@ -261,5 +262,5 @@ public class MainViewController implements Initializable {
 		}
 
 	}
-
+	
 }

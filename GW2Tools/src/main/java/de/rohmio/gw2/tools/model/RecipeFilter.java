@@ -82,7 +82,7 @@ public class RecipeFilter {
 	
 	public void addDiscoverableFilter(ObservableBooleanValue discoverable) {
 		boolean empty = recipe.getFlags().isEmpty();
-		this.discoverable.bind(Bindings.createBooleanBinding(() -> empty && discoverable.get(), discoverable));
+		this.discoverable.bind(Bindings.createBooleanBinding(() -> !empty || empty && discoverable.get(), discoverable));
 	}
 	
 	public void addCharacterFilter(ObservableObjectValue<Character> character) {

@@ -5,7 +5,7 @@
 
 	<groupId>de.rohm-io.gw2</groupId>
 	<artifactId>tools</artifactId>
-	<version>0.2.4.1</version>
+	<version>0.3.1.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>GW2 Tools</name>
@@ -16,10 +16,11 @@
 	</properties>
 
 	<dependencies>
+		<!-- https://mvnrepository.com/artifact/junit/junit -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
+			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
 
