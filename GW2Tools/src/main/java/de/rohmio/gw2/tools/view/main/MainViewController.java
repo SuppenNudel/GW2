@@ -21,8 +21,9 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.fxml.FXML;
@@ -48,7 +49,7 @@ import me.xhsun.guildwars2wrapper.model.v2.util.comm.CraftingDisciplines;
 public class MainViewController implements Initializable {
 
 	// Begin view elements
-	
+
 	@FXML
 	private ChoiceBox<String> choice_charName;
 
@@ -81,7 +82,7 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private CheckBox chbx_showAutoLearned;
-	
+
 	@FXML
 	private CheckBox chbx_showDiscoverable;
 
@@ -96,52 +97,48 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	private Label lbl_recipes_progress;
-	
+
 	// filter properties
-	
+
 	private final ObservableList<RecipeFilter> recipeFilters = FXCollections.observableArrayList();
-	
+
 	private ObjectProperty<Character> selectedCharacter = new SimpleObjectProperty<>();
 	// selected Disciplines
 	private ObservableMap<CraftingDisciplines, Boolean> disciplinesFilter = FXCollections.observableHashMap();
 	private SimpleIntegerProperty minLevel = new SimpleIntegerProperty();
 	private SimpleIntegerProperty maxLevel = new SimpleIntegerProperty();
-	
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		// internationalization
 		initResourceBundle();
-		
 		chbx_showDiscoverable.setSelected(true);
-		
-		// bind progress 
+
+		minLevel.addListener((observable, oldValue, newValue) -> countShownRecipies());
+		maxLevel.addListener((observable, oldValue, newValue) -> countShownRecipies());
+		recipeFilters.addListener((ListChangeListener<RecipeFilter>) c -> countShownRecipies());
+		disciplinesFilter.addListener((MapChangeListener<CraftingDisciplines, Boolean>) c -> countShownRecipies());
+		selectedCharacter.addListener(c -> countShownRecipies());
+
+		// bind progress
 		DoubleProperty progress = Data.getInstance().getRecipes().getProgress();
-		progress.addListener(new ChangeListener<Number>() {
-			@Override
-			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-				Platform.runLater(() -> {
-					pb_getRecipes.setProgress(newValue.doubleValue());
-					NumberFormat format = NumberFormat.getPercentInstance();
-					lbl_recipes_progress.setText(format.format(newValue));
-				});
-			}
-		});
+		progress.addListener((ChangeListener<Number>) (observable, oldValue, newValue) ->
+		Platform.runLater(() -> {
+			pb_getRecipes.setProgress(newValue.doubleValue());
+			NumberFormat format = NumberFormat.getPercentInstance();
+			lbl_recipes_progress.setText(format.format(newValue));
+		}));
 		Platform.runLater(() -> {
 			pb_getRecipes.setProgress(progress.doubleValue());
 			NumberFormat format = NumberFormat.getPercentInstance();
 			lbl_recipes_progress.setText(format.format(progress.doubleValue()));
 		});
-		
+
 		// discipline selection
 		for (CraftingDisciplines discipline : CraftingDisciplines.values()) {
 			CheckBox checkbox = new CheckBox(discipline.name());
 			disciplinesFilter.put(discipline, checkbox.isSelected());
-			checkbox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-				@Override
-				public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-					disciplinesFilter.put(discipline, newValue);
-				}
-			});
+			checkbox.selectedProperty().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> disciplinesFilter.put(discipline, newValue));
 			vbox_disciplineCheck.getChildren().add(checkbox);
 		}
 
@@ -154,10 +151,10 @@ public class MainViewController implements Initializable {
 		apiKeyProperty.addListener((observable, oldValue, newValue) -> checkApiKey(newValue));
 
 		choice_charName.setOnAction((event) -> onSelectCharacter());
-		
+
 		Bindings.bindBidirectional(txt_minLevel.textProperty(), minLevel, new NumberStringConverter());
 		Bindings.bindBidirectional(txt_maxLevel.textProperty(), maxLevel, new NumberStringConverter());
-		
+
 		new Thread(() -> {
 			for(Recipe recipe : Data.getInstance().getRecipes().getAll().values()) {
 				createRecipeView(recipe);
@@ -167,14 +164,25 @@ public class MainViewController implements Initializable {
 		List<BooleanProperty> collect = recipeFilters.stream().map(filter -> filter.getShow()).collect(Collectors.toList());
 		BooleanProperty[] collectArr = collect.toArray(new BooleanProperty[collect.size()]);
 		LongBinding count = Bindings.createLongBinding(() -> recipeFilters.stream().filter(f -> f.getShow().get()).count(), collectArr);
-		count.addListener(new ChangeListener<Number>() {
-			@Override
-			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-				System.out.println(newValue);
+		count.addListener((ChangeListener<Number>) (observable, oldValue, newValue) -> System.out.println(newValue));
+	}
+
+	private void countShownRecipies() {
+		//		long count = recipeFilters.stream().filter(f -> f.getShow().get()).count();
+		int count = 0;
+		for(RecipeFilter filter : recipeFilters) {
+			synchronized (filter) {
+				if(filter.getShow().get()) {
+					++count;
+				}
 			}
+		}
+		final int finalCopyOfCount = count;
+		Platform.runLater(() -> {
+			lbl_currentlyDisplayed.setText(String.valueOf(finalCopyOfCount));
 		});
 	}
-	
+
 	private void createRecipeView(Recipe recipe) {
 		RecipeFilter recipeFilter = new RecipeFilter(recipe);
 		recipeFilters.add(recipeFilter);
@@ -185,22 +193,9 @@ public class MainViewController implements Initializable {
 		recipeFilter.addAutoLearnedFilter(chbx_showAutoLearned.selectedProperty());
 		recipeFilter.addDiscoverableFilter(chbx_showDiscoverable.selectedProperty());
 		RecipeView recipeView = new RecipeView(recipeFilter, false);
-		recipeFilter.getShow().addListener(new ChangeListener<Boolean>() {
-			@Override
-			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-				if(newValue && !flow_recipes.getChildren().contains(recipeView)) {
-					Platform.runLater(() -> flow_recipes.getChildren().add(recipeView));
-				}
-				int iterator = 0;
-				for(RecipeFilter filter : recipeFilters) {
-					synchronized (filter) {
-						if(filter.getShow().get()) {
-							++iterator;
-						}
-					}
-				}
-				final int count = iterator;
-				Platform.runLater(() -> lbl_currentlyDisplayed.setText(String.valueOf(count)));
+		recipeFilter.getShow().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> {
+			if(newValue && !flow_recipes.getChildren().contains(recipeView)) {
+				Platform.runLater(() -> flow_recipes.getChildren().add(recipeView));
 			}
 		});
 	}
@@ -245,7 +240,7 @@ public class MainViewController implements Initializable {
 	 * <li>reset filters</li>
 	 * <li>start displaying recipes unlockable by the character</li>
 	 * </ul>
-	 * 
+	 *
 	 * @throws GuildWars2Exception
 	 */
 	private void onSelectCharacter() {
@@ -254,7 +249,7 @@ public class MainViewController implements Initializable {
 			selectedCharacter.set(null);
 			return;
 		}
-		
+
 		try {
 			selectedCharacter.set(GuildWars2.getInstance().getSynchronous().getCharacter(Data.getInstance().getSettingsWrapper().accessTokenProperty().get(), characterName));
 		} catch (GuildWars2Exception e) {
@@ -262,5 +257,5 @@ public class MainViewController implements Initializable {
 		}
 
 	}
-	
+
 }
