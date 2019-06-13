@@ -14,19 +14,19 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class App extends Application {
-	
+
 	private static Stage stage;
 	private static Application app;
 	private static Class<? extends Initializable> startingView = MainViewController.class;
-	
+
 	public static void main(String[] args) {
 		launch(args);
 	}
-	
+
 	public static Scene createScene(Class<? extends Initializable> controllerClass) throws IOException {
 		String fileName_view = controllerClass.getSimpleName().replaceAll("Controller", "");
 		URL location = controllerClass.getResource(String.format("/fxml/%s.fxml", fileName_view));
-		
+
 		ResourceBundle resources = Data.getInstance().getResources().get();
 		Parent root = FXMLLoader.load(location, resources);
 		Scene scene = new Scene(root);
@@ -44,16 +44,16 @@ public class App extends Application {
 		stage = primaryStage;
 		setScene(startingView);
 		primaryStage.setTitle("Guild Wars 2 Tools");
-		primaryStage.setOnCloseRequest(event -> { 
+		primaryStage.setOnCloseRequest(event -> {
 			System.exit(0);
 		});
 		primaryStage.show();
 	}
-	
+
 	public static Application app() {
 		return app;
 	}
-	
+
 	public static Stage getStage() {
 		return stage;
 	}

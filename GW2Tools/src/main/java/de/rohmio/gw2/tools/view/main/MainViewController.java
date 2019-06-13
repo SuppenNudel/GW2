@@ -208,7 +208,7 @@ public class MainViewController implements Initializable {
 
 	private void checkApiKey(String apiKey) {
 		try {
-			Account accountInfo = GuildWars2.getInstance().getSynchronous().getAccountInfo(apiKey);
+			Account accountInfo = Data.getInstance().getApi().getSynchronous().getAccountInfo(apiKey);
 			String name = accountInfo.getName();
 			lbl_accountName.setText(name);
 			getCharacters();
@@ -229,7 +229,7 @@ public class MainViewController implements Initializable {
 
 	private void getCharacters() throws GuildWars2Exception {
 		choice_charName.getItems().clear();
-		GuildWars2 gw2 = GuildWars2.getInstance();
+		GuildWars2 gw2 = Data.getInstance().getApi();
 		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(Data.getInstance().getSettingsWrapper().accessTokenProperty().get());
 		choice_charName.getItems().add(null);
 		choice_charName.getItems().addAll(allCharacterName);
@@ -251,7 +251,7 @@ public class MainViewController implements Initializable {
 		}
 
 		try {
-			selectedCharacter.set(GuildWars2.getInstance().getSynchronous().getCharacter(Data.getInstance().getSettingsWrapper().accessTokenProperty().get(), characterName));
+			selectedCharacter.set(Data.getInstance().getApi().getSynchronous().getCharacter(Data.getInstance().getSettingsWrapper().accessTokenProperty().get(), characterName));
 		} catch (GuildWars2Exception e) {
 			e.printStackTrace();
 		}

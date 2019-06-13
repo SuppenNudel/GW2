@@ -26,7 +26,7 @@ public class Util {
 	 * location where all app data is stored
 	 */
 	public static File DOCS = new File(System.getProperty("user.home") + "/AppData/Roaming/GW2 Tools");
-	
+
 	private static Gson gson = new Gson();
 
 	public static File getImage(String url) throws IOException {
@@ -70,7 +70,7 @@ public class Util {
 		}
 		return new File(DOCS, fileName);
 	}
-	
+
 	public static <T> T getCache(RequestType type, int id) {
 		File file = getFilePath(type, id);
 		return readFile(file, type.getClazz());
@@ -78,9 +78,10 @@ public class Util {
 
 	public static <T> T getCache(RequestType type) {
 		File file = getFilePath(type);
-		return readFile(file, type.getArrClazz());
+		T readFile = readFile(file, type.getArrClazz());
+		return readFile;
 	}
-	
+
 	public static <T> T readFile(File file, Type clazz) {
 		T object = null;
 		if (file.exists()) {
@@ -101,9 +102,9 @@ public class Util {
 	}
 
 	public static void writeCache(RequestType type, List<? extends IdentifiableInt> object) throws Exception {
-//		if(!object.get(0).getClass().isAssignableFrom(type.getClazz())) {
-//			throw new Exception(object.getClass()+" not assignable from "+type.getClazz());
-//		}
+		//		if(!object.get(0).getClass().isAssignableFrom(type.getClazz())) {
+		//			throw new Exception(object.getClass()+" not assignable from "+type.getClazz());
+		//		}
 		File file = getFilePath(type);
 		System.out.println("Writing cache "+file);
 		writeFile(file, object);
@@ -117,7 +118,7 @@ public class Util {
 		System.out.println("Writing cache "+file);
 		writeFile(file, object);
 	}
-	
+
 	public static void writeFile(File file, Object object) {
 		try {
 			String json = gson.toJson(object);
