@@ -16,59 +16,53 @@ import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 
 public class ClientFactory {
-	
+
 	public static OkHttpClient getClient() {
-		if(!ProxyCredentials.useProxy) {
+		if (!ProxyCredentials.useProxy) {
 			return new OkHttpClient();
 		}
 		OkHttpClient client;
-		if(ProxyCredentials.proxyHost == null) {
+		if (ProxyCredentials.proxyHost == null) {
 			client = new OkHttpClient();
 		} else {
 			Authenticator proxyAuthenticator = (route, response) -> {
 				String credential = Credentials.basic(ProxyCredentials.username, ProxyCredentials.password);
-				return response.request().newBuilder()
-						.header("Proxy-Authorization", credential)
-						.build();
+				return response.request().newBuilder().header("Proxy-Authorization", credential).build();
 			};
-			
-			client = new OkHttpClient.Builder()
-					.connectTimeout(60, TimeUnit.SECONDS)
-					.writeTimeout(60, TimeUnit.SECONDS)
+
+			client = new OkHttpClient.Builder().connectTimeout(60, TimeUnit.SECONDS).writeTimeout(60, TimeUnit.SECONDS)
 					.readTimeout(60, TimeUnit.SECONDS)
-					.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(ProxyCredentials.proxyHost, ProxyCredentials.proxyPort)))
+					.proxy(new Proxy(Proxy.Type.HTTP,
+							new InetSocketAddress(ProxyCredentials.proxyHost, ProxyCredentials.proxyPort)))
 					.proxyAuthenticator(proxyAuthenticator)
-					.sslSocketFactory(trustAllSslSocketFactory, (X509TrustManager)trustAllCerts[0])
-					.build();
+					.sslSocketFactory(trustAllSslSocketFactory, (X509TrustManager) trustAllCerts[0]).build();
 		}
 		return client;
 	}
-	
-	private static final TrustManager[] trustAllCerts = new TrustManager[] {
-		    new X509TrustManager() {
-		        @Override
-		        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
-		        }
 
-		        @Override
-		        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
-		        }
+	private static final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+		@Override
+		public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+		}
 
-		        @Override
-		        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-		          return new java.security.cert.X509Certificate[]{};
-		        }
-		    }
-		};
-	
+		@Override
+		public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+		}
+
+		@Override
+		public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+			return new java.security.cert.X509Certificate[] {};
+		}
+	} };
+
 	private static final SSLContext trustAllSslContext;
 	static {
-	    try {
-	        trustAllSslContext = SSLContext.getInstance("SSL");
-	        trustAllSslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-	    } catch (NoSuchAlgorithmException | KeyManagementException e) {
-	        throw new RuntimeException(e);
-	    }
+		try {
+			trustAllSslContext = SSLContext.getInstance("SSL");
+			trustAllSslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+		} catch (NoSuchAlgorithmException | KeyManagementException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	private static final SSLSocketFactory trustAllSslSocketFactory = trustAllSslContext.getSocketFactory();
 

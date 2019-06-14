@@ -150,6 +150,6 @@ public class ItemView extends VBox {
 	//			}
 	//		});
 	//		return new ContextMenu(openWiki);
-	//	}
+	// }
 
 }

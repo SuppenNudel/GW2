@@ -32,21 +32,21 @@ public class RequestSpeedTest {
 		chunkedIds = Util.chunkUp(chunk, allRecipeIds);
 
 		Date start = new Date();
-		for(int[] ids : chunkedIds) {
+		for (int[] ids : chunkedIds) {
 			recipes.addAll(Data.getInstance().getApi().getSynchronous().getRecipeInfo(ids));
 		}
 		Date end = new Date();
-		System.out.println("Direct time: "+(end.getTime()-start.getTime())+"ms");
+		System.out.println("Direct time: " + (end.getTime() - start.getTime()) + "ms");
 
-		for(Recipe recipe : recipes) {
+		for (Recipe recipe : recipes) {
 			File filePath = Util.getFilePath(RequestType.RECIPE, recipe.getId());
-			if(!filePath.exists()) {
+			if (!filePath.exists()) {
 				Util.writeCache(RequestType.RECIPE, recipe);
 			}
 		}
 		File filePath = Util.getFilePath(RequestType.RECIPE);
 		filePath.delete();
-		if(!filePath.exists()) {
+		if (!filePath.exists()) {
 			Util.writeCache(RequestType.RECIPE, recipes);
 		}
 	}
@@ -66,7 +66,7 @@ public class RequestSpeedTest {
 		List<Thread> threads = new ArrayList<>();
 
 		Date start = new Date();
-		for(int[] ids : chunkedIds) {
+		for (int[] ids : chunkedIds) {
 			Thread thread = new Thread(() -> {
 				try {
 					recipes.addAll(Data.getInstance().getApi().getSynchronous().getRecipeInfo(ids));
@@ -85,7 +85,7 @@ public class RequestSpeedTest {
 			}
 		});
 		Date end = new Date();
-		System.out.println("Direct threaded time: "+(end.getTime()-start.getTime())+"ms");
+		System.out.println("Direct threaded time: " + (end.getTime() - start.getTime()) + "ms");
 	}
 
 	@Test
@@ -93,18 +93,18 @@ public class RequestSpeedTest {
 		Date start = new Date();
 		recipes = Arrays.asList(Util.getCache(RequestType.RECIPE));
 		Date end = new Date();
-		System.out.println("Single File time: "+(end.getTime()-start.getTime())+"ms");
+		System.out.println("Single File time: " + (end.getTime() - start.getTime()) + "ms");
 	}
 
 	@Ignore
 	@Test
 	public void multipleRecipeFiles() {
 		Date start = new Date();
-		for(int id : allRecipeIds) {
+		for (int id : allRecipeIds) {
 			recipes.add(Util.getCache(RequestType.RECIPE, id));
 		}
 		Date end = new Date();
-		System.out.println("File time: "+(end.getTime()-start.getTime())+"ms");
+		System.out.println("File time: " + (end.getTime() - start.getTime()) + "ms");
 	}
 
 }

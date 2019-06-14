@@ -122,8 +122,7 @@ public class MainViewController implements Initializable {
 
 		// bind progress
 		DoubleProperty progress = Data.getInstance().getRecipes().getProgress();
-		progress.addListener((ChangeListener<Number>) (observable, oldValue, newValue) ->
-		Platform.runLater(() -> {
+		progress.addListener((ChangeListener<Number>) (observable, oldValue, newValue) -> Platform.runLater(() -> {
 			pb_getRecipes.setProgress(newValue.doubleValue());
 			NumberFormat format = NumberFormat.getPercentInstance();
 			lbl_recipes_progress.setText(format.format(newValue));
@@ -138,7 +137,8 @@ public class MainViewController implements Initializable {
 		for (CraftingDisciplines discipline : CraftingDisciplines.values()) {
 			CheckBox checkbox = new CheckBox(discipline.name());
 			disciplinesFilter.put(discipline, checkbox.isSelected());
-			checkbox.selectedProperty().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> disciplinesFilter.put(discipline, newValue));
+			checkbox.selectedProperty().addListener((ChangeListener<Boolean>) (observable, oldValue,
+					newValue) -> disciplinesFilter.put(discipline, newValue));
 			vbox_disciplineCheck.getChildren().add(checkbox);
 		}
 
@@ -156,23 +156,25 @@ public class MainViewController implements Initializable {
 		Bindings.bindBidirectional(txt_maxLevel.textProperty(), maxLevel, new NumberStringConverter());
 
 		new Thread(() -> {
-			for(Recipe recipe : Data.getInstance().getRecipes().getAll().values()) {
+			for (Recipe recipe : Data.getInstance().getRecipes().getAll().values()) {
 				createRecipeView(recipe);
 			}
 		}).start();
 
-		List<BooleanProperty> collect = recipeFilters.stream().map(filter -> filter.getShow()).collect(Collectors.toList());
+		List<BooleanProperty> collect = recipeFilters.stream().map(filter -> filter.getShow())
+				.collect(Collectors.toList());
 		BooleanProperty[] collectArr = collect.toArray(new BooleanProperty[collect.size()]);
-		LongBinding count = Bindings.createLongBinding(() -> recipeFilters.stream().filter(f -> f.getShow().get()).count(), collectArr);
+		LongBinding count = Bindings
+				.createLongBinding(() -> recipeFilters.stream().filter(f -> f.getShow().get()).count(), collectArr);
 		count.addListener((ChangeListener<Number>) (observable, oldValue, newValue) -> System.out.println(newValue));
 	}
 
 	private void countShownRecipies() {
-		//		long count = recipeFilters.stream().filter(f -> f.getShow().get()).count();
+		// long count = recipeFilters.stream().filter(f -> f.getShow().get()).count();
 		int count = 0;
-		for(RecipeFilter filter : recipeFilters) {
+		for (RecipeFilter filter : recipeFilters) {
 			synchronized (filter) {
-				if(filter.getShow().get()) {
+				if (filter.getShow().get()) {
 					++count;
 				}
 			}
@@ -194,7 +196,7 @@ public class MainViewController implements Initializable {
 		recipeFilter.addDiscoverableFilter(chbx_showDiscoverable.selectedProperty());
 		RecipeView recipeView = new RecipeView(recipeFilter, false);
 		recipeFilter.getShow().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> {
-			if(newValue && !flow_recipes.getChildren().contains(recipeView)) {
+			if (newValue && !flow_recipes.getChildren().contains(recipeView)) {
 				Platform.runLater(() -> flow_recipes.getChildren().add(recipeView));
 			}
 		});
@@ -230,7 +232,8 @@ public class MainViewController implements Initializable {
 	private void getCharacters() throws GuildWars2Exception {
 		choice_charName.getItems().clear();
 		GuildWars2 gw2 = Data.getInstance().getApi();
-		List<String> allCharacterName = gw2.getSynchronous().getAllCharacterName(Data.getInstance().getSettingsWrapper().accessTokenProperty().get());
+		List<String> allCharacterName = gw2.getSynchronous()
+				.getAllCharacterName(Data.getInstance().getSettingsWrapper().accessTokenProperty().get());
 		choice_charName.getItems().add(null);
 		choice_charName.getItems().addAll(allCharacterName);
 	}
@@ -251,7 +254,8 @@ public class MainViewController implements Initializable {
 		}
 
 		try {
-			selectedCharacter.set(Data.getInstance().getApi().getSynchronous().getCharacter(Data.getInstance().getSettingsWrapper().accessTokenProperty().get(), characterName));
+			selectedCharacter.set(Data.getInstance().getApi().getSynchronous()
+					.getCharacter(Data.getInstance().getSettingsWrapper().accessTokenProperty().get(), characterName));
 		} catch (GuildWars2Exception e) {
 			e.printStackTrace();
 		}

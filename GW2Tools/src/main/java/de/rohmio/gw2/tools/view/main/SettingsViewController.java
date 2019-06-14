@@ -11,17 +11,17 @@ import javafx.scene.control.TextField;
 import me.xhsun.guildwars2wrapper.GuildWars2.LanguageSelect;
 
 public class SettingsViewController implements Initializable {
-	
+
 	@FXML
 	private ChoiceBox<LanguageSelect> choice_lang;
-	
+
 	@FXML
 	private TextField txt_apiKey;
-	
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		choice_lang.getItems().addAll(LanguageSelect.values());
-		
+
 		txt_apiKey.textProperty().bindBidirectional(Data.getInstance().getSettingsWrapper().accessTokenProperty());
 		choice_lang.valueProperty().bindBidirectional(Data.getInstance().getSettingsWrapper().languageProperty());
 	}

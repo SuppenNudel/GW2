@@ -53,7 +53,7 @@ public class SettingsWrapper {
 	private void loadSettings() {
 		if (settingsFile.exists()) {
 			Settings settings = Util.readFile(settingsFile, Settings.class);
-			if(settings == null) {
+			if (settings == null) {
 				settingsFile.delete();
 				loadSettings();
 			}

@@ -60,7 +60,8 @@ public class Util {
 		String fileName = null;
 		switch (type) {
 		case ITEM:
-			fileName = String.format("data/cache/%s/%s/%d.json", type.getPath(), GuildWars2.getLanguage().getValue(), id);
+			fileName = String.format("data/cache/%s/%s/%d.json", type.getPath(), GuildWars2.getLanguage().getValue(),
+					id);
 			break;
 		case RECIPE:
 			fileName = String.format("data/cache/%s/%s.json", type.getPath(), id);
@@ -102,20 +103,21 @@ public class Util {
 	}
 
 	public static void writeCache(RequestType type, List<? extends IdentifiableInt> object) throws Exception {
-		//		if(!object.get(0).getClass().isAssignableFrom(type.getClazz())) {
-		//			throw new Exception(object.getClass()+" not assignable from "+type.getClazz());
-		//		}
+		// if(!object.get(0).getClass().isAssignableFrom(type.getClazz())) {
+		// throw new Exception(object.getClass()+" not assignable from
+		// "+type.getClazz());
+		// }
 		File file = getFilePath(type);
-		System.out.println("Writing cache "+file);
+		System.out.println("Writing cache " + file);
 		writeFile(file, object);
 	}
 
 	public static void writeCache(RequestType type, IdentifiableInt object) throws Exception {
-		if(!object.getClass().isAssignableFrom(type.getClazz())) {
-			throw new Exception(object.getClass()+" not assignable from "+type.getClazz());
+		if (!object.getClass().isAssignableFrom(type.getClazz())) {
+			throw new Exception(object.getClass() + " not assignable from " + type.getClazz());
 		}
 		File file = getFilePath(type, object.getId());
-		System.out.println("Writing cache "+file);
+		System.out.println("Writing cache " + file);
 		writeFile(file, object);
 	}
 

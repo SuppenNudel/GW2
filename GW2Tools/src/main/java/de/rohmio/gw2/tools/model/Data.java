@@ -22,15 +22,16 @@ public class Data {
 
 	// loaded data
 	private RequestProgress<Recipe> recipes;
-	//	private RequestProgress<Item> items;
+	// private RequestProgress<Item> items;
 
 	private SettingsWrapper settingsWrapper;
 
 	private Data() throws NullPointerException, GuildWars2Exception {
 		settingsWrapper = new SettingsWrapper();
-		resources.set(ResourceBundle.getBundle("bundle.MyBundle", new Locale(settingsWrapper.languageProperty().get().toString())));
+		resources.set(ResourceBundle.getBundle("bundle.MyBundle",
+				new Locale(settingsWrapper.languageProperty().get().toString())));
 		GuildWars2.setInstance(ClientFactory.getClient());
-		//		items = new RequestProgress<>(RequestType.ITEM);
+		// items = new RequestProgress<>(RequestType.ITEM);
 	}
 
 	public GuildWars2 getApi() {
@@ -66,16 +67,16 @@ public class Data {
 	}
 
 	public RequestProgress<Recipe> getRecipes() {
-		if(recipes == null) {
+		if (recipes == null) {
 			recipes = new RequestProgress<>(RequestType.RECIPE);
 		}
 		return recipes;
 	}
 
 	// TODO first only with recipes
-	//	public RequestProgress<Item> getItems() {
-	//		return items;
-	//	}
+	// public RequestProgress<Item> getItems() {
+	// return items;
+	// }
 
 	public SettingsWrapper getSettingsWrapper() {
 		return settingsWrapper;

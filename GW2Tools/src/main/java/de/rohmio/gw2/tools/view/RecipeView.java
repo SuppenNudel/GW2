@@ -25,49 +25,47 @@ import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe.Ingredient;
 
 public class RecipeView extends AnchorPane {
-	
-//	private boolean detailed;
+
+	//	private boolean detailed;
 	private RecipeFilter recipeFilter;
-	
-//	private List<ItemView> itemViews = new ArrayList<>();
-	
+
+	//	private List<ItemView> itemViews = new ArrayList<>();
+
 	public RecipeView(RecipeFilter recipeFilter, boolean detailed) {
 		this.recipeFilter = recipeFilter;
-		
-		visibleProperty().bind(recipeFilter.getShow()); //.and(Bindings.createBooleanBinding(() -> count() <= 200, recipeViews)));
-		managedProperty().bind(recipeFilter.getShow()); //.and(Bindings.createBooleanBinding(() -> count() <= 200, recipeViews)));
-		
+
+		visibleProperty().bind(recipeFilter.getShow()); // .and(Bindings.createBooleanBinding(() -> count() <= 200,
+		// recipeViews)));
+		managedProperty().bind(recipeFilter.getShow()); // .and(Bindings.createBooleanBinding(() -> count() <= 200,
+		// recipeViews)));
+
 		/*
-		recipeFilter.getShow().addListener(new ChangeListener<Boolean>() {
-			@Override
-			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-				if(newValue) {
-					showItems(true);
-				}
-			}
-		});
-		*/
+		 * recipeFilter.getShow().addListener(new ChangeListener<Boolean>() {
+		 *
+		 * @Override public void changed(ObservableValue<? extends Boolean> observable,
+		 * Boolean oldValue, Boolean newValue) { if(newValue) { showItems(true); } } });
+		 */
 
 		setPrefWidth(USE_COMPUTED_SIZE);
 		setPrefHeight(USE_COMPUTED_SIZE);
-		
+
 		HBox hBox = new HBox(createTree(recipeFilter.getRecipe()));
 
 		hBox.setPrefWidth(USE_COMPUTED_SIZE);
 		hBox.setPrefHeight(USE_COMPUTED_SIZE);
 		hBox.setAlignment(Pos.TOP_CENTER);
 		getChildren().add(hBox);
-		
+
 		ContextMenu contextMenu = createContextMenu();
 		Node owner = this;
 		setOnContextMenuRequested(event -> {
 			contextMenu.show(owner, event.getScreenX(), event.getScreenY());
 		});
 	}
-	
-//	private long count() {
-//		return recipeViews.stream().map(view -> view.getRecipeFilter()).filter(filter -> filter.getShow().get()).count();
-//	}
+
+	//	private long count() {
+	//		return recipeViews.stream().map(view -> view.getRecipeFilter()).filter(filter -> filter.getShow().get()).count();
+	//	}
 
 	private ContextMenu createContextMenu() {
 		MenuItem showDetailed = new MenuItem("Show Detailed");
@@ -83,7 +81,7 @@ public class RecipeView extends AnchorPane {
 			stage.setScene(scene);
 			stage.show();
 		});
-		
+
 		// copy chat link for this recipe to clipboard
 		MenuItem linkToClipboard = new MenuItem("Copy Link to Clipboard");
 		linkToClipboard.setOnAction(event -> {
@@ -94,38 +92,33 @@ public class RecipeView extends AnchorPane {
 			content.putHtml("<b>Some</b> text");
 			clipboard.setContent(content);
 		});
-		
+
 		// open browser with the wiki article of this recipe
 		MenuItem goToWiki = new MenuItem("Go to Wiki");
 		goToWiki.setOnAction(event -> {
 			String chatLink = recipeFilter.getRecipe().getChatLink();
 			try {
-				String url = String.format("https://wiki.guildwars2.com/wiki/?search=%s", URLEncoder.encode(chatLink, "UTF-8"));
+				String url = String.format("https://wiki.guildwars2.com/wiki/?search=%s",
+						URLEncoder.encode(chatLink, "UTF-8"));
 				App.app().getHostServices().showDocument(url);
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
 		});
-		
+
 		return new ContextMenu(showDetailed, linkToClipboard, goToWiki);
 	}
 
 	public RecipeFilter getRecipeFilter() {
 		return recipeFilter;
 	}
-	
-//	private boolean itemsShown = false;
-	
+
+	//	private boolean itemsShown = false;
+
 	/*
-	public void showItems(boolean show) {
-		if(!itemsShown) {
-			itemsShown = true;
-			for(ItemView itemView : itemViews) {
-				itemView.show(show);
-			}
-		}
-	}
-	*/
+	 * public void showItems(boolean show) { if(!itemsShown) { itemsShown = true;
+	 * for(ItemView itemView : itemViews) { itemView.show(show); } } }
+	 */
 
 	private VBox createTree(Recipe recipe) {
 		VBox root = new VBox();
@@ -137,34 +130,34 @@ public class RecipeView extends AnchorPane {
 		root.setStyle("-fx-border-color: black;" + "-fx-border-width: 5;");
 		root.setAlignment(Pos.TOP_CENTER);
 
-		root.getChildren().add(new Label(String.valueOf( recipe.getOutputItemId())));
+		root.getChildren().add(new Label(String.valueOf(recipe.getOutputItemId())));
 		GridPane grid_data = new GridPane();
 		grid_data.add(new Label("Source"), 0, 0);
 		grid_data.add(new Label(recipe.getFlags().toString()), 1, 0);
-		
+
 		grid_data.add(new Label("Type"), 0, 1);
 		grid_data.add(new Label(String.valueOf(recipe.getType())), 1, 1);
-		
+
 		grid_data.add(new Label("Output qty."), 0, 2);
 		grid_data.add(new Label(String.valueOf(recipe.getOutputItemCount())), 1, 2);
-		
+
 		grid_data.add(new Label("Discipline"), 0, 3);
 		grid_data.add(new Label(recipe.getDisciplines().toString()), 1, 3);
-		
+
 		grid_data.add(new Label("Req. rating"), 0, 4);
 		grid_data.add(new Label(String.valueOf(recipe.getMinRating())), 1, 4);
-		
+
 		grid_data.add(new Label("Chat link"), 0, 5);
 		grid_data.add(new TextField(recipe.getChatLink()), 1, 5);
-		
-//		ItemView itemView = new ItemView(outputItemId, outputCount, detailed);
-//		itemViews.add(itemView);
-//		root.getChildren().add(itemView);
-		
+
+		//		ItemView itemView = new ItemView(outputItemId, outputCount, detailed);
+		//		itemViews.add(itemView);
+		//		root.getChildren().add(itemView);
+
 		root.getChildren().add(grid_data);
-		
+
 		root.getChildren().add(new Label("Ingredients"));
-		for(Ingredient ingredient : recipe.getIngredients()) {
+		for (Ingredient ingredient : recipe.getIngredients()) {
 			root.getChildren().add(new Label(String.format("%dx %d", ingredient.getCount(), ingredient.getItemId())));
 		}
 

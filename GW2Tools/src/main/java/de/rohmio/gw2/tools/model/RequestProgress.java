@@ -36,7 +36,8 @@ public class RequestProgress<T extends IdentifiableInt> {
 	public RequestProgress(RequestType type) {
 		this.type = type;
 
-		values.addListener((MapChangeListener<Integer, T>) change -> progress.set(change.getMap().size() / allIds.size()));
+		values.addListener(
+				(MapChangeListener<Integer, T>) change -> progress.set(change.getMap().size() / allIds.size()));
 
 		SynchronousRequest synchronous = Data.getInstance().getApi().getSynchronous();
 
@@ -73,8 +74,8 @@ public class RequestProgress<T extends IdentifiableInt> {
 	}
 
 	private List<T> onError(GuildWars2Exception e, int[] ids) {
-		if(e.getMessage().equals("Exceeded 600 requests per minute limit")) {
-			System.err.println("Repeating request "+type);
+		if (e.getMessage().equals("Exceeded 600 requests per minute limit")) {
+			System.err.println("Repeating request " + type);
 			try {
 				Thread.sleep(10000);
 			} catch (InterruptedException e1) {
@@ -101,8 +102,8 @@ public class RequestProgress<T extends IdentifiableInt> {
 	public synchronized ObservableMap<Integer, T> getByIds(List<Integer> itemIds) {
 		List<Integer> toRequest = new ArrayList<>();
 		// add items that are not yet in values
-		for(Integer id : itemIds) {
-			if(!values.containsKey(id)) {
+		for (Integer id : itemIds) {
+			if (!values.containsKey(id)) {
 				toRequest.add(id);
 			}
 		}
@@ -110,10 +111,10 @@ public class RequestProgress<T extends IdentifiableInt> {
 		int chunk = 200; // chunk size to divide
 		List<int[]> chunkedIds = Util.chunkUp(chunk, toRequest);
 		List<Thread> threads = new ArrayList<>();
-		for(int[] ids : chunkedIds) {
+		for (int[] ids : chunkedIds) {
 			Thread thread = new Thread(() -> {
 				values.putAll(infoFunction.apply(ids).stream().collect(Collectors.toMap(T::getId, r -> r)));
-			}, "Thread "+ids);
+			}, "Thread " + ids);
 			threads.add(thread);
 			thread.start();
 		}
