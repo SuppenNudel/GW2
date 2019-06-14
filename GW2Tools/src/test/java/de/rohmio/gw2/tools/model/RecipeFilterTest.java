@@ -51,7 +51,7 @@ public class RecipeFilterTest {
 	public void createRecipeFilter() {
 		System.out.println("RecipeFilterTest.createRecipeFilter()");
 		recipeFilters = new ArrayList<>();
-		for(Recipe recipe : Data.getInstance().getRecipes().getValues().values()) {
+		for (Recipe recipe : Data.getInstance().getRecipes().getValues().values()) {
 			recipeFilters.add(new RecipeFilter(recipe));
 		}
 		printAmountOfShownRecipes("Before everything");
@@ -59,7 +59,7 @@ public class RecipeFilterTest {
 
 	private void printAmountOfShownRecipes(String message) {
 		long count = recipeFilters.stream().filter(filter -> filter.getShow().get()).count();
-		System.out.println(message+": "+count);
+		System.out.println(message + ": " + count);
 	}
 
 	@Test
@@ -83,13 +83,13 @@ public class RecipeFilterTest {
 	}
 
 	private void testForDisciplines() {
-		for(RecipeFilter filters : recipeFilters) {
+		for (RecipeFilter filters : recipeFilters) {
 			List<CraftingDisciplines> recipeDisciplines = filters.getRecipe().getDisciplines();
 			boolean show = filters.getShow().get();
 			boolean containsAny = false;
-			for(CraftingDisciplines discipline : recipeDisciplines) {
+			for (CraftingDisciplines discipline : recipeDisciplines) {
 				Boolean selected = disciplines.get(discipline);
-				if(selected != null && selected == true) {
+				if (selected != null && selected == true) {
 					containsAny = true;
 					break;
 				}
@@ -123,7 +123,7 @@ public class RecipeFilterTest {
 		int minLevel = this.minLevel.get();
 		int maxLevel = this.maxLevel.get();
 
-		for(RecipeFilter filter : recipeFilters) {
+		for (RecipeFilter filter : recipeFilters) {
 			int minRating = filter.getRecipe().getMinRating();
 			boolean show = filter.getShow().get();
 
@@ -148,7 +148,7 @@ public class RecipeFilterTest {
 	}
 
 	private void testForCharacter() {
-		for(RecipeFilter filter : recipeFilters) {
+		for (RecipeFilter filter : recipeFilters) {
 			boolean contains = character.get().getRecipes().contains(filter.getRecipe().getId());
 			Assert.assertTrue(filter.getShow().get() != contains);
 		}
@@ -166,7 +166,7 @@ public class RecipeFilterTest {
 	}
 
 	private void testForLearnedFromItem() {
-		for(RecipeFilter filter : recipeFilters) {
+		for (RecipeFilter filter : recipeFilters) {
 			boolean containsFlag = filter.getRecipe().getFlags().contains(Flag.LearnedFromItem);
 			boolean learnedFromItem = filter.getRecipe().getFlags().contains(Flag.LearnedFromItem);
 			Assert.assertTrue(filter.getShow().get() == !containsFlag || containsFlag && learnedFromItem);
@@ -185,7 +185,7 @@ public class RecipeFilterTest {
 	}
 
 	private void testForAutoLearned() {
-		for(RecipeFilter filter : recipeFilters) {
+		for (RecipeFilter filter : recipeFilters) {
 			boolean containsFlag = filter.getRecipe().getFlags().contains(Flag.AutoLearned);
 			boolean autoLearned = containsFlag;
 			Assert.assertTrue(filter.getShow().get() == !containsFlag || containsFlag && autoLearned);
@@ -208,8 +208,8 @@ public class RecipeFilterTest {
 		autoLearned.set(false);
 
 		boolean found = false;
-		for(RecipeFilter filter : recipeFilters) {
-			if(filter.getRecipe().getId() == 9957) {
+		for (RecipeFilter filter : recipeFilters) {
+			if (filter.getRecipe().getId() == 9957) {
 				Assert.assertTrue(filter.getShow().get());
 				found = true;
 				break;
