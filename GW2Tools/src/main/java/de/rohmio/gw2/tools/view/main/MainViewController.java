@@ -5,7 +5,6 @@ import java.net.URL;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
 
 import de.rohmio.gw2.tools.App;
 import de.rohmio.gw2.tools.model.Data;
@@ -13,8 +12,6 @@ import de.rohmio.gw2.tools.model.RecipeFilter;
 import de.rohmio.gw2.tools.view.RecipeView;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.LongBinding;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -22,7 +19,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
@@ -116,9 +112,13 @@ public class MainViewController implements Initializable {
 
 		minLevel.addListener((observable, oldValue, newValue) -> countShownRecipies());
 		maxLevel.addListener((observable, oldValue, newValue) -> countShownRecipies());
-		recipeFilters.addListener((ListChangeListener<RecipeFilter>) c -> countShownRecipies());
+		// recipeFilters.addListener((ListChangeListener<RecipeFilter>) c ->
+		// countShownRecipies());
 		disciplinesFilter.addListener((MapChangeListener<CraftingDisciplines, Boolean>) c -> countShownRecipies());
 		selectedCharacter.addListener(c -> countShownRecipies());
+		chbx_showAutoLearned.selectedProperty().addListener((observable, oldValue, newValue) -> countShownRecipies());
+		chbx_byableRecipe.selectedProperty().addListener((observable, oldValue, newValue) -> countShownRecipies());
+		chbx_showDiscoverable.selectedProperty().addListener((observable, oldValue, newValue) -> countShownRecipies());
 
 		// bind progress
 		DoubleProperty progress = Data.getInstance().getRecipes().getProgress();
@@ -161,21 +161,25 @@ public class MainViewController implements Initializable {
 			}
 		}).start();
 
+		/*
 		List<BooleanProperty> collect = recipeFilters.stream().map(filter -> filter.getShow())
 				.collect(Collectors.toList());
 		BooleanProperty[] collectArr = collect.toArray(new BooleanProperty[collect.size()]);
 		LongBinding count = Bindings
 				.createLongBinding(() -> recipeFilters.stream().filter(f -> f.getShow().get()).count(), collectArr);
 		count.addListener((ChangeListener<Number>) (observable, oldValue, newValue) -> System.out.println(newValue));
+		 */
 	}
 
 	private void countShownRecipies() {
 		// long count = recipeFilters.stream().filter(f -> f.getShow().get()).count();
 		int count = 0;
-		for (RecipeFilter filter : recipeFilters) {
-			synchronized (filter) {
-				if (filter.getShow().get()) {
-					++count;
+		synchronized (recipeFilters) {
+			for (RecipeFilter filter : recipeFilters) {
+				synchronized (filter) {
+					if (filter.getShow().get()) {
+						++count;
+					}
 				}
 			}
 		}
