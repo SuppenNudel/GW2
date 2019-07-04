@@ -1,20 +1,29 @@
 package de.rohmio.gw2.tools.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import de.rohmio.gw2.tools.main.Util;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.MapChangeListener;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
+import me.xhsun.guildwars2wrapper.AsynchronousRequest;
 import me.xhsun.guildwars2wrapper.SynchronousRequest;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.identifiable.IdentifiableInt;
+import me.xhsun.guildwars2wrapper.model.v2.Item;
+import me.xhsun.guildwars2wrapper.model.v2.Recipe;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class RequestProgress<T extends IdentifiableInt> {
 
@@ -24,11 +33,16 @@ public class RequestProgress<T extends IdentifiableInt> {
 	private ObservableMap<Integer, T> values = FXCollections.observableHashMap();
 
 	// list of all ids available for this data type
-	private List<Integer> allIds;
+	private List<Integer> allIds = new ArrayList<>();
 
 	// function to get all ids of this data type
 	private Callable<List<Integer>> idCaller;
-	private Function<int[], List<T>> infoFunction;
+
+	// function to get all that get requested
+	private Function<int[], Void> infoFunction;
+
+	private ObservableList<Integer> toRequest = FXCollections.observableArrayList();
+	private List<Integer> alreadyGettingRequested = new ArrayList<>();
 
 	private RequestType type;
 
@@ -36,30 +50,63 @@ public class RequestProgress<T extends IdentifiableInt> {
 	public RequestProgress(RequestType type) {
 		this.type = type;
 
-		values.addListener(
-				(MapChangeListener<Integer, T>) change -> progress.set(change.getMap().size() / allIds.size()));
+		progress.bind(Bindings.createDoubleBinding(() -> {
+			int valuesSize = values.size();
+			int allSize = allIds.size();
+			System.out.println("Values: " + valuesSize);
+			System.out.println("All: " + allSize);
+			return 100.0 * valuesSize / allSize;
+		}, values));
 
 		SynchronousRequest synchronous = Data.getInstance().getApi().getSynchronous();
+		AsynchronousRequest asynchronous = Data.getInstance().getApi().getAsynchronous();
 
 		switch (type) {
 		case RECIPE:
 			idCaller = () -> synchronous.getAllRecipeID();
 			infoFunction = ids -> {
 				try {
-					return (List<T>) synchronous.getRecipeInfo(ids);
+					asynchronous.getRecipeInfo(ids, new Callback<List<Recipe>>() {
+						@Override
+						public void onResponse(Call<List<Recipe>> call, Response<List<Recipe>> response) {
+							List<T> body = (List<T>) response.body();
+							handleResponse(body);
+						}
+
+						@Override
+						public void onFailure(Call<List<Recipe>> call, Throwable t) {
+							t.printStackTrace();
+						}
+					});
+				} catch (NullPointerException e) {
+					e.printStackTrace();
 				} catch (GuildWars2Exception e) {
-					return onError(e, ids);
+					onError(e, ids);
 				}
+				return null;
 			};
 			break;
 		case ITEM:
 			idCaller = () -> synchronous.getAllItemID();
 			infoFunction = ids -> {
 				try {
-					return (List<T>) synchronous.getItemInfo(ids);
+					asynchronous.getItemInfo(ids, new Callback<List<Item>>() {
+						@Override
+						public void onResponse(Call<List<Item>> call, Response<List<Item>> response) {
+							handleResponse((List<T>) response.body());
+						}
+
+						@Override
+						public void onFailure(Call<List<Item>> call, Throwable t) {
+							t.printStackTrace();
+						}
+					});
+				} catch (NullPointerException e) {
+					e.printStackTrace();
 				} catch (GuildWars2Exception e) {
-					return onError(e, ids);
+					onError(e, ids);
 				}
+				return null;
 			};
 			break;
 		default:
@@ -71,9 +118,38 @@ public class RequestProgress<T extends IdentifiableInt> {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		toRequest.addListener((ListChangeListener<Integer>) c -> {
+			while (c.next()) {
+				if (c.wasAdded()) {
+					List<? extends Integer> added = new ArrayList<>(c.getAddedSubList());
+					toRequest.removeAll(added);
+					request(added);
+				}
+			}
+		});
 	}
 
-	private List<T> onError(GuildWars2Exception e, int[] ids) {
+	private void request(List<? extends Integer> itemIds) {
+		int chunk = 200; // chunk size to divide
+		List<int[]> chunkedIds = Util.chunkUp(chunk, itemIds);
+		for (int[] ids : chunkedIds) {
+			infoFunction.apply(ids);
+		}
+		System.out.println("Request finished");
+	}
+
+	private void handleResponse(List<T> toAdds) {
+		Map<Integer, T> mapped = new HashMap<>();
+		for(T toAdd : toAdds) {
+			mapped.put(toAdd.getId(), toAdd);
+		}
+		synchronized (values) {
+			values.putAll(mapped);
+		}
+	}
+
+	private void onError(GuildWars2Exception e, int[] ids) {
 		if (e.getMessage().equals("Exceeded 600 requests per minute limit")) {
 			System.err.println("Repeating request " + type);
 			try {
@@ -81,10 +157,9 @@ public class RequestProgress<T extends IdentifiableInt> {
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}
-			return infoFunction.apply(ids);
+			infoFunction.apply(ids);
 		}
 		e.printStackTrace();
-		return null;
 	}
 
 	public ObservableMap<Integer, T> getValues() {
@@ -100,32 +175,15 @@ public class RequestProgress<T extends IdentifiableInt> {
 	}
 
 	public synchronized ObservableMap<Integer, T> getByIds(List<Integer> itemIds) {
-		List<Integer> toRequest = new ArrayList<>();
+		List<Integer> requested = new ArrayList<>();
 		// add items that are not yet in values
 		for (Integer id : itemIds) {
-			if (!values.containsKey(id)) {
-				toRequest.add(id);
+			if (!values.containsKey(id) && !alreadyGettingRequested.contains(id)) {
+				requested.add(id);
+				alreadyGettingRequested.add(id);
 			}
 		}
-
-		int chunk = 200; // chunk size to divide
-		List<int[]> chunkedIds = Util.chunkUp(chunk, toRequest);
-		List<Thread> threads = new ArrayList<>();
-		for (int[] ids : chunkedIds) {
-			Thread thread = new Thread(() -> {
-				values.putAll(infoFunction.apply(ids).stream().collect(Collectors.toMap(T::getId, r -> r)));
-			}, "Thread " + ids);
-			threads.add(thread);
-			thread.start();
-		}
-		threads.forEach(t -> {
-			try {
-				t.join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		});
-		System.out.println("Request finished");
+		this.toRequest.addAll(requested);
 		return values;
 	}
 

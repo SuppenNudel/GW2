@@ -132,7 +132,7 @@ public class Util {
 		}
 	}
 
-	public static List<int[]> chunkUp(int chunkSize, List<Integer> integers) {
+	public static List<int[]> chunkUp(int chunkSize, List<? extends Integer> integers) {
 		int[] allIdArray = integers.stream().mapToInt(i -> i).toArray();
 		return chunkUp(chunkSize, allIdArray);
 	}
