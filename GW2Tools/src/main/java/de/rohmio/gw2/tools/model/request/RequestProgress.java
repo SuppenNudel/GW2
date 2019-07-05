@@ -1,11 +1,9 @@
-package de.rohmio.gw2.tools.model;
+package de.rohmio.gw2.tools.model.request;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.function.Function;
 
 import de.rohmio.gw2.tools.main.Util;
 import javafx.beans.binding.Bindings;
@@ -15,15 +13,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
-import me.xhsun.guildwars2wrapper.AsynchronousRequest;
-import me.xhsun.guildwars2wrapper.SynchronousRequest;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.identifiable.IdentifiableInt;
-import me.xhsun.guildwars2wrapper.model.v2.Item;
-import me.xhsun.guildwars2wrapper.model.v2.Recipe;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class RequestProgress<T extends IdentifiableInt> {
 
@@ -35,16 +26,11 @@ public class RequestProgress<T extends IdentifiableInt> {
 	// list of all ids available for this data type
 	private List<Integer> allIds = new ArrayList<>();
 
-	// function to get all ids of this data type
-	private Callable<List<Integer>> idCaller;
-
-	// function to get all that get requested
-	private Function<int[], Void> infoFunction;
-
 	private ObservableList<Integer> toRequest = FXCollections.observableArrayList();
 	private List<Integer> alreadyGettingRequested = new ArrayList<>();
 
 	private RequestType type;
+	private RequestStrategy<T> requestStrategy;
 
 	@SuppressWarnings("unchecked")
 	public RequestProgress(RequestType type) {
@@ -55,88 +41,35 @@ public class RequestProgress<T extends IdentifiableInt> {
 			int allSize = allIds.size();
 			System.out.println("Values: " + valuesSize);
 			System.out.println("All: " + allSize);
-			return 100.0 * valuesSize / allSize;
+			return 1.0 * valuesSize / allSize;
 		}, values));
-
-		SynchronousRequest synchronous = Data.getInstance().getApi().getSynchronous();
-		AsynchronousRequest asynchronous = Data.getInstance().getApi().getAsynchronous();
 
 		switch (type) {
 		case RECIPE:
-			idCaller = () -> synchronous.getAllRecipeID();
-			infoFunction = ids -> {
-				try {
-					asynchronous.getRecipeInfo(ids, new Callback<List<Recipe>>() {
-						@Override
-						public void onResponse(Call<List<Recipe>> call, Response<List<Recipe>> response) {
-							List<T> body = (List<T>) response.body();
-							handleResponse(body);
-						}
-
-						@Override
-						public void onFailure(Call<List<Recipe>> call, Throwable t) {
-							t.printStackTrace();
-						}
-					});
-				} catch (NullPointerException e) {
-					e.printStackTrace();
-				} catch (GuildWars2Exception e) {
-					onError(e, ids);
-				}
-				return null;
-			};
+			requestStrategy = (RequestStrategy<T>) new RecipeRequestStrategy();
 			break;
 		case ITEM:
-			idCaller = () -> synchronous.getAllItemID();
-			infoFunction = ids -> {
-				try {
-					asynchronous.getItemInfo(ids, new Callback<List<Item>>() {
-						@Override
-						public void onResponse(Call<List<Item>> call, Response<List<Item>> response) {
-							handleResponse((List<T>) response.body());
-						}
-
-						@Override
-						public void onFailure(Call<List<Item>> call, Throwable t) {
-							t.printStackTrace();
-						}
-					});
-				} catch (NullPointerException e) {
-					e.printStackTrace();
-				} catch (GuildWars2Exception e) {
-					onError(e, ids);
-				}
-				return null;
-			};
+			requestStrategy = (RequestStrategy<T>) new ItemRequestStrategy();
 			break;
 		default:
 			break;
 		}
 
 		try {
-			allIds = idCaller.call();
-		} catch (Exception e) {
+			allIds = requestStrategy.getIds();
+		} catch (GuildWars2Exception e) {
 			e.printStackTrace();
 		}
 
 		toRequest.addListener((ListChangeListener<Integer>) c -> {
 			while (c.next()) {
 				if (c.wasAdded()) {
-					List<? extends Integer> added = new ArrayList<>(c.getAddedSubList());
+					List<Integer> added = new ArrayList<>(c.getAddedSubList());
 					toRequest.removeAll(added);
-					request(added);
+					requestItems(added);
 				}
 			}
 		});
-	}
-
-	private void request(List<? extends Integer> itemIds) {
-		int chunk = 200; // chunk size to divide
-		List<int[]> chunkedIds = Util.chunkUp(chunk, itemIds);
-		for (int[] ids : chunkedIds) {
-			infoFunction.apply(ids);
-		}
-		System.out.println("Request finished");
 	}
 
 	private void handleResponse(List<T> toAdds) {
@@ -149,7 +82,32 @@ public class RequestProgress<T extends IdentifiableInt> {
 		}
 	}
 
-	private void onError(GuildWars2Exception e, int[] ids) {
+	private void requestItems(List<Integer> itemIds) {
+		int chunkSize = 200;
+		List<int[]> chunkedIds = Util.chunkUp(chunkSize, itemIds);
+		List<Thread> threads = new ArrayList<>();
+		for(int[] ids : chunkedIds) {
+			Thread thread = new Thread(() -> {
+				try {
+					List<T> items = requestStrategy.getItems(ids);
+					handleResponse(items);
+				} catch (GuildWars2Exception e) {
+					handleResponse(onError(e, ids));
+				}
+			});
+			thread.start();
+			threads.add(thread);
+		}
+		for(Thread thread : threads) {
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private List<T> onError(GuildWars2Exception e, int[] ids) {
 		if (e.getMessage().equals("Exceeded 600 requests per minute limit")) {
 			System.err.println("Repeating request " + type);
 			try {
@@ -157,9 +115,16 @@ public class RequestProgress<T extends IdentifiableInt> {
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}
-			infoFunction.apply(ids);
+			try {
+				return requestStrategy.getItems(ids);
+			} catch (GuildWars2Exception e1) {
+				onError(e1, ids);
+			}
+		} else {
+			e.printStackTrace();
+			return null;
 		}
-		e.printStackTrace();
+		return null;
 	}
 
 	public ObservableMap<Integer, T> getValues() {

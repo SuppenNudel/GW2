@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import de.rohmio.gw2.tools.model.request.RequestProgress;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -40,8 +41,10 @@ public class RecipeFilterTest {
 	@BeforeClass
 	public static void loadRecipes() {
 		System.out.println("RecipeFilterTest.loadRecipes()");
+		Data instance = Data.getInstance();
+		RequestProgress<Recipe> recipes = instance.getRecipes();
 		Date start = new Date();
-		ObservableMap<Integer, Recipe> all = Data.getInstance().getRecipes().getAll();
+		ObservableMap<Integer, Recipe> all = recipes.getAll();
 		Date loadedRecipes = new Date();
 		System.out.println("Time to Load: " + String.valueOf(loadedRecipes.getTime() - start.getTime()));
 		System.out.println(all.size());

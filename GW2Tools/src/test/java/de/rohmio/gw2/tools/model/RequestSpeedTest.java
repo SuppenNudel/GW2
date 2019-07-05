@@ -14,6 +14,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import de.rohmio.gw2.tools.main.Util;
+import de.rohmio.gw2.tools.model.request.RequestType;
+import me.xhsun.guildwars2wrapper.SynchronousRequest;
 import me.xhsun.guildwars2wrapper.error.GuildWars2Exception;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 
@@ -26,14 +28,16 @@ public class RequestSpeedTest {
 
 	@BeforeClass
 	public static void directFromApi() throws Exception {
-		allRecipeIds = Data.getInstance().getApi().getSynchronous().getAllRecipeID();
+		System.out.println("RequestSpeedTest.directFromApi()");
+		SynchronousRequest synchronous = Data.getInstance().getApi().getSynchronous();
+		allRecipeIds = synchronous.getAllRecipeID();
 
 		int chunk = 200; // chunk size to divide
 		chunkedIds = Util.chunkUp(chunk, allRecipeIds);
 
 		Date start = new Date();
 		for (int[] ids : chunkedIds) {
-			recipes.addAll(Data.getInstance().getApi().getSynchronous().getRecipeInfo(ids));
+			recipes.addAll(synchronous.getRecipeInfo(ids));
 		}
 		Date end = new Date();
 		System.out.println("Direct time: " + (end.getTime() - start.getTime()) + "ms");

@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import de.rohmio.gw2.tools.model.request.RequestProgress;
+import de.rohmio.gw2.tools.model.request.RequestType;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 
 public class RequestProgressTest {
@@ -30,9 +32,6 @@ public class RequestProgressTest {
 		for(Thread thread : threads) {
 			thread.join();
 		}
-		//		while(true) {
-		//			Thread.sleep(10000);
-		//		}
 	}
 
 }
