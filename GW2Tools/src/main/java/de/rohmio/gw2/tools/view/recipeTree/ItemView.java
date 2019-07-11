@@ -8,6 +8,7 @@ import java.util.List;
 import de.rohmio.gw2.tools.main.Util;
 import de.rohmio.gw2.tools.model.Data;
 import javafx.application.Platform;
+import javafx.collections.MapChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
@@ -28,17 +29,29 @@ public class ItemView extends VBox {
 	private Item item;
 	private int count;
 
-	private ItemView(int itemId, int count, boolean detailed) {
+	public ItemView(int itemId, int count, boolean detailed) {
 		setPrefWidth(USE_COMPUTED_SIZE);
 		setPrefHeight(USE_COMPUTED_SIZE);
+		setAlignment(Pos.TOP_CENTER);
 
 		this.detailed = detailed;
-
 		this.count = count;
-		try {
-			init();
-		} catch (NullPointerException e) {
-			System.err.println("Can't load Item with ID " + itemId);
+
+		item = Data.getInstance().getItems().getValues().get(itemId);
+		if(item == null) {
+			Data.getInstance().getItems().getValues().addListener((MapChangeListener<Integer, Item>) change -> {
+				if(change.getValueAdded().getId() == itemId) {
+					Item addedItem = change.getValueAdded();
+					item = addedItem;
+					init();
+				}
+			});
+		} else {
+			try {
+				init();
+			} catch (NullPointerException e) {
+				System.err.println("Can't load Item with ID " + itemId);
+			}
 		}
 	}
 
@@ -64,8 +77,6 @@ public class ItemView extends VBox {
 		//			contextMenu.show(owner, event.getScreenX(), event.getScreenY());
 		//			event.consume();
 		//		});
-
-		setAlignment(Pos.TOP_CENTER);
 		if (item == null) {
 			return;
 		}

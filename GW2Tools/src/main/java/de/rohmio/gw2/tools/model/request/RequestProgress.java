@@ -74,19 +74,17 @@ public class RequestProgress<T extends IdentifiableInt> {
 
 	private void handleResponse(List<T> toAdds) {
 		Map<Integer, T> mapped = new HashMap<>();
-		for(T toAdd : toAdds) {
+		for (T toAdd : toAdds) {
 			mapped.put(toAdd.getId(), toAdd);
 		}
-		synchronized (values) {
-			values.putAll(mapped);
-		}
+		values.putAll(mapped);
 	}
 
 	private void requestItems(List<Integer> itemIds) {
 		int chunkSize = 200;
 		List<int[]> chunkedIds = Util.chunkUp(chunkSize, itemIds);
 		List<Thread> threads = new ArrayList<>();
-		for(int[] ids : chunkedIds) {
+		for (int[] ids : chunkedIds) {
 			Thread thread = new Thread(() -> {
 				try {
 					List<T> items = requestStrategy.getItems(ids);
@@ -94,11 +92,11 @@ public class RequestProgress<T extends IdentifiableInt> {
 				} catch (GuildWars2Exception e) {
 					handleResponse(onError(e, ids));
 				}
-			});
+			}, "Request " + type + " " + itemIds);
 			thread.start();
 			threads.add(thread);
 		}
-		for(Thread thread : threads) {
+		for (Thread thread : threads) {
 			try {
 				thread.join();
 			} catch (InterruptedException e) {
@@ -118,6 +116,8 @@ public class RequestProgress<T extends IdentifiableInt> {
 			try {
 				return requestStrategy.getItems(ids);
 			} catch (GuildWars2Exception e1) {
+				System.err.println(e1);
+				e1.printStackTrace();
 				onError(e1, ids);
 			}
 		} else {

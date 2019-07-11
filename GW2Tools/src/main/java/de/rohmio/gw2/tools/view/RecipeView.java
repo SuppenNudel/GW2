@@ -5,6 +5,7 @@ import java.net.URLEncoder;
 
 import de.rohmio.gw2.tools.App;
 import de.rohmio.gw2.tools.model.RecipeFilter;
+import de.rohmio.gw2.tools.view.recipeTree.ItemView;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -150,9 +151,9 @@ public class RecipeView extends AnchorPane {
 		grid_data.add(new Label("Chat link"), 0, 5);
 		grid_data.add(new TextField(recipe.getChatLink()), 1, 5);
 
-		//		ItemView itemView = new ItemView(outputItemId, outputCount, detailed);
+		ItemView itemView = new ItemView(recipe.getOutputItemId(), recipe.getOutputItemCount(), false);
 		//		itemViews.add(itemView);
-		//		root.getChildren().add(itemView);
+		root.getChildren().add(itemView);
 
 		root.getChildren().add(grid_data);
 

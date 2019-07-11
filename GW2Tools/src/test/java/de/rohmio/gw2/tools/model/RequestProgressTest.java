@@ -12,7 +12,8 @@ import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 public class RequestProgressTest {
 
 	@Test
-	public void test() throws InterruptedException {
+	public void getSingle() throws InterruptedException {
+		System.out.println("RequestProgressTest.getSingle()");
 		RequestProgress<Recipe> requestProgress = new RequestProgress<>(RequestType.RECIPE);
 		requestProgress.getProgress().addListener((obj, newV, oldV) -> {
 			System.out.println(newV);
@@ -20,7 +21,7 @@ public class RequestProgressTest {
 		List<Integer> ids = requestProgress.getIds();
 		System.out.println(ids);
 		List<Thread> threads = new ArrayList<>();
-		for(int i=1; i<=10; ++i) {
+		for (int i = 1; i <= 10; ++i) {
 			int idx = i;
 			Thread thread = new Thread(() -> {
 				requestProgress.getById(idx);
@@ -29,9 +30,19 @@ public class RequestProgressTest {
 			thread.start();
 			threads.add(thread);
 		}
-		for(Thread thread : threads) {
+		for (Thread thread : threads) {
 			thread.join();
 		}
+	}
+
+	@Test
+	public void getAll() {
+		System.out.println("RequestProgressTest.getAll()");
+		RequestProgress<Recipe> requestProgress = new RequestProgress<>(RequestType.RECIPE);
+		requestProgress.getProgress().addListener((obj, oldV, newV) -> {
+			System.out.println(newV);
+		});
+		System.out.println(requestProgress.getAll());
 	}
 
 }
