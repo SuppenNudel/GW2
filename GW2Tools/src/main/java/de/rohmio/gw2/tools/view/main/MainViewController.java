@@ -3,8 +3,10 @@ package de.rohmio.gw2.tools.view.main;
 import java.io.IOException;
 import java.net.URL;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import de.rohmio.gw2.tools.App;
 import de.rohmio.gw2.tools.model.Data;
@@ -159,7 +161,7 @@ public class MainViewController implements Initializable {
 			for (Recipe recipe : Data.getInstance().getRecipes().getAll().values()) {
 				createRecipeView(recipe);
 			}
-		}).start();
+		}, "Create Recipe views").start();
 
 		/*
 		List<BooleanProperty> collect = recipeFilters.stream().map(filter -> filter.getShow())
@@ -173,20 +175,23 @@ public class MainViewController implements Initializable {
 
 	private void countShownRecipies() {
 		// long count = recipeFilters.stream().filter(f -> f.getShow().get()).count();
-		int count = 0;
-		synchronized (recipeFilters) {
-			for (RecipeFilter filter : recipeFilters) {
+		List<RecipeFilter> recipeFiltersCopy = new ArrayList<>(recipeFilters);
+		List<RecipeFilter> shownRecipes = new ArrayList<>();
+		synchronized (recipeFiltersCopy) {
+			for (RecipeFilter filter : recipeFiltersCopy) {
 				synchronized (filter) {
 					if (filter.getShow().get()) {
-						++count;
+						shownRecipes.add(filter);
 					}
 				}
 			}
 		}
-		final int finalCopyOfCount = count;
+		final int finalCopyOfCount = shownRecipes.size();
 		Platform.runLater(() -> {
 			lbl_currentlyDisplayed.setText(String.valueOf(finalCopyOfCount));
 		});
+		List<Integer> collect = shownRecipes.stream().map(filter -> filter.getRecipe().getOutputItemId()).collect(Collectors.toList());
+		Data.getInstance().getItems().getByIds(collect);
 	}
 
 	private void createRecipeView(Recipe recipe) {

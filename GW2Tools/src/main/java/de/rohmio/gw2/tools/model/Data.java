@@ -4,6 +4,8 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 import de.rohmio.gw2.tools.main.ClientFactory;
+import de.rohmio.gw2.tools.model.request.RequestProgress;
+import de.rohmio.gw2.tools.model.request.RequestType;
 import de.rohmio.gw2.tools.model.settings.SettingsWrapper;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
@@ -73,7 +75,6 @@ public class Data {
 		return recipes;
 	}
 
-	// TODO first only with recipes
 	public RequestProgress<Item> getItems() {
 		if (items == null) {
 			items = new RequestProgress<>(RequestType.ITEM);

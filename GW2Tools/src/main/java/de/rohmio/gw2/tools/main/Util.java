@@ -14,7 +14,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
-import de.rohmio.gw2.tools.model.RequestType;
+import de.rohmio.gw2.tools.model.request.RequestType;
 import me.xhsun.guildwars2wrapper.GuildWars2;
 import me.xhsun.guildwars2wrapper.model.identifiable.IdentifiableInt;
 import okhttp3.OkHttpClient;
@@ -132,7 +132,7 @@ public class Util {
 		}
 	}
 
-	public static List<int[]> chunkUp(int chunkSize, List<Integer> integers) {
+	public static List<int[]> chunkUp(int chunkSize, List<? extends Integer> integers) {
 		int[] allIdArray = integers.stream().mapToInt(i -> i).toArray();
 		return chunkUp(chunkSize, allIdArray);
 	}
