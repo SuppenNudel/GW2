@@ -32,10 +32,16 @@
 		</dependency>
 
 		<!-- https://github.com/xhsun/gw2wrapper -->
+		<!-- <dependency> -->
+		<!-- <groupId>me.xhsun.gw2wrapper</groupId> -->
+		<!-- <artifactId>gw2wrapper</artifactId> -->
+		<!-- <version>1.3.2</version> -->
+		<!-- </dependency> -->
+
 		<dependency>
-			<groupId>me.xhsun.gw2wrapper</groupId>
-			<artifactId>gw2wrapper</artifactId>
-			<version>1.3.2</version>
+			<groupId>gw2wrapper2</groupId>
+			<artifactId>gw2wrapper2</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
