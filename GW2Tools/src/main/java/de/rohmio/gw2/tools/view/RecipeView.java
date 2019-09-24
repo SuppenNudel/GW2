@@ -2,9 +2,16 @@ package de.rohmio.gw2.tools.view;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 
 import de.rohmio.gw2.tools.App;
+import de.rohmio.gw2.tools.model.Data;
 import de.rohmio.gw2.tools.model.RecipeFilter;
+import de.rohmio.gw2.tools.view.recipeTree.ItemView;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableMap;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -21,15 +28,18 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import me.xhsun.guildwars2wrapper.model.v2.Item;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe;
 import me.xhsun.guildwars2wrapper.model.v2.Recipe.Ingredient;
 
 public class RecipeView extends AnchorPane {
 
-	//	private boolean detailed;
+	// private boolean detailed;
 	private RecipeFilter recipeFilter;
+	
+	private boolean itemLoaded = false;
 
-	//	private List<ItemView> itemViews = new ArrayList<>();
+	// private List<ItemView> itemViews = new ArrayList<>();
 
 	public RecipeView(RecipeFilter recipeFilter, boolean detailed) {
 		this.recipeFilter = recipeFilter;
@@ -63,9 +73,10 @@ public class RecipeView extends AnchorPane {
 		});
 	}
 
-	//	private long count() {
-	//		return recipeViews.stream().map(view -> view.getRecipeFilter()).filter(filter -> filter.getShow().get()).count();
-	//	}
+	// private long count() {
+	// return recipeViews.stream().map(view -> view.getRecipeFilter()).filter(filter
+	// -> filter.getShow().get()).count();
+	// }
 
 	private ContextMenu createContextMenu() {
 		MenuItem showDetailed = new MenuItem("Show Detailed");
@@ -113,7 +124,7 @@ public class RecipeView extends AnchorPane {
 		return recipeFilter;
 	}
 
-	//	private boolean itemsShown = false;
+	// private boolean itemsShown = false;
 
 	/*
 	 * public void showItems(boolean show) { if(!itemsShown) { itemsShown = true;
@@ -129,6 +140,24 @@ public class RecipeView extends AnchorPane {
 
 		root.setStyle("-fx-border-color: black;" + "-fx-border-width: 5;");
 		root.setAlignment(Pos.TOP_CENTER);
+		
+		List<Integer> itemIds = new ArrayList<>();
+		List<ItemView> itemViews = new ArrayList<>();
+		
+		ItemView outputItemView = new ItemView(recipe.getOutputItemId(), recipe.getOutputItemCount(), false);
+		root.getChildren().add(outputItemView);
+		itemIds.add(recipe.getOutputItemId());
+		itemViews.add(outputItemView);
+
+		
+		HBox ingredientItemViews = new HBox();
+		root.getChildren().add(ingredientItemViews);
+		for(Ingredient ingredient : recipe.getIngredients()) {
+			ItemView ingredientItemView = new ItemView(ingredient.getItemId(), ingredient.getCount(), false);
+			ingredientItemViews.getChildren().add(ingredientItemView);
+			itemIds.add(ingredient.getItemId());
+			itemViews.add(ingredientItemView);
+		}
 
 		root.getChildren().add(new Label(String.valueOf(recipe.getOutputItemId())));
 		GridPane grid_data = new GridPane();
@@ -150,9 +179,18 @@ public class RecipeView extends AnchorPane {
 		grid_data.add(new Label("Chat link"), 0, 5);
 		grid_data.add(new TextField(recipe.getChatLink()), 1, 5);
 
-		//		ItemView itemView = new ItemView(outputItemId, outputCount, detailed);
-		//		itemViews.add(itemView);
-		//		root.getChildren().add(itemView);
+		recipeFilter.getShow().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+				if (!itemLoaded && recipeFilter.getShow().get()) {
+//					new Thread(() -> {
+					ObservableMap<Integer, Item> byIds = Data.getInstance().getItems().getByIds(itemIds);
+					itemViews.forEach(itemView -> itemView.init(byIds.get(itemView.getItemId())));
+					itemLoaded = true;
+//					}).start();
+				}
+			}
+		});
 
 		root.getChildren().add(grid_data);
 

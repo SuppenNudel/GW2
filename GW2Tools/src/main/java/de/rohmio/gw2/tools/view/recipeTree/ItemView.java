@@ -25,21 +25,21 @@ import retrofit2.Response;
 public class ItemView extends VBox {
 
 	private boolean detailed;
-	private Item item;
+	private int itemId;
 	private int count;
 
-	private ItemView(int itemId, int count, boolean detailed) {
+	public ItemView(int itemId, int count, boolean detailed) {
 		setPrefWidth(USE_COMPUTED_SIZE);
 		setPrefHeight(USE_COMPUTED_SIZE);
 
 		this.detailed = detailed;
-
+		this.itemId = itemId;
 		this.count = count;
-		try {
-			init();
-		} catch (NullPointerException e) {
-			System.err.println("Can't load Item with ID " + itemId);
-		}
+//		try {
+//			init();
+//		} catch (NullPointerException e) {
+//			System.err.println("Can't load Item with ID " + item.getId());
+//		}
 	}
 
 	/*
@@ -52,12 +52,16 @@ public class ItemView extends VBox {
 		}
 	}
 	 */
+	
+	public int getItemId() {
+		return itemId;
+	}
 
 	// public ItemView(Item item, int count) {
 	// init(item, count);
 	// }
 
-	private void init() throws NullPointerException {
+	public void init(Item item) throws NullPointerException {
 		//		ContextMenu contextMenu = createContextMenu();
 		//		Node owner = this;
 		//		setOnContextMenuRequested(event -> {
@@ -66,9 +70,6 @@ public class ItemView extends VBox {
 		//		});
 
 		setAlignment(Pos.TOP_CENTER);
-		if (item == null) {
-			return;
-		}
 		Platform.runLater(() -> {
 			getChildren().add(new Label(String.format("%dx %s", count, item.getName())));
 			try {

@@ -22,11 +22,11 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="518.0" prefWidth="790.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
+<BorderPane prefHeight="518.0" prefWidth="790.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="de.rohmio.gw2.tools.view.main.MainViewController">
    <center>
-    <SplitPane dividerPositions="0.49111675126903553, 0.75" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0">
+    <SplitPane dividerPositions="0.5, 0.5" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0">
       <items>
-            <VBox spacing="5.0">
+            <VBox spacing="5.0" SplitPane.resizableWithParent="false">
                <children>
                   <Label fx:id="lbl_accountName" text="Account Name" />
                   <Separator prefWidth="200.0" />
@@ -83,7 +83,7 @@
                   <FlowPane fx:id="flow_recipes" />
                </content>
         </ScrollPane>
-        <AnchorPane>
+        <AnchorPane SplitPane.resizableWithParent="false">
           <children>
             <Label alignment="CENTER" layoutX="14.0" layoutY="14.0" style="&#10;" text="Details" textAlignment="CENTER" wrapText="false">
                      <textFill>
