@@ -6,6 +6,7 @@ public class Settings {
 	
 	private LanguageSelect lang;
 	private String accessToken;
+	private ProxySettings proxySettings;
 	
 	public Settings(String accessToken, LanguageSelect lang) {
 		this.accessToken = accessToken;
@@ -20,12 +21,20 @@ public class Settings {
 		this.lang = lang;
 	}
 	
+	public void setProxySettings(ProxySettings proxySettings) {
+		this.proxySettings = proxySettings;
+	}
+	
 	public String getAccessToken() {
 		return accessToken;
 	}
 
 	public LanguageSelect getLang() {
 		return lang;
+	}
+	
+	public ProxySettings getProxySettings() {
+		return proxySettings;
 	}
 	
 }

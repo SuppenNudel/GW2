@@ -27,7 +27,7 @@ public class Util {
 		final File file = new File(Data.DOCS, fileName);
 		if (!file.exists()) {
 			Request request = new Request.Builder().url(url).build();
-			OkHttpClient client = ClientFactory.getClient();
+			OkHttpClient client = ClientFactory.getClient(Data.getInstance().getSettings().getProxySettings());
 			okhttp3.Response response = client.newCall(request).execute();
 			FileUtils.writeByteArrayToFile(file, response.body().bytes());
 		}

@@ -17,16 +17,16 @@ import okhttp3.OkHttpClient;
 
 public class ClientFactory {
 	
-	public static OkHttpClient getClient() {
-		if(!ProxyCredentials.useProxy) {
+	public static OkHttpClient getClient(ProxySettings proxySettings) {
+		if(proxySettings == null) {
 			return new OkHttpClient();
 		}
 		OkHttpClient client;
-		if(ProxyCredentials.proxyHost == null) {
+		if(proxySettings.getHost() == null) {
 			client = new OkHttpClient();
 		} else {
 			Authenticator proxyAuthenticator = (route, response) -> {
-				String credential = Credentials.basic(ProxyCredentials.username, ProxyCredentials.password);
+				String credential = Credentials.basic(proxySettings.getUser(), proxySettings.getPassword());
 				return response.request().newBuilder()
 						.header("Proxy-Authorization", credential)
 						.build();
@@ -36,7 +36,7 @@ public class ClientFactory {
 					.connectTimeout(60, TimeUnit.SECONDS)
 					.writeTimeout(60, TimeUnit.SECONDS)
 					.readTimeout(60, TimeUnit.SECONDS)
-					.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(ProxyCredentials.proxyHost, ProxyCredentials.proxyPort)))
+					.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxySettings.getHost(), proxySettings.getPort())))
 					.proxyAuthenticator(proxyAuthenticator)
 					.sslSocketFactory(trustAllSslSocketFactory, (X509TrustManager)trustAllCerts[0])
 					.build();

@@ -36,11 +36,14 @@ public class Data {
 	
 	private StringProperty accessTokenProperty = new SimpleStringProperty();
 	
+	private ObjectProperty<ProxySettings> proxySettingsProperty = new SimpleObjectProperty<>();
+	
 	private ObjectProperty<ResourceBundle> resources = new SimpleObjectProperty<>();
 
 	private Data() throws NullPointerException, GuildWars2Exception {
-		GuildWars2.setInstance(ClientFactory.getClient());
 		loadSettings();
+		ProxySettings proxySettings = settings.getProxySettings();
+		GuildWars2.setInstance(ClientFactory.getClient(proxySettings));
 		
 		itemProgress = new RequestProgress<>(RequestType.ITEM);
 		recipeProgress = new RequestProgress<>(RequestType.RECIPE);
@@ -83,6 +86,12 @@ public class Data {
 		saveSettings();
 	}
 	
+	public void setProxySettings(ProxySettings proxySettings) {
+		settings.setProxySettings(proxySettings);
+		proxySettingsProperty.set(proxySettings);
+		saveSettings();
+	}
+	
 	public void setAccessToken(String accessToken) {
 		settings.setAccessToken(accessToken);
 		accessTokenProperty.set(accessToken);
@@ -99,6 +108,10 @@ public class Data {
 		};
 	}
 	
+	public final ProxySettings getProxySettings() {
+		return settings.getProxySettings();
+	}
+	
 	public final String getAccessToken() {
 		return settings.getAccessToken();
 	}
@@ -112,6 +125,7 @@ public class Data {
 		}
 		setLanguage(settings.getLang());
 		setAccessToken(settings.getAccessToken());
+		setProxySettings(settings.getProxySettings());
 	}
 	
 	private void saveSettings() {
@@ -124,6 +138,10 @@ public class Data {
 	
 	public StringProperty accessTokenProperty() {
 		return accessTokenProperty;
+	}
+	
+	public ObjectProperty<ProxySettings> getProxySettingsProperty() {
+		return proxySettingsProperty;
 	}
 	
 }
